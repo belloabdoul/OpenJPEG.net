@@ -276,13 +276,13 @@ namespace OpenJpeg
             }
             uint cblkw = (uint)MyMath.int_floorlog2(parameters.cblockw_init);
             uint cblkh = (uint)MyMath.int_floorlog2(parameters.cblockh_init);
-            if (parameters.cblockw_init != (1 << (int)cblkw))
+            if (parameters.cblockw_init != 1 << (int)cblkw)
             {
                 _cinfo.Error("Invalid value for cblockw_init: {0} not a power of 2 in range [4,1024]",
                               parameters.cblockw_init);
                 return false;
             }
-            if (parameters.cblockh_init != (1 << (int)cblkh))
+            if (parameters.cblockh_init != 1 << (int)cblkh)
             {
                 _cinfo.Error("Invalid value for cblockw_init: {0} not a power of 2 in range [4,1024]\n",
                               parameters.cblockh_init);
@@ -455,7 +455,7 @@ namespace OpenJpeg
             {
                 if (parameters.tcp_rates[parameters.tcp_numlayers - 1] > 0)
                 {
-                    float temp_size = (image.numcomps * image.comps[0].w * image.comps[0].h * image.comps[0].prec) /
+                    float temp_size = image.numcomps * image.comps[0].w * image.comps[0].h * image.comps[0].prec /
                         (parameters.tcp_rates[parameters.tcp_numlayers - 1] * 8 * image.comps[0].dx * image.comps[0].dy);
                     if (temp_size > int.MaxValue)
                         parameters.max_cs_size = int.MaxValue;
@@ -472,13 +472,13 @@ namespace OpenJpeg
                 if (parameters.IsIMF && parameters.max_cs_size > 0 &&
                     parameters.tcp_numlayers == 1 && parameters.tcp_rates[0] == 0)
                 {
-                    parameters.tcp_rates[0] = (image.numcomps * image.comps[0].w *
-                                               image.comps[0].h * image.comps[0].prec) /
-                                               (float)(((uint)parameters.max_cs_size) * 8 * image.comps[0].dx *
+                    parameters.tcp_rates[0] = image.numcomps * image.comps[0].w *
+                                              image.comps[0].h * image.comps[0].prec /
+                                               (float)((uint)parameters.max_cs_size * 8 * image.comps[0].dx *
                                                image.comps[0].dy);
                 }
 
-                float temp_rate = (image.numcomps * image.comps[0].w * image.comps[0].h * image.comps[0].prec) /
+                float temp_rate = image.numcomps * image.comps[0].w * image.comps[0].h * image.comps[0].prec /
                     (parameters.max_cs_size * 8 * image.comps[0].dx * image.comps[0].dy);
                 for (int i = 0; i < parameters.tcp_numlayers; i++)
                 {
@@ -612,8 +612,8 @@ namespace OpenJpeg
             }
             else
             {
-                _cp.tdx = (uint) image.x1 - _cp.tx0;
-                _cp.tdy = (uint) image.y1 - _cp.ty0;
+                _cp.tdx = image.x1 - _cp.tx0;
+                _cp.tdy = image.y1 - _cp.ty0;
             }
 
             if (parameters.tp_on)
@@ -748,10 +748,10 @@ namespace OpenJpeg
                 {
                     if (tcp.mct == 1 && image.numcomps >= 3)
                     { //RGB->YCC MCT is enabled
-                        if ((image.comps[0].dx != image.comps[1].dx) ||
-                            (image.comps[0].dx != image.comps[2].dx) ||
-                            (image.comps[0].dy != image.comps[1].dy) ||
-                            (image.comps[0].dy != image.comps[2].dy))
+                        if (image.comps[0].dx != image.comps[1].dx ||
+                            image.comps[0].dx != image.comps[2].dx ||
+                            image.comps[0].dy != image.comps[1].dy ||
+                            image.comps[0].dy != image.comps[2].dy)
                         {
                             _cinfo.Warn("Cannot perform MCT on components with different sizes. Disabling MCT.");
                             tcp.mct = 0;
@@ -908,7 +908,7 @@ namespace OpenJpeg
             for (layno = 0; layno < num_layers ; ++layno) {
                 for (resno = 0; resno < n_resolutions; ++resno) {
                     for (compno = 0; compno < num_comps; ++compno) {
-                            loss |= (packet_array[index]!=1);
+                            loss |= packet_array[index]!=1;
                             index += step_c;
                     }
                 }
@@ -1005,7 +1005,7 @@ namespace OpenJpeg
 
             for (i = 0; i < n_elem; ++i)
             {
-                data[current_data++] = (float)(tccps[tccp].dc_level_shift);
+                data[current_data++] = tccps[tccp].dc_level_shift;
                 ++tccp;
             }
 
@@ -1086,12 +1086,12 @@ namespace OpenJpeg
                 {
                     while (parameters.numresolution > 0)
                     {
-                        if (image.x1 < (1U << (parameters.numresolution - 1)))
+                        if (image.x1 < 1U << (parameters.numresolution - 1))
                         {
                             parameters.numresolution--;
                             continue;
                         }
-                        if (image.y1 < (1U << (parameters.numresolution - 1)))
+                        if (image.y1 < 1U << (parameters.numresolution - 1))
                         {
                             parameters.numresolution--;
                             continue;
@@ -1333,7 +1333,7 @@ namespace OpenJpeg
                 parameters.max_comp_size = Constants.CINEMA_24_COMP;
             }
 
-            parameters.tcp_rates[0] = (image.numcomps * image.comps[0].w * image.comps[0].h * image.comps[0].prec)/
+            parameters.tcp_rates[0] = image.numcomps * image.comps[0].w * image.comps[0].h * image.comps[0].prec/
                     (parameters.max_cs_size * 8f * image.comps[0].dx * image.comps[0].dy);
 
         }
@@ -1487,7 +1487,7 @@ namespace OpenJpeg
             for (i = 0; i < image.numcomps; i++)
             {
                 if (!(image.comps[i].prec >= 8 && image.comps[i].prec <= 16) ||
-                     (image.comps[i].sgnd))
+                     image.comps[i].sgnd)
                 {
                     var tmp_str = image.comps[i].sgnd ? "signed" : "unsigned";
                     _cinfo.Warn("IMF profiles require precision of each component to b in [8-16] bits unsigned"+
@@ -1538,7 +1538,7 @@ namespace OpenJpeg
             {
                 case J2K_PROFILE.IMF_2K:
                 case J2K_PROFILE.IMF_2K_R:
-                    if (((image.comps[0].w > 2048) | (image.comps[0].h > 1556)))
+                    if ((image.comps[0].w > 2048) | (image.comps[0].h > 1556))
                     {
                         _cinfo.Warn("IMF 2K/2K_R profile require:\n"+
                                     "width <= 2048 and height <= 1556\n"+
@@ -1550,7 +1550,7 @@ namespace OpenJpeg
                     break;
                 case J2K_PROFILE.IMF_4K:
                 case J2K_PROFILE.IMF_4K_R:
-                    if (((image.comps[0].w > 4096) | (image.comps[0].h > 3112)))
+                    if ((image.comps[0].w > 4096) | (image.comps[0].h > 3112))
                     {
                         _cinfo.Warn("IMF 4K/4K_R profile require:\n"+
                                     "width <= 4096 and height <= 3112\n"+
@@ -1562,7 +1562,7 @@ namespace OpenJpeg
                     break;
                 case J2K_PROFILE.IMF_8K:
                 case J2K_PROFILE.IMF_8K_R:
-                    if (((image.comps[0].w > 8192) | (image.comps[0].h > 6224)))
+                    if ((image.comps[0].w > 8192) | (image.comps[0].h > 6224))
                     {
                         _cinfo.Warn("IMF 8K/8K_R profile require:\n"+
                                     "width <= 8192 and height <= 6224\n"+
@@ -1851,7 +1851,7 @@ namespace OpenJpeg
 
             /* Bitdepth */
             for (int i = 0; i < image.numcomps; i++) {
-                if ((image.comps[i].bpp != 12) | (image.comps[i].sgnd)){
+                if ((image.comps[i].bpp != 12) | image.comps[i].sgnd){
                     _cinfo.Warn("JPEG 2000 Profile-3 (2k dc profile) requires:\n"+
                                 "Precision of each component shall be 12 bits unsigned"+
                                 "-> At least component {0} of input image ({1} bits, {2}) is not compliant\n"+
@@ -1865,7 +1865,7 @@ namespace OpenJpeg
             switch (rsiz)
             {
                 case J2K_PROFILE.CINEMA_2K:
-                    if (((image.comps[0].w > 2048) | (image.comps[0].h > 1080))){
+                    if ((image.comps[0].w > 2048) | (image.comps[0].h > 1080)){
                         _cinfo.Warn("JPEG 2000 Profile-3 (2k dc profile) requires:\n"+
                                     "width <= 2048 and height <= 1080\n"+
                                     "-> Input image size {0} x {1} is not compliant\n"+
@@ -1875,7 +1875,7 @@ namespace OpenJpeg
                 }
                 break;
                 case J2K_PROFILE.CINEMA_4K:
-                    if (((image.comps[0].w > 4096) | (image.comps[0].h > 2160))){
+                    if ((image.comps[0].w > 4096) | (image.comps[0].h > 2160)){
                          _cinfo.Warn("JPEG 2000 Profile-4 (4k dc profile) requires:\n"+
                                      "width <= 4096 and height <= 2160\n"+
                                      "-> Image size {0} x {1} is not compliant\n"+
@@ -1902,7 +1902,7 @@ namespace OpenJpeg
 
             /* STATE checking */
             /* make sure the state is at 0 */
-            l_is_valid &= (!_is_decompressor || _specific_param.decoder.state == J2K_STATUS.NONE);
+            l_is_valid &= !_is_decompressor || _specific_param.decoder.state == J2K_STATUS.NONE;
 
             /* POINTER validation */
             /* make sure a p_j2k codec is present */
@@ -1917,8 +1917,8 @@ namespace OpenJpeg
                 return false;
             }
 
-            if ((_cp.tdx) < (1u << (int) (_cp.tcps[0].tccps[0].numresolutions - 1)) || 
-                (_cp.tdy) < (1u << (int) (_cp.tcps[0].tccps[0].numresolutions - 1)))
+            if (_cp.tdx < 1u << (int) (_cp.tcps[0].tccps[0].numresolutions - 1) || 
+                _cp.tdy < 1u << (int) (_cp.tcps[0].tccps[0].numresolutions - 1))
             {
                 _cinfo.Error("Number of resolutions is too high in comparison to the size of tiles\n");
                 return false;
@@ -1945,7 +1945,7 @@ namespace OpenJpeg
                     if (tcp.mct == 2)
                     {
                         TileCompParams[] l_tccp = tcp.tccps;
-                        l_is_valid &= (tcp.mct_coding_matrix != null);
+                        l_is_valid &= tcp.mct_coding_matrix != null;
 
                         for (j = 0; j < _private_image.numcomps; ++j)
                         {
@@ -2602,7 +2602,7 @@ namespace OpenJpeg
         /// <remarks>2.5 - opj_j2k_write_coc</remarks>
         private void WriteCOC(uint compno)
         {
-            uint comp_room = (_private_image.numcomps <= 256) ? 1u : 2u;
+            uint comp_room = _private_image.numcomps <= 256 ? 1u : 2u;
 
             uint coc_size = 5 + comp_room + GetSPCodSPCocSize(_current_tile_number, compno);
             _bcio.SetBuffer(ref _specific_param.encoder.header_tile_data, coc_size);
@@ -2618,7 +2618,7 @@ namespace OpenJpeg
         private uint WriteCOC_InMemory(uint comp_no)
         {
             var tcp = _cp.tcps[_current_tile_number];
-            uint comp_room = (_private_image.numcomps <= 256) ? 1u : 2u;
+            uint comp_room = _private_image.numcomps <= 256 ? 1u : 2u;
             uint coc_size = 5 + comp_room + GetSPCodSPCocSize(_current_tile_number, comp_no);
             uint remaining_size = coc_size;
 
@@ -2702,7 +2702,7 @@ namespace OpenJpeg
             var tcp = _cp.tcps[tileno];
             var tccp = tcp.tccps[compno];
 
-            uint num_bands = (tccp.qntsty == CCP_QNTSTY.SIQNT) ? 1 :
+            uint num_bands = tccp.qntsty == CCP_QNTSTY.SIQNT ? 1 :
                              tccp.numresolutions * 3 - 2;
 
             if (tccp.qntsty == CCP_QNTSTY.NOQNT)
@@ -3196,8 +3196,8 @@ namespace OpenJpeg
                 _specific_param.encoder.Ttlmi_is_byte = false;
             }
 
-            uint tlm_size = 2 + 4 + (size_per_tile_part * 
-                                     _specific_param.encoder.total_tile_parts);
+            uint tlm_size = 2 + 4 + size_per_tile_part * 
+                _specific_param.encoder.total_tile_parts;
             Array.Clear(_specific_param.encoder.header_tile_data, 0, 
                 Math.Min((int)tlm_size, _specific_param.encoder.header_tile_data.Length));
             _bcio.SetBuffer(ref _specific_param.encoder.header_tile_data, tlm_size);
@@ -3252,7 +3252,7 @@ namespace OpenJpeg
 
             var nb_comp = _private_image.numcomps;
             uint nb_poc = 1 + tcp.numpocs;
-            uint poc_room = (nb_comp <= 256 ? 1u : 2u);
+            uint poc_room = nb_comp <= 256 ? 1u : 2u;
             uint poc_size = 4u + (5u + 2u * poc_room) * nb_poc;
 
             _bcio.SetBuffer(ref _specific_param.encoder.header_tile_data, poc_size);
@@ -3269,7 +3269,7 @@ namespace OpenJpeg
 
             var nb_comp = _private_image.numcomps;
             uint nb_poc = 1 + tcp.numpocs;
-            uint poc_room = (nb_comp <= 256 ? 1u : 2u);
+            uint poc_room = nb_comp <= 256 ? 1u : 2u;
             uint poc_size = 4u + (5u + 2u * poc_room) * nb_poc;
 
             _bcio.Write(J2K_Marker.POC);
@@ -3401,7 +3401,7 @@ namespace OpenJpeg
             Debug.Assert(_cstr_index.tile_index != null);
 
             // expand the list?
-            if ((_cstr_index.tile_index[tileno].marknum + 1) >
+            if (_cstr_index.tile_index[tileno].marknum + 1 >
                     _cstr_index.tile_index[tileno].maxmarknum)
             {
                 _cstr_index.tile_index[tileno].maxmarknum += 100;
@@ -3518,10 +3518,10 @@ namespace OpenJpeg
                 return false;
             }
 
-            if ((tile_index >= _cp.tw * _cp.th))
+            if (tile_index >= _cp.tw * _cp.th)
             {
                 _cinfo.Error("Tile index provided by the user is incorrect {0} (max = {1}) \n", tile_index,
-                              (_cp.tw * _cp.th) - 1);
+                              _cp.tw * _cp.th - 1);
                 return false;
             }
 
@@ -4137,7 +4137,7 @@ namespace OpenJpeg
                     }
                 }
 
-                if ((offset_x0_src < 0) || (offset_y0_src < 0) || (offset_x1_src < 0) || (offset_y1_src < 0))
+                if (offset_x0_src < 0 || offset_y0_src < 0 || offset_x1_src < 0 || offset_y1_src < 0)
                 {
                     return false;
                 }
@@ -4179,8 +4179,8 @@ namespace OpenJpeg
                     var width = img_comp_dest.w;
                     var height = img_comp_dest.h;
 
-                    if ((height == 0) || (width > (Constants.SIZE_MAX / height)) ||
-                            width * height > (Constants.SIZE_MAX / 4))
+                    if (height == 0 || width > Constants.SIZE_MAX / height ||
+                            width * height > Constants.SIZE_MAX / 4)
                     {
                         // will overflow
                         return false;
@@ -4269,7 +4269,7 @@ namespace OpenJpeg
             }
 
             _specific_param.decoder.can_decode = false;
-            _specific_param.decoder.state &= (J2K_STATUS) (~(0x0080));
+            _specific_param.decoder.state &= (J2K_STATUS) (~0x0080);
 
             if (_cio.BytesLeft == 0 && _specific_param.decoder.state == J2K_STATUS.NEOC)
                 return true;
@@ -4458,7 +4458,7 @@ namespace OpenJpeg
                         break;
                     }
 
-                    if (((_specific_param.decoder.state & J2K_STATUS.TPH) != 0) &&
+                    if ((_specific_param.decoder.state & J2K_STATUS.TPH) != 0 &&
                           _specific_param.decoder.sot_length != 0)
                     {
                         if (_specific_param.decoder.sot_length < marker_size + 2)
@@ -4695,7 +4695,7 @@ namespace OpenJpeg
             }
 
             _cinfo.Info("Header of tile {0} / {1} has been read.",
-                _current_tile_number + 1, (_cp.th * _cp.tw));
+                _current_tile_number + 1, _cp.th * _cp.tw);
 
             tile_index = _current_tile_number;
             go_on = true;
@@ -5195,7 +5195,7 @@ namespace OpenJpeg
             if (!_specific_param.decoder.last_tile_part)
             {
                 //Keep the size of data to skip after this marker
-                _specific_param.decoder.sot_length = (OPJ_UINT32)(tot_len - 12);
+                _specific_param.decoder.sot_length = tot_len - 12;
             }
             else
             {
@@ -5416,7 +5416,7 @@ namespace OpenJpeg
             uint Stlm = _cio.ReadByte();
             header_size -= 2;
 
-            uint ST = ((Stlm >> 4) & 0x03);
+            uint ST = (Stlm >> 4) & 0x03;
             if (ST == 3)
             {
                 tlm.is_invalid = true;
@@ -5719,7 +5719,7 @@ namespace OpenJpeg
 
                     if (N_ppm_remaining >= data_size)
                     {
-                        Buffer.BlockCopy(data, data_pt, ppm_buffer, _cp.ppm_buffer_pt + (int)ppm_data_size, (int) data_size);
+                        Buffer.BlockCopy(data, data_pt, ppm_buffer, _cp.ppm_buffer_pt + (int)ppm_data_size, data_size);
                         ppm_data_size += (uint) data_size;
                         N_ppm_remaining -= (uint) data_size;
                         data_size = 0;
@@ -5757,7 +5757,7 @@ namespace OpenJpeg
                             }
                             else
                             {
-                                Buffer.BlockCopy(data, data_pt, ppm_buffer, _cp.ppm_buffer_pt + (int)ppm_data_size, (int)data_size);
+                                Buffer.BlockCopy(data, data_pt, ppm_buffer, _cp.ppm_buffer_pt + (int)ppm_data_size, data_size);
                                 ppm_data_size += (uint) data_size;
                                 N_ppm_remaining = N_ppm - (uint) data_size;
                                 data_size = 0;
@@ -5850,7 +5850,7 @@ namespace OpenJpeg
             }
 
             uint remaining_size = header_size - 36;
-            uint n_comps = (uint)remaining_size / 3u;
+            uint n_comps = remaining_size / 3u;
             if (remaining_size % 3 != 0)
             {
                 _cinfo.Error("Error with SIZ marker size");
@@ -5902,8 +5902,8 @@ namespace OpenJpeg
             
             var tx1 = MyMath.uint_adds(_cp.tx0, _cp.tdx); // manage overflow
             var ty1 = MyMath.uint_adds(_cp.ty0, _cp.tdy); // manage overflow
-            if ((_cp.tx0 > _private_image.x0) || (_cp.ty0 > _private_image.y0) ||
-                    (tx1 <= _private_image.x0) || (ty1 <= _private_image.y0))
+            if (_cp.tx0 > _private_image.x0 || _cp.ty0 > _private_image.y0 ||
+                    tx1 <= _private_image.x0 || ty1 <= _private_image.y0)
             {
                 _cinfo.Error("Error with SIZ marker: illegal tile offset");
                 return false;
@@ -5912,8 +5912,8 @@ namespace OpenJpeg
             if (!_dump_state)
 #endif
             {
-                uint siz_w = (uint) (_private_image.x1 - _private_image.x0);
-                uint siz_h = (uint) (_private_image.y1 - _private_image.y0);
+                uint siz_w = _private_image.x1 - _private_image.x0;
+                uint siz_h = _private_image.y1 - _private_image.y0;
 
                 if (_ihdr_w > 0 && _ihdr_h > 0
                         && (_ihdr_w != siz_w || _ihdr_h != siz_h))
@@ -5935,7 +5935,7 @@ namespace OpenJpeg
                 var comp = new ImageComp();
                 uint tmp = _cio.ReadByte();
                 comp.prec = (tmp & 0x7f) + 1;
-                comp.sgnd = (tmp >> 7) == 1;
+                comp.sgnd = tmp >> 7 == 1;
 #if SUPPORT_DUMP_FLAG
                 if (!_dump_state)
 #endif
@@ -5987,8 +5987,8 @@ namespace OpenJpeg
             }
 
             //Computes the number of tiles
-            _cp.tw = (uint) MyMath.uint_ceildiv(_private_image.x1 - _cp.tx0, _cp.tdx);
-            _cp.th = (uint) MyMath.uint_ceildiv(_private_image.y1 - _cp.ty0, _cp.tdy);
+            _cp.tw = MyMath.uint_ceildiv(_private_image.x1 - _cp.tx0, _cp.tdx);
+            _cp.th = MyMath.uint_ceildiv(_private_image.y1 - _cp.ty0, _cp.tdy);
 
             //Check that the number of tiles is valid
             if (_cp.tw == 0 || _cp.th == 0 || _cp.tw > 65535 / _cp.th)
@@ -6001,8 +6001,8 @@ namespace OpenJpeg
             //Define the tiles which will be decoded
             if (_specific_param.decoder.discard_tiles)
             {
-                _specific_param.decoder.start_tile_x = ((_specific_param.decoder.start_tile_x - _cp.tx0) / _cp.tdx);
-                _specific_param.decoder.start_tile_y = ((_specific_param.decoder.start_tile_y - _cp.ty0) / _cp.tdy);
+                _specific_param.decoder.start_tile_x = (_specific_param.decoder.start_tile_x - _cp.tx0) / _cp.tdx;
+                _specific_param.decoder.start_tile_y = (_specific_param.decoder.start_tile_y - _cp.ty0) / _cp.tdy;
                 _specific_param.decoder.end_tile_x = MyMath.uint_ceildiv(_specific_param.decoder.end_tile_x - _cp.tx0, _cp.tdx);
                 _specific_param.decoder.end_tile_y = MyMath.uint_ceildiv(_specific_param.decoder.end_tile_y - _cp.ty0, _cp.tdy);
             }
@@ -6212,7 +6212,7 @@ namespace OpenJpeg
                 {
                     uint tmp = _cio.ReadByte();
                     //Precinct exponent 0 is only allowed for lowest resolution level (Table A.21)
-                    if (i != 0 && ((tmp & 0xf) == 0 || (tmp >> 4) == 0))
+                    if (i != 0 && ((tmp & 0xf) == 0 || tmp >> 4 == 0))
                     {
                         _cinfo.Error("Invalid precinct size");
                         return false;
@@ -6318,7 +6318,7 @@ namespace OpenJpeg
             uint max = 0;
 
             uint n_tiles = _cp.tw * _cp.th;
-            uint n_comp = (uint) _private_image.numcomps;
+            uint n_comp = _private_image.numcomps;
 
             for (uint i = 0; i < n_tiles; i++)
             {
@@ -6349,7 +6349,7 @@ namespace OpenJpeg
             }
             header_size -= comp_room + 1;
 
-            int compno = (comp_room == 1) ? _cio.ReadByte() : _cio.ReadUShort();
+            int compno = comp_room == 1 ? _cio.ReadByte() : _cio.ReadUShort();
             if (compno >= _private_image.numcomps)
             {
                 _cinfo.Error("Error reading COC marker (bad number of components)");
@@ -6402,7 +6402,7 @@ namespace OpenJpeg
 
             num_comps = _private_image.numcomps;
 
-            if (header_size != (_private_image.numcomps + 2))
+            if (header_size != _private_image.numcomps + 2)
             {
                 _cinfo.Error("Error reading CBD marker");
                 return false;
@@ -6688,7 +6688,7 @@ namespace OpenJpeg
                 n_bytes_by_comp = 1 + (n_comps >> 15);
                 mcc_record.n_comps = n_comps & 0x7fff;
 
-                if (header_size < (n_bytes_by_comp * mcc_record.n_comps + 2))
+                if (header_size < n_bytes_by_comp * mcc_record.n_comps + 2)
                 {
                     _cinfo.Error("Error reading MCC marker");
                     return false;
@@ -6720,7 +6720,7 @@ namespace OpenJpeg
                     return true;
                 }
 
-                if (header_size < (n_bytes_by_comp * mcc_record.n_comps + 3))
+                if (header_size < n_bytes_by_comp * mcc_record.n_comps + 3)
                 {
                     _cinfo.Error("Error reading MCC marker");
                     return false;
@@ -6945,7 +6945,7 @@ namespace OpenJpeg
         /// <remarks>2.5 - opj_j2k_read_rgn</remarks>
         internal bool ReadRGN(uint header_size)
         {
-            int comp_room = (_private_image.numcomps <= 256) ? 1 : 2;
+            int comp_room = _private_image.numcomps <= 256 ? 1 : 2;
             if (header_size != 2 + comp_room)
             {
                 _cinfo.Error("Error reading RGN marker");
@@ -6954,7 +6954,7 @@ namespace OpenJpeg
             var tcp = _specific_param.decoder.state == J2K_STATUS.TPH ? 
                 _cp.tcps[_current_tile_number] : 
                 _specific_param.decoder.default_tcp;
-            int compno = (comp_room == 1) ? _cio.ReadByte() : _cio.ReadUShort();
+            int compno = comp_room == 1 ? _cio.ReadByte() : _cio.ReadUShort();
             int roisty = _cio.ReadByte();
             if (compno >= _private_image.numcomps)
             {
@@ -7083,7 +7083,7 @@ namespace OpenJpeg
             for (uint i = 0; i < n_tiles; i++)
             {
                 var tcp = tcps[i];
-                max_poc = Math.Max(max_poc, (uint) tcp.numpocs);
+                max_poc = Math.Max(max_poc, tcp.numpocs);
             }
 
             max_poc++;
@@ -7122,7 +7122,7 @@ namespace OpenJpeg
             uint n_comps;
             uint coc_bytes, qcc_bytes;
 
-            n_comps = (uint) _private_image.numcomps - 1u;
+            n_comps = _private_image.numcomps - 1u;
             n_bytes += GetMaxTocSize();
 
             if (!_cp.IsCinema)
@@ -7178,7 +7178,7 @@ namespace OpenJpeg
 
             uint comp_room = numcomps <= 256 ? 1u : 2u;
             uint chunk_size = 5u + 2u * comp_room;
-            uint current_poc_nb = (uint)header_size / chunk_size;
+            uint current_poc_nb = header_size / chunk_size;
 
             if (current_poc_nb <= 0 || header_size % chunk_size != 0)
             {
@@ -7225,12 +7225,12 @@ namespace OpenJpeg
             var tccp = tcp.tccps[comp_no];
 
             /* preconditions again */
-            Debug.Assert(tile_no < (_cp.tw * _cp.th));
+            Debug.Assert(tile_no < _cp.tw * _cp.th);
             Debug.Assert(comp_no < _private_image.numcomps);
 
             if ((tccp.csty & CP_CSTY.PRT) != 0)
             {
-                return 5u + (uint) tccp.numresolutions;
+                return 5u + tccp.numresolutions;
             }
             else
             {
@@ -7253,10 +7253,10 @@ namespace OpenJpeg
             for (it_comp = 0; it_comp < image.numcomps; ++it_comp)
             {
                 int h, w;
-                if (image.x0 > (OPJ_UINT32)int.MaxValue ||
-                    image.y0 > (OPJ_UINT32)int.MaxValue ||
-                    image.x1 > (OPJ_UINT32)int.MaxValue ||
-                    image.y1 > (OPJ_UINT32)int.MaxValue)
+                if (image.x0 > int.MaxValue ||
+                    image.y0 > int.MaxValue ||
+                    image.x1 > int.MaxValue ||
+                    image.y1 > int.MaxValue)
                 {
                     _cinfo.Error("Image coordinates above INT_MAX are not supported");
                     return false;
@@ -7411,7 +7411,7 @@ namespace OpenJpeg
             }
             else
             {
-                _specific_param.decoder.end_tile_x = MyMath.uint_ceildiv(((uint)end_x - _cp.tx0) , _cp.tdx);
+                _specific_param.decoder.end_tile_x = MyMath.uint_ceildiv((uint)end_x - _cp.tx0 , _cp.tdx);
                 image.x1 = (uint)end_x;
             }
 
@@ -7476,9 +7476,9 @@ namespace OpenJpeg
             image = _private_image;
             tcps = cp.tcps;
 
-            bits_empty = (uint) (8 * image.comps[0].dx * image.comps[0].dy);
-            size_pixel = (uint) (image.numcomps * image.comps[0].prec);
-            sot_remove = (float) _bcio.Pos / (float)(cp.th * cp.tw);
+            bits_empty = 8 * image.comps[0].dx * image.comps[0].dy;
+            size_pixel = image.numcomps * image.comps[0].prec;
+            sot_remove = _bcio.Pos / (float)(cp.th * cp.tw);
 
             if (cp.specific_param.enc.tp_on)
                 stride_func = new StrideFunc(GetTpStride);
@@ -7491,7 +7491,7 @@ namespace OpenJpeg
                 {
                     var tcp = tcps[tcp_ptr++];
 
-                    float l_offset = stride_func(tcp) / (float)tcp.numlayers;
+                    float l_offset = stride_func(tcp) / tcp.numlayers;
 
                     /* 4 borders of the tile rescale on the image if necessary */
                     x0 = Math.Max((int)(cp.tx0 + j * cp.tdx), (int)image.x0);
@@ -7506,9 +7506,9 @@ namespace OpenJpeg
                     {
                         if (rates[k] > 0)
                         {
-                            rates[k] = (float)(((double)size_pixel * (uint)(x1 - x0) * (uint)(y1 - y0))
+                            rates[k] = (float)((double)size_pixel * (uint)(x1 - x0) * (uint)(y1 - y0)
                                                                     /
-                                                                    (rates[k] * (float)bits_empty)
+                                                                    (rates[k] * bits_empty)
                                                                     -
                                                                     l_offset);
                         }
@@ -7570,12 +7570,11 @@ namespace OpenJpeg
             for (int i=0; i < image.numcomps; i++)
             {
                 var img_comp = img_comps[i];
-                tile_size += (MyMath.uint_ceildiv(cp.tdx, img_comp.dx)
-                                    *
-                                    MyMath.uint_ceildiv(cp.tdy, img_comp.dy)
-                                    *
-                                    img_comp.prec
-                             );
+                tile_size += MyMath.uint_ceildiv(cp.tdx, img_comp.dx)
+                             *
+                             MyMath.uint_ceildiv(cp.tdy, img_comp.dy)
+                             *
+                             img_comp.prec;
             }
 
             tile_size = (uint) (tile_size * 1.4 / 8);
@@ -7608,7 +7607,7 @@ namespace OpenJpeg
         //2.5 - opj_j2k_get_tp_stride
         private float GetTpStride(TileCodingParams tcp)
         {
-            return (float)((tcp.n_tile_parts - 1) * 14);
+            return (tcp.n_tile_parts - 1) * 14;
         }
 
         //2.5 - opj_j2k_get_default_stride
@@ -7638,7 +7637,7 @@ namespace OpenJpeg
                 }
                 //C# org impl. adds this value in the loop. End result is the same.
                 n_tiles += cur_totnum_tp;
-                tcp.n_tile_parts = (uint) cur_totnum_tp;
+                tcp.n_tile_parts = cur_totnum_tp;
             }
 
             return true;

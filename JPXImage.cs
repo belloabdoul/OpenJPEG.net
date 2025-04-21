@@ -236,7 +236,7 @@ namespace OpenJpeg
             {
                 uint img_size = 0;
                 for (int i = 0; i < comps.Length; i++)
-                    img_size += (comps[i].w * comps[i].h * comps[i].prec);
+                    img_size += comps[i].w * comps[i].h * comps[i].prec;
                 return (int) img_size;
             }
         }
@@ -494,7 +494,7 @@ namespace OpenJpeg
                 {
                     channel_definitions[c].cn = (ushort)c;
                     channel_definitions[c].asoc = (ushort)(c + 1);
-                    channel_definitions[c].typ = (ushort)0;
+                    channel_definitions[c].typ = 0;
                 }
             }
             channel_definitions[index].typ = 1;
@@ -543,13 +543,13 @@ namespace OpenJpeg
             uint w = comps[0].w;
             uint h = comps[0].h;
 
-            if ((numcomps < 4) ||
-                (comps[0].dx != comps[1].dx) ||
-                (comps[0].dx != comps[2].dx) ||
-                (comps[0].dx != comps[3].dx) ||
-                (comps[0].dy != comps[1].dy) ||
-                (comps[0].dy != comps[2].dy) ||
-                (comps[0].dy != comps[3].dy)
+            if (numcomps < 4 ||
+                comps[0].dx != comps[1].dx ||
+                comps[0].dx != comps[2].dx ||
+                comps[0].dx != comps[3].dx ||
+                comps[0].dy != comps[1].dy ||
+                comps[0].dy != comps[2].dy ||
+                comps[0].dy != comps[3].dy
     )
             {
                 string msg = "color_cmyk_to_rgb - can't convert";
@@ -569,10 +569,10 @@ namespace OpenJpeg
             for (int i = 0; i < max; ++i)
             {
                 // CMYK values from 0 to 1
-                float C = (comps[0].data[i]) * sC;
-                float M = (comps[1].data[i]) * sM;
-                float Y = (comps[2].data[i]) * sY;
-                float K = (comps[3].data[i]) * sK;
+                float C = comps[0].data[i] * sC;
+                float M = comps[1].data[i] * sM;
+                float Y = comps[2].data[i] * sY;
+                float K = comps[3].data[i] * sK;
 
                 // Invert all CMYK values
                 C = 1.0F - C;
@@ -581,9 +581,9 @@ namespace OpenJpeg
                 K = 1.0F - K;
 
 #if TEST_MATH_MODE
-                comps[0].data[i] = (int)(float)((float)(255.0F * C) * K); // R
-                comps[1].data[i] = (int)(float)((float)(255.0F * M) * K); // G
-                comps[2].data[i] = (int)(float)((float)(255.0F * Y) * K); // B
+                comps[0].data[i] = (int)(255.0F * C * K); // R
+                comps[1].data[i] = (int)(255.0F * M * K); // G
+                comps[2].data[i] = (int)(255.0F * Y * K); // B
 #else
                 // CMYK -> RGB : RGB results from 0 to 255
                 comps[0].data[i] = (int)(255.0F * C * K); // R
@@ -612,11 +612,11 @@ namespace OpenJpeg
         /// </remarks>
         public bool ESyccToRGB(CompressionInfo cinfo = null)
         {
-            if ((numcomps < 3) || ColorSpace != COLOR_SPACE.eYCC ||
-                (comps[0].dx != comps[1].dx) ||
-                (comps[0].dx != comps[2].dx) || 
-                (comps[0].dy != comps[1].dy) ||
-                (comps[0].dy != comps[2].dy)
+            if (numcomps < 3 || ColorSpace != COLOR_SPACE.eYCC ||
+                comps[0].dx != comps[1].dx ||
+                comps[0].dx != comps[2].dx || 
+                comps[0].dy != comps[1].dy ||
+                comps[0].dy != comps[2].dy
             )
             {
                 string msg = "color_esycc_to_rgb - Colorspace must be sYYC";
@@ -626,7 +626,7 @@ namespace OpenJpeg
                 return false;
             }
 
-            int flip_value = (1 << ((int)comps[0].prec - 1));
+            int flip_value = 1 << ((int)comps[0].prec - 1);
             int max_value = (1 << (int)comps[0].prec) - 1;
 
             uint w = comps[0].w;
@@ -649,7 +649,7 @@ namespace OpenJpeg
                     cr -= flip_value;
 
 #if TEST_MATH_MODE
-                int val = (int)(float)((float)((float)(y - (float)(0.0000368f * cb)) + (float)(1.40199f * cr)) + 0.5f);
+                int val = (int)(y - 0.0000368f * cb + 1.40199f * cr + 0.5f);
 #else
                 int val = (int)(y - 0.0000368f * cb + 1.40199f * cr + 0.5f);
 #endif
@@ -662,7 +662,7 @@ namespace OpenJpeg
 
 #if TEST_MATH_MODE
                 //Should probably have another (float)( ) before the +0.5f
-                val = (int)((float)((float)(1.0003f * y) - (float)(0.344125f * cb)) - (float)(0.7141128f * cr) + 0.5f);
+                val = (int)(1.0003f * y - 0.344125f * cb - 0.7141128f * cr + 0.5f);
 #else
                 val = (int)(1.0003f * y - 0.344125f * cb - 0.7141128f * cr + 0.5f);
 #endif
@@ -675,7 +675,7 @@ namespace OpenJpeg
 
 #if TEST_MATH_MODE
                 //Should probably have another (float)( ) before the +0.5f
-                val = (int)((float)((float)(0.999823f * y) + (float)(1.77204 * cb)) - (float)(0.000008 * cr) + 0.5f);
+                val = (int)(0.999823f * y + (float)(1.77204 * cb) - (float)(0.000008 * cr) + 0.5f);
 #else
                 val = (int)(0.999823f * y + 1.77204 * cb - 0.000008 * cr + 0.5f);
 #endif
@@ -708,30 +708,30 @@ namespace OpenJpeg
                 return true;
             }
 
-            if ((comps[0].dx == 1)
-                && (comps[1].dx == 2)
-                && (comps[2].dx == 2)
-                && (comps[0].dy == 1)
-                && (comps[1].dy == 2)
-                && (comps[2].dy == 2))
+            if (comps[0].dx == 1
+                && comps[1].dx == 2
+                && comps[2].dx == 2
+                && comps[0].dy == 1
+                && comps[1].dy == 2
+                && comps[2].dy == 2)
             { /* horizontal and vertical sub-sample */
                 sycc420_to_rgb();
             }
-            else if ((comps[0].dx == 1)
-                       && (comps[1].dx == 2)
-                       && (comps[2].dx == 2)
-                       && (comps[0].dy == 1)
-                       && (comps[1].dy == 1)
-                       && (comps[2].dy == 1))
+            else if (comps[0].dx == 1
+                       && comps[1].dx == 2
+                       && comps[2].dx == 2
+                       && comps[0].dy == 1
+                       && comps[1].dy == 1
+                       && comps[2].dy == 1)
             { /* horizontal sub-sample only */
                 sycc422_to_rgb();
             }
-            else if ((comps[0].dx == 1)
-                       && (comps[1].dx == 1)
-                       && (comps[2].dx == 1)
-                       && (comps[0].dy == 1)
-                       && (comps[1].dy == 1)
-                       && (comps[2].dy == 1))
+            else if (comps[0].dx == 1
+                       && comps[1].dx == 1
+                       && comps[2].dx == 1
+                       && comps[0].dy == 1
+                       && comps[1].dy == 1
+                       && comps[2].dy == 1)
             { /* no sub-sample */
                 sycc444_to_rgb();
             }
@@ -1128,10 +1128,10 @@ namespace OpenJpeg
 
             for (i = 0; i < numcomps - 1; i++)
             {
-                if ((comps[0].dx != comps[i + 1].dx)
-                        || (comps[0].dy != comps[i + 1].dy)
-                        || (comps[0].prec != comps[i + 1].prec)
-                        || (comps[0].sgnd != comps[i + 1].sgnd))
+                if (comps[0].dx != comps[i + 1].dx
+                        || comps[0].dy != comps[i + 1].dy
+                        || comps[0].prec != comps[i + 1].prec
+                        || comps[0].sgnd != comps[i + 1].sgnd)
                 {
                     if (cinfo != null)
                         cinfo.Error("Unable to create a tga file with such J2K image charateristics.\n");
@@ -1143,7 +1143,7 @@ namespace OpenJpeg
             height = (int)comps[0].h;
 
             // Mono with alpha, or RGB with alpha.
-            write_alpha = (numcomps == 2) || (numcomps == 4);
+            write_alpha = numcomps == 2 || numcomps == 4;
 
             // Write TGA header
             bpp = write_alpha ? 32 : 24;
@@ -1155,13 +1155,13 @@ namespace OpenJpeg
 
                 alpha_channel = numcomps - 1;
 
-                scale = 255.0f / (float)((1 << (int)comps[0].prec) - 1);
+                scale = 255.0f / ((1 << (int)comps[0].prec) - 1);
 
-                adjustR = (comps[0].sgnd ? 1 << ((int)comps[0].prec - 1) : 0);
+                adjustR = comps[0].sgnd ? 1 << ((int)comps[0].prec - 1) : 0;
                 if (numcomps >= 3)
                 {
-                    adjustG = (comps[1].sgnd ? 1 << ((int)comps[1].prec - 1) : 0);
-                    adjustB = (comps[2].sgnd ? 1 << ((int)comps[2].prec - 1) : 0);
+                    adjustG = comps[1].sgnd ? 1 << ((int)comps[1].prec - 1) : 0;
+                    adjustB = comps[2].sgnd ? 1 << ((int)comps[2].prec - 1) : 0;
                 }
 
                 for (y = 0; y < height; y++)
@@ -1170,12 +1170,12 @@ namespace OpenJpeg
 
                     for (x = 0; x < width; x++, index++)
                     {
-                        r = (float)(comps[0].data[index] + adjustR);
+                        r = comps[0].data[index] + adjustR;
 
                         if (numcomps > 2)
                         {
-                            g = (float)(comps[1].data[index] + adjustG);
-                            b = (float)(comps[2].data[index] + adjustB);
+                            g = comps[1].data[index] + adjustG;
+                            b = comps[2].data[index] + adjustB;
                         }
                         else
                         {
@@ -1220,7 +1220,7 @@ namespace OpenJpeg
 
                         if (write_alpha)
                         {
-                            a = (float)(comps[alpha_channel].data[index]);
+                            a = comps[alpha_channel].data[index];
                             if (a > 255f)
                             {
                                 a = 255f;
@@ -1400,11 +1400,11 @@ namespace OpenJpeg
                     //    i = i;
                     //}
 
-                    r = comps[0].data[w * h - ((i) / (w) + 1) * w + (i) % (w)];
-                    r += (comps[0].sgnd ? 1 << ((int)comps[0].prec - 1) : 0);
+                    r = comps[0].data[w * h - (i / w + 1) * w + i % w];
+                    r += comps[0].sgnd ? 1 << ((int)comps[0].prec - 1) : 0;
                     if (adjustR > 0)
                     {
-                        r = ((r >> adjustR) + ((r >> (adjustR - 1)) % 2));
+                        r = (r >> adjustR) + (r >> (adjustR - 1)) % 2;
                     }
                     if (r > 255)
                     {
@@ -1416,11 +1416,11 @@ namespace OpenJpeg
                     }
                     rc = (byte)r;
 
-                    g = comps[1].data[w * h - ((i) / (w) + 1) * w + (i) % (w)];
-                    g += (comps[1].sgnd ? 1 << ((int)comps[1].prec - 1) : 0);
+                    g = comps[1].data[w * h - (i / w + 1) * w + i % w];
+                    g += comps[1].sgnd ? 1 << ((int)comps[1].prec - 1) : 0;
                     if (adjustG > 0)
                     {
-                        g = ((g >> adjustG) + ((g >> (adjustG - 1)) % 2));
+                        g = (g >> adjustG) + (g >> (adjustG - 1)) % 2;
                     }
                     if (g > 255)
                     {
@@ -1432,11 +1432,11 @@ namespace OpenJpeg
                     }
                     gc = (byte)g;
 
-                    b = comps[2].data[w * h - ((i) / (w) + 1) * w + (i) % (w)];
-                    b += (comps[2].sgnd ? 1 << ((int)comps[2].prec - 1) : 0);
+                    b = comps[2].data[w * h - (i / w + 1) * w + i % w];
+                    b += comps[2].sgnd ? 1 << ((int)comps[2].prec - 1) : 0;
                     if (adjustB > 0)
                     {
-                        b = ((b >> adjustB) + ((b >> (adjustB - 1)) % 2));
+                        b = (b >> adjustB) + (b >> (adjustB - 1)) % 2;
                     }
                     if (b > 255)
                     {
@@ -1452,7 +1452,7 @@ namespace OpenJpeg
 
                     if ((i + 1) % w == 0)
                     {
-                        for (pad = ((3 * w) % 4) != 0 ? 4 - (3 * w) % 4 : 0; pad > 0; pad--)	/* ADD */
+                        for (pad = 3 * w % 4 != 0 ? 4 - 3 * w % 4 : 0; pad > 0; pad--)	/* ADD */
                             bw.WriteBytes(0);
                     }
                 }
@@ -1521,10 +1521,10 @@ namespace OpenJpeg
                     //    i = i;
                     //}
 
-                    r = comps[0].data[w * h - ((i) / (w) + 1) * w + (i) % (w)];
-			        r += (comps[0].sgnd ? 1 << ((int)comps[0].prec - 1) : 0);
+                    r = comps[0].data[w * h - (i / w + 1) * w + i % w];
+			        r += comps[0].sgnd ? 1 << ((int)comps[0].prec - 1) : 0;
                     if (adjustR > 0)
-                        r = ((r >> adjustR) + ((r >> (adjustR - 1)) % 2));
+                        r = (r >> adjustR) + (r >> (adjustR - 1)) % 2;
                     if (r > 255)
                     {
                         r = 255;
@@ -1554,7 +1554,7 @@ namespace OpenJpeg
         public void MakeUniformBPC()
         {
             var max_bpc = (uint) MaxBPC;
-            double max_val = (double)((1 << (int)max_bpc) - 1);
+            double max_val = (1 << (int)max_bpc) - 1;
             for (int c=0; c < comps.Length; c++)
             {
                 var comp = comps[c];

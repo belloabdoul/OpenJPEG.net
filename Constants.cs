@@ -10,7 +10,7 @@
         /// <summary>
         /// Number of maximum sub-band linked to number of resolution level
         /// </summary>
-        internal const int J2K_MAXBANDS = (3 * J2K_MAXRLVLS - 2);
+        internal const int J2K_MAXBANDS = 3 * J2K_MAXRLVLS - 2;
         internal const int J2K_DEFAULT_NB_SEGS = 10;
         internal const int J2K_TCD_MATRIX_MAX_LAYER_COUNT = 10;
         internal const int J2K_TCD_MATRIX_MAX_RESOLUTION_COUNT = 10;
@@ -21,7 +21,7 @@
 
         internal const int T1_NMSEDEC_BITS = 7;
 
-        internal const int T1_NMSEDEC_FRACBITS = (T1_NMSEDEC_BITS - 1);
+        internal const int T1_NMSEDEC_FRACBITS = T1_NMSEDEC_BITS - 1;
 
         public const int CINEMA_24_CS = 1302083;
         public const int CINEMA_48_CS = 651041;

@@ -89,7 +89,7 @@ namespace OpenJpeg
 	    /// if != 0, then original dimension divided by 2^(reduce); 
 	    /// if == 0 or not used, image is decoded to the full resolution 
         /// </summary>
-        public int Reduce { get { return reduce; } set { reduce = (OPJ_UINT32) value; } }
+        public int Reduce { get { return reduce; } set { reduce = value; } }
 
         internal OPJ_UINT32 layer;
 
@@ -106,7 +106,7 @@ namespace OpenJpeg
 	    /// if != 0, then only the first "layer" layers are decoded; 
 	    /// if == 0 or not used, all the quality layers are decoded 
         /// </summary>
-        public int MaxLayer { get { return layer; } set { layer = (OPJ_UINT32)value; } }
+        public int MaxLayer { get { return layer; } set { layer = value; } }
 
         /// <summary>
         /// Decoding area. For decoding parts of an image

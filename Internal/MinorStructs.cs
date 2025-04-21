@@ -176,7 +176,7 @@ namespace OpenJpeg.Internal
                     break;
                 case ELEMENT_TYPE.DOUBLE:
                     for (int c = 0; c < num_to_copy; c++)
-                        DA[c] = (double)ar[c];
+                        DA[c] = ar[c];
                     break;
             }
         }
@@ -187,11 +187,11 @@ namespace OpenJpeg.Internal
             {
                 case ELEMENT_TYPE.INT16:
                     for (int c = 0; c < num_to_copy; c++)
-                        ar[c] = (float)SA[c];
+                        ar[c] = SA[c];
                     break;
                 case ELEMENT_TYPE.INT32:
                     for (int c = 0; c < num_to_copy; c++)
-                        ar[c] = (float)IA[c];
+                        ar[c] = IA[c];
                     break;
                 case ELEMENT_TYPE.FLOAT:
                     Buffer.BlockCopy(FA, 0, ar, 0, num_to_copy * sizeof(float));
@@ -209,11 +209,11 @@ namespace OpenJpeg.Internal
             {
                 case ELEMENT_TYPE.INT16:
                     for (int c = 0; c < num_to_copy; c++)
-                        ar[c] = (int)SA[c];
+                        ar[c] = SA[c];
                     break;
                 case ELEMENT_TYPE.INT32:
                     for (int c = 0; c < num_to_copy; c++)
-                        ar[c] = (int)IA[c];
+                        ar[c] = IA[c];
                     break;
                 case ELEMENT_TYPE.FLOAT:
                     Buffer.BlockCopy(FA, 0, ar, 0, num_to_copy * sizeof(float));

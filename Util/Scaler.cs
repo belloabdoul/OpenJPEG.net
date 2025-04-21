@@ -25,7 +25,7 @@ namespace OpenJpeg.Util
             //that holds the modulus of the division.
             //
             // i. e. 50 / 100 gives 0, and 100 as the fraction. That way we know how much to advance.
-            int integer_part_h = (org_height / height) * org_width, integer_part_w = org_width / width;
+            int integer_part_h = org_height / height * org_width, integer_part_w = org_width / width;
             int fractional_part_h = org_height % height, fractional_part_w = org_width % width;
 
             //Fractions are added together into this value.

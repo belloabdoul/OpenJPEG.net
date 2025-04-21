@@ -272,7 +272,7 @@ namespace OpenJpeg.Internal
                     var iof = new IntOrFloat();
                     for (int i = 0; i < n_elem; i++)
                     {
-                        iof.F = (data[current_pointer] - tccp.dc_level_shift);
+                        iof.F = data[current_pointer] - tccp.dc_level_shift;
                         data[current_pointer] = iof.I;
                         current_pointer++;
                     }
@@ -499,9 +499,9 @@ namespace OpenJpeg.Internal
                         }
                     }
                 }
-                maxSE += (((double)(1 << (int)_image.comps[compno].prec) - 1.0)
-                    * ((double)(1 << (int)_image.comps[compno].prec) - 1.0))
-                    * ((double)(tilec.numpix));
+                maxSE += ((1 << (int)_image.comps[compno].prec) - 1.0)
+                         * ((1 << (int)_image.comps[compno].prec) - 1.0)
+                    * tilec.numpix;
             }
 
             //C# snip cstr_info
@@ -510,10 +510,10 @@ namespace OpenJpeg.Internal
             {
                 double lo = min;
                 double hi = max;
-                int maxlen = (_tcp.rates[layno] != 0) ? Math.Min(((int)Math.Ceiling(_tcp.rates[layno])), len) : len;
+                int maxlen = _tcp.rates[layno] != 0 ? Math.Min((int)Math.Ceiling(_tcp.rates[layno]), len) : len;
                 double goodthresh;
                 double stable_thresh = 0;
-                double distotarget = tcd_tile.distotile - ((K * maxSE) / Math.Pow((float)10, _tcp.distoratio[layno] / 10));
+                double distotarget = tcd_tile.distotile - K * maxSE / Math.Pow((float)10, _tcp.distoratio[layno] / 10);
 
                 /* Don't try to find an optimal threshold but rather take everything not included yet, if
                   -r xx,yy,zz,0   (quality_layer_alloc_strategy == RATE_DISTORTION_RATIO and rates == NULL)
@@ -629,8 +629,8 @@ namespace OpenJpeg.Internal
                 MakeLayer(layno, goodthresh, true);
 
                 //Used for fixed quality
-                cumdisto[layno] = (layno == 0) ?
-                    tcd_tile.distolayer[0] : (cumdisto[layno - 1] + tcd_tile.distolayer[layno]);
+                cumdisto[layno] = layno == 0 ?
+                    tcd_tile.distolayer[0] : cumdisto[layno - 1] + tcd_tile.distolayer[layno];
             }
 
             return true;
@@ -826,7 +826,7 @@ namespace OpenJpeg.Internal
                                                 n = passno + 1;
                                             continue;
                                         }
-                                        if (thresh - (dd / dr) < MyMath.DBL_EPSILON)
+                                        if (thresh - dd / dr < MyMath.DBL_EPSILON)
                                             n = passno + 1;
                                     }
                                 }
@@ -1091,12 +1091,12 @@ namespace OpenJpeg.Internal
                         br_prc_y_end = (int)tmp;
                     }
 
-                    res.pw = (res.x0 == res.x1) ? 0u : 
+                    res.pw = res.x0 == res.x1 ? 0u : 
                         (uint)((br_prc_x_end - tl_prc_x_start) >> (int)pdx);
-                    res.ph = (res.y0 == res.y1) ? 0u : 
+                    res.ph = res.y0 == res.y1 ? 0u : 
                         (uint)((br_prc_y_end - tl_prc_y_start) >> (int)pdy);
 
-                    if (res.pw != 0 && (int.MaxValue / res.pw) < res.ph)
+                    if (res.pw != 0 && int.MaxValue / res.pw < res.ph)
                     {//C# impl. We use int.MaxValue instead of uint.MaxValue
                         _cinfo.Error("Size of tile data exceeds system limits");
                         return false;
@@ -1182,15 +1182,15 @@ namespace OpenJpeg.Internal
                             // the test (!isEncoder && l_tccp->qmfbid == 0) is strongly
                             // linked to the use of two_invK instead of invK
                             int log2_gain = !is_encoder && tccp.qmfbid == 0 ? 0 : 
-                                            (band.bandno == 0) ? 0 :
-                                            (band.bandno == 3) ? 2 : 1;
+                                            band.bandno == 0 ? 0 :
+                                            band.bandno == 3 ? 2 : 1;
 
                             // Nominal dynamic range. Equation E-4
                             int Rb = (int)image_comp.prec + log2_gain;
 
                             // Delta_b value of Equation E-3 in "E.1 Inverse quantization
                             // procedure" of the standard
-                            band.stepsize = (1f + step_size.mant / 2048f) * (float)Math.Pow(2f, (int)(Rb - step_size.expn));
+                            band.stepsize = (1f + step_size.mant / 2048f) * (float)Math.Pow(2f, Rb - step_size.expn);
                         }
 
                         // Mb value of Equation E-2 in "E.1 Inverse quantization
@@ -1401,7 +1401,7 @@ namespace OpenJpeg.Internal
             // TODO: is there a theoretical upper-bound for the compressed code
             // block size ?
             l_data_size = 74u + (uint)((code_block.x1 - code_block.x0) *
-                                       (code_block.y1 - code_block.y0) * (int)sizeof(uint));
+                                       (code_block.y1 - code_block.y0) * sizeof(uint));
 
             if (l_data_size > code_block.data_size)
             {
@@ -1731,7 +1731,7 @@ namespace OpenJpeg.Internal
                 // A bit inefficient: we process more data than needed if
                 // resno_decoded < l_tile_comp->minimum_num_resolutions-1,
                 // but we would need to take into account a stride then
-                samples = (int)((res_comp0.x1 - res_comp0.x0) * (res_comp0.y1 - res_comp0.y0));
+                samples = (res_comp0.x1 - res_comp0.x0) * (res_comp0.y1 - res_comp0.y0);
                 if (tile.numcomps >= 3)
                 {
                     if (tile_comp.minimum_num_resolutions != tile.comps[1].minimum_num_resolutions ||
@@ -2009,8 +2009,8 @@ namespace OpenJpeg.Internal
                     long l_data_size;
 
                     // compute data_size with overflow check
-                    long res_w = (long)(l_res.x1 - l_res.x0);
-                    long res_h = (long)(l_res.y1 - l_res.y0);
+                    long res_w = l_res.x1 - l_res.x0;
+                    long res_h = l_res.y1 - l_res.y0;
 
                     // issue 733, l_data_size == 0U, probably something wrong should be checked before getting here
                     if (res_h > 0 && res_w > Constants.SIZE_MAX / res_h)
@@ -2307,8 +2307,8 @@ namespace OpenJpeg.Internal
             {
                 var img_comp = img_comps[i];
                 var l_tilec = tilecs[i];
-                size_comp = (uint)img_comp.prec >> 3; /*(/ 8)*/
-                remaining = (uint)img_comp.prec & 7u;  /* (%8) */
+                size_comp = img_comp.prec >> 3; /*(/ 8)*/
+                remaining = img_comp.prec & 7u;  /* (%8) */
 
                 if (remaining != 0)
                 {
@@ -2341,8 +2341,8 @@ namespace OpenJpeg.Internal
                 OPJ_UINT32 w, h;
                 var img_comp = img_comps[i];
                 var tile_comp = tile_comps[i];
-                size_comp = (uint)img_comp.prec >> 3; /*(/ 8)*/
-                remaining = (uint)img_comp.prec & 7u;  /* (%8) */
+                size_comp = img_comp.prec >> 3; /*(/ 8)*/
+                remaining = img_comp.prec & 7u;  /* (%8) */
 
                 if (remaining != 0)
                 {
@@ -2422,7 +2422,7 @@ namespace OpenJpeg.Internal
             image_width = (uint)MyMath.int_ceildiv((int)image.x1 -
                              (int)image.x0, (int)img_comp.dx);
             stride = image_width - width;
-            tile_offset = ((uint)tilec.x0 - offset_x) + ((
+            tile_offset = (uint)tilec.x0 - offset_x + ((
                                  uint)tilec.y0 - offset_y) * image_width;
         }
 
@@ -2486,7 +2486,7 @@ namespace OpenJpeg.Internal
                                 for (uint k = 0; k < width; k++)
                                 {
                                     var val = (short)src[src_ptr++];
-                                    dest[dest_ptr++] = (byte)(val);
+                                    dest[dest_ptr++] = (byte)val;
                                     dest[dest_ptr++] = (byte)(val >> 8);
                                 }
                                 src_ptr += (int)stride;
@@ -2499,7 +2499,7 @@ namespace OpenJpeg.Internal
                                 for (uint k = 0; k < width; k++)
                                 {
                                     var val = (short)(src[src_ptr++] & 0xFFFF);
-                                    dest[dest_ptr++] = (byte)(val);
+                                    dest[dest_ptr++] = (byte)val;
                                     dest[dest_ptr++] = (byte)(val >> 8);
                                 }
                                 src_ptr += (int)stride;
@@ -2556,7 +2556,7 @@ namespace OpenJpeg.Internal
 
                 var tilec = tilecs[i];
                 var dest = tilec.data;
-                int nb_elem = ((tilec.x1 - tilec.x0) * (tilec.y1 - tilec.y0));
+                int nb_elem = (tilec.x1 - tilec.x0) * (tilec.y1 - tilec.y0);
 
                 switch (size_comp)
                 {
@@ -2570,7 +2570,7 @@ namespace OpenJpeg.Internal
                         else
                         {
                             for (int j = 0; j < nb_elem; j++)
-                                dest[j] = (src[src_ptr++] & 0xff);
+                                dest[j] = src[src_ptr++] & 0xff;
                         }
 
                         //C# Note, we increment scr_ptr directly, so no set p_src
@@ -2675,7 +2675,7 @@ namespace OpenJpeg.Internal
             /* needed to be bumped to 4, in case inconsistencies are found while */
             /* decoding parts of irreversible coded images. */
             /* See opj_dwt_decode_partial_53 and opj_dwt_decode_partial_97 as well */
-            uint filter_margin = (_tcp.tccps[compno].qmfbid == 1) ? 2u : 3u;
+            uint filter_margin = _tcp.tccps[compno].qmfbid == 1 ? 2u : 3u;
             var tilec = _tcd_image.tiles[0].comps[compno];
             var image_comp = _image.comps[compno];
             /* Compute the intersection of the area of interest, expressed in tile coordinates */
@@ -2693,24 +2693,24 @@ namespace OpenJpeg.Internal
                                   (OPJ_UINT32)tilec.y1,
                                   MyMath.uint_ceildiv(_win_y1, image_comp.dy));
             /* Compute number of decomposition for this band. See table F-1 */
-            OPJ_UINT32 nb = (resno == 0) ?
+            OPJ_UINT32 nb = resno == 0 ?
                             tilec.numresolutions - 1 :
                             tilec.numresolutions - resno;
             /* Map above tile-based coordinates to sub-band-based coordinates per */
             /* equation B-15 of the standard */
             OPJ_UINT32 x0b = bandno & 1;
             OPJ_UINT32 y0b = bandno >> 1;
-            OPJ_UINT32 tbx0 = (nb == 0) ? tcx0 :
-                              (tcx0 <= (1U << (int)(nb - 1)) * x0b) ? 0 :
+            OPJ_UINT32 tbx0 = nb == 0 ? tcx0 :
+                              tcx0 <= (1U << (int)(nb - 1)) * x0b ? 0 :
                               MyMath.uint_ceildivpow2(tcx0 - (1U << (int)(nb - 1)) * x0b, (int)nb);
-            OPJ_UINT32 tby0 = (nb == 0) ? tcy0 :
-                              (tcy0 <= (1U << (int)(nb - 1)) * y0b) ? 0 :
+            OPJ_UINT32 tby0 = nb == 0 ? tcy0 :
+                              tcy0 <= (1U << (int)(nb - 1)) * y0b ? 0 :
                               MyMath.uint_ceildivpow2(tcy0 - (1U << (int)(nb - 1)) * y0b, (int)nb);
-            OPJ_UINT32 tbx1 = (nb == 0) ? tcx1 :
-                              (tcx1 <= (1U << (int)(nb - 1)) * x0b) ? 0 :
+            OPJ_UINT32 tbx1 = nb == 0 ? tcx1 :
+                              tcx1 <= (1U << (int)(nb - 1)) * x0b ? 0 :
                               MyMath.uint_ceildivpow2(tcx1 - (1U << (int)(nb - 1)) * x0b, (int)nb);
-            OPJ_UINT32 tby1 = (nb == 0) ? tcy1 :
-                              (tcy1 <= (1U << (int)(nb - 1)) * y0b) ? 0 :
+            OPJ_UINT32 tby1 = nb == 0 ? tcy1 :
+                              tcy1 <= (1U << (int)(nb - 1)) * y0b ? 0 :
                               MyMath.uint_ceildivpow2(tcy1 - (1U << (int)(nb - 1)) * y0b, (int)nb);
             bool intersects;
 
@@ -2770,15 +2770,15 @@ namespace OpenJpeg.Internal
             int shift = (int) (tilec.numresolutions - tilec.minimum_num_resolutions);
             // Tolerate small margin within the reduced resolution factor to consider if
             // the whole tile path must be taken
-            return (tcx0 >= (OPJ_UINT32)tilec.x0 &&
-                    tcy0 >= (OPJ_UINT32)tilec.y0 &&
-                    tcx1 <= (OPJ_UINT32)tilec.x1 &&
-                    tcy1 <= (OPJ_UINT32)tilec.y1 &&
-                    (shift >= 32 ||
-                     (((tcx0 - (OPJ_UINT32)tilec.x0) >> shift) == 0 &&
-                      ((tcy0 - (OPJ_UINT32)tilec.y0) >> shift) == 0 &&
-                      (((OPJ_UINT32)tilec.x1 - tcx1) >> shift) == 0 &&
-                      (((OPJ_UINT32)tilec.y1 - tcy1) >> shift) == 0)));
+            return tcx0 >= (OPJ_UINT32)tilec.x0 &&
+                   tcy0 >= (OPJ_UINT32)tilec.y0 &&
+                   tcx1 <= (OPJ_UINT32)tilec.x1 &&
+                   tcy1 <= (OPJ_UINT32)tilec.y1 &&
+                   (shift >= 32 ||
+                    ((tcx0 - (OPJ_UINT32)tilec.x0) >> shift == 0 &&
+                     (tcy0 - (OPJ_UINT32)tilec.y0) >> shift == 0 &&
+                     ((OPJ_UINT32)tilec.x1 - tcx1) >> shift == 0 &&
+                     ((OPJ_UINT32)tilec.y1 - tcy1) >> shift == 0));
         }
     }
 }

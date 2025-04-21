@@ -59,7 +59,7 @@ namespace OpenJpeg.Internal
 		        /* make permutation with the biggest value in the column */
                 for (i = k; i < n_compo; ++i) 
                 {
-                    temp = ((matrix[lColumnMatrix] > 0) ? matrix[lColumnMatrix] : -(matrix[lColumnMatrix]));
+                    temp = matrix[lColumnMatrix] > 0 ? matrix[lColumnMatrix] : -matrix[lColumnMatrix];
      		        if (temp > p) {
      			        p = temp;
      			        k2 = i;
@@ -180,7 +180,7 @@ namespace OpenJpeg.Internal
                 lTmpMatrix = lLineMatrix;
                 u = matrix[lTmpMatrix++];
                 lCurrentPtr = lDestPtr--;
-                for (j = (k + 1); j < n_compo; ++j)
+                for (j = k + 1; j < n_compo; ++j)
                 {
                     /* sum += matrix[k][j] * x[j] */
                     sum += matrix[lTmpMatrix++] * intermediate_data[lCurrentPtr++];

@@ -323,7 +323,7 @@ namespace OpenJpeg.Internal
             if (_u_pos == 0)
             {
                 //Skips a bit to avoid 0xFFFF bit patterns
-                _u_pos = (_unfinished_byte == 0xFF) ? 7 : 8;
+                _u_pos = _unfinished_byte == 0xFF ? 7 : 8;
 
                 //Does not write beyond the length
                 if (_written >= _length)

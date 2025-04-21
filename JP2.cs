@@ -179,7 +179,7 @@ namespace OpenJpeg
             //Setting bits per componet
             uint depth_0 = image.comps[0].prec - 1;
             uint sign = image.comps[0].sgnd ? 1u : 0u;
-            _bpc = (depth_0 + (sign << 7));
+            _bpc = depth_0 + (sign << 7);
             for (int i = 0; i < image.numcomps; i++)
             {
                 uint depth = image.comps[i].prec - 1;
@@ -238,7 +238,7 @@ namespace OpenJpeg
                 {
                     _cinfo.Warn("Alpha channel specified but unknown enumcs. No cdef box will be created.");
                 }
-                else if (image.numcomps < (color_channels + 1))
+                else if (image.numcomps < color_channels + 1)
                 {
                     _cinfo.Warn("Alpha channel specified but not enough image components for an automatic cdef box creation.");
                     alpha_count = 0U;
@@ -595,7 +595,7 @@ namespace OpenJpeg
                 // cdef applies to cmap channels if any
                 if (_color.jp2_pclr != null && _color.jp2_pclr.cmap != null)
                 {
-                    nr_channels = (uint)_color.jp2_pclr.nr_channels;
+                    nr_channels = _color.jp2_pclr.nr_channels;
                 }
 
                 for (i = 0; i < info.Length; i++)
@@ -609,7 +609,7 @@ namespace OpenJpeg
                     {
                         continue;
                     }
-                    if (info[i].asoc > 0 && (info[i].asoc - 1) >= nr_channels)
+                    if (info[i].asoc > 0 && info[i].asoc - 1 >= nr_channels)
                     {
                         _cinfo.Error("Invalid component index {0} (>= {1})", info[i].asoc - 1, nr_channels);
                         return false;
@@ -623,7 +623,7 @@ namespace OpenJpeg
                 {
                     for (i = 0; i < n; ++i)
                     {
-                        if ((uint)info[i].cn == (nr_channels - 1U))
+                        if (info[i].cn == nr_channels - 1U)
                         {
                             break;
                         }
@@ -711,7 +711,7 @@ namespace OpenJpeg
                     }
                 }
                 // Issue 235/447 weird cmap
-                if (is_sane && (image.numcomps == 1U))
+                if (is_sane && image.numcomps == 1U)
                 {
                     for (int i = 0; i < nr_channels; i++)
                     {
@@ -811,7 +811,7 @@ namespace OpenJpeg
 	            cmp = cmap[i].cmp; 
                 pcol = cmap[i].pcol;
 	            src = old_comps[cmp].data; 
-	            max = (uint) new_comps[i].w * (uint) new_comps[i].h;
+	            max = new_comps[i].w * new_comps[i].h;
 
                 /* Direct use: */
                 if (cmap[i].mtyp == 0)
@@ -837,7 +837,7 @@ namespace OpenJpeg
                     }
                 }
             }
-	        max = (uint) image.numcomps;
+	        max = image.numcomps;
             for (i = 0; i < max; i++)
             {
                 if (old_comps[i].data != null)
@@ -955,7 +955,7 @@ namespace OpenJpeg
                     var pos = _cio.Pos;
                     if (!handler(box))
                         return false;
-                    if ((_cio.Pos - pos) < box.data_length)
+                    if (_cio.Pos - pos < box.data_length)
                     {
                         //C# OpenJpeg 2.5 effectivly does this as it reads all the data
                         //   for a box before calling the handler. 
@@ -1079,7 +1079,7 @@ namespace OpenJpeg
             {
                 uc = _cio.ReadByte(); // Bi
 	            channel_size[i] = (byte) ((uc & 0x7f) + 1);
-	            channel_sign[i] = (byte) (((uc & 0x80) == 0x80) ? 1 : 0);
+	            channel_sign[i] = (byte) ((uc & 0x80) == 0x80 ? 1 : 0);
             }
 
 	        for(int j = 0, k = 0; j < nr_entries; ++j)
@@ -1090,11 +1090,11 @@ namespace OpenJpeg
 
                     //mem-b2ace68c-1381.jp2 triggers this condition. File decodes
                     //fine without this check.
-                    if (box.data_length < (_cio.Pos - org_pos) + bytes_to_read)
+                    if (box.data_length < _cio.Pos - org_pos + bytes_to_read)
                         return false;
 
                     /* Cji */
-                    entries[k++] = unchecked((uint) _cio.Read(bytes_to_read));
+                    entries[k++] = unchecked(_cio.Read(bytes_to_read));
                 }
             }
 
@@ -1315,7 +1315,7 @@ namespace OpenJpeg
             _UnkC = _cio.ReadBool();
             _IPR = _cio.ReadBool();
 
-            _j2k.CP.AllowDifferentBitDepthSign = (_bpc == 255);
+            _j2k.CP.AllowDifferentBitDepthSign = _bpc == 255;
             _j2k._ihdr_w = _w;
             _j2k._ihdr_h = _h;
             _has_ihdr = true;
@@ -1520,14 +1520,14 @@ namespace OpenJpeg
 
             /* STATE checking */
             /* make sure the state is at 0 */
-            l_is_valid &= (_state == JP2_STATE.NONE);
+            l_is_valid &= _state == JP2_STATE.NONE;
 
             /* make sure not reading a jp2h ???? WEIRD */
-            l_is_valid &= (_img_state == JP2_IMG_STATE.NONE);
+            l_is_valid &= _img_state == JP2_IMG_STATE.NONE;
 
             /* POINTER validation */
             /* make sure a j2k codec is present */
-            l_is_valid &= (_j2k != null);
+            l_is_valid &= _j2k != null;
 
             /* make sure a procedure list is present */
             //l_is_valid &= (_procedure_list != null);
@@ -1537,19 +1537,19 @@ namespace OpenJpeg
 
             /* PARAMETER VALIDATION */
             /* number of components */
-            l_is_valid &= (_cl != null);
+            l_is_valid &= _cl != null;
             /* width */
-            l_is_valid &= (_h > 0);
+            l_is_valid &= _h > 0;
             /* height */
-            l_is_valid &= (_w > 0);
+            l_is_valid &= _w > 0;
             /* precision */
             for (i = 0; i < _numcomps; ++i)
             {
-                l_is_valid &= ((_comps[i].bpcc & 0x7FU) < 38U); //Bug in org. impl?
+                l_is_valid &= (_comps[i].bpcc & 0x7FU) < 38U; //Bug in org. impl?
             }
 
             /* METH */
-            l_is_valid &= ((_meth > 0) && (_meth < 3));
+            l_is_valid &= _meth > 0 && _meth < 3;
 
             /* stream validation */
             /* back and forth is needed */

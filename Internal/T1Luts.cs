@@ -94,7 +94,7 @@
         {
             if (bitpos > 0)
             {
-                return lut_nmsedec_sig[(x >> (bitpos)) & ((1 << Constants.T1_NMSEDEC_BITS) - 1)];
+                return lut_nmsedec_sig[(x >> bitpos) & ((1 << Constants.T1_NMSEDEC_BITS) - 1)];
             }
 
             return lut_nmsedec_sig0[x & ((1 << Constants.T1_NMSEDEC_BITS) - 1)];
@@ -118,17 +118,17 @@
             T1 lu = (T1)((uint)fX >> (ci * 3)) & (T1.SIGMA_1 | T1.SIGMA_3 | T1.SIGMA_5 |
                                          T1.SIGMA_7);
 
-            lu |= (T1)(((uint)pfX >> ((int)T1.CHI_THIS_I + (ci * 3))) & (1U << 0));
-            lu |= (T1)(((uint)nfX >> ((int)T1.CHI_THIS_I - 2 + (ci * 3))) & (1U << 2));
+            lu |= (T1)(((uint)pfX >> ((int)T1.CHI_THIS_I + ci * 3)) & (1U << 0));
+            lu |= (T1)(((uint)nfX >> ((int)T1.CHI_THIS_I - 2 + ci * 3)) & (1U << 2));
             if (ci == 0U)
             {
                 lu |= (T1)(((uint)fX >> ((int)T1.CHI_0_I - 4)) & (1U << 4));
             }
             else
             {
-                lu |= (T1)(((uint)fX >> ((int)T1.CHI_1_I - 4 + ((ci - 1) * 3))) & (1U << 4));
+                lu |= (T1)(((uint)fX >> ((int)T1.CHI_1_I - 4 + (ci - 1) * 3)) & (1U << 4));
             }
-            lu |= (T1)(((uint)fX >> ((int)T1.CHI_2_I - 6 + (ci * 3))) & (1U << 6));
+            lu |= (T1)(((uint)fX >> ((int)T1.CHI_2_I - 6 + ci * 3)) & (1U << 6));
 
             return lu;
         }
@@ -259,9 +259,9 @@
         /// </remarks>
         internal static uint Getctxno_mag(T1 f)
         {
-            uint tmp1 = ((f & T1.SIGMA_NEIGHBOURS) != 0) ? (uint) T1_CTXNO.MAG + 1 : (uint) T1_CTXNO.MAG;
-            uint tmp2 = ((f & T1.MU_0) != 0) ? (uint) T1_CTXNO.MAG + 2 : tmp1;
-            return (tmp2);
+            uint tmp1 = (f & T1.SIGMA_NEIGHBOURS) != 0 ? (uint) T1_CTXNO.MAG + 1 : (uint) T1_CTXNO.MAG;
+            uint tmp2 = (f & T1.MU_0) != 0 ? (uint) T1_CTXNO.MAG + 2 : tmp1;
+            return tmp2;
         }
 
     }

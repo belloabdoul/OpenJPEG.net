@@ -239,7 +239,7 @@ namespace OpenJpeg.Internal
             var l_tcp = cp.tcps;
             var tcp = l_tcp[p_tileno];
             /* number of iterations in the loop */
-            l_poc_bound = (uint) (tcp.numpocs + 1);
+            l_poc_bound = tcp.numpocs + 1;
 
             /* start at first element, and to make sure the compiler will not make a calculation each time in the loop
                store a pointer to the current element to modify rather than l_tcp->pocs[i]*/
@@ -275,7 +275,7 @@ namespace OpenJpeg.Internal
                 current_poc.prg = current_poc.prg1;
                 current_poc.prcS = 0;
                 /* special treatment here different from the first element*/
-                current_poc.layS = (current_poc.layE > (tcp.pocs[pino - 1]).layE) ? current_poc.layE : 0;
+                current_poc.layS = current_poc.layE > tcp.pocs[pino - 1].layE ? current_poc.layE : 0;
 
                 current_poc.prcE = p_max_prec;
                 current_poc.txS = p_tx0;
@@ -399,8 +399,8 @@ namespace OpenJpeg.Internal
 
                     py1 = MyMath.uint_ceildivpow2(l_ry1, (int)l_pdy) << (int) l_pdy;
 
-			        l_pw = (l_rx0==l_rx1) ? 0 : ((l_px1 - l_px0) >> (int) l_pdx);
-			        l_ph = (l_ry0==l_ry1) ? 0 : ((py1 - l_py0) >> (int) l_pdy);
+			        l_pw = l_rx0==l_rx1 ? 0 : (l_px1 - l_px0) >> (int) l_pdx;
+			        l_ph = l_ry0==l_ry1 ? 0 : (py1 - l_py0) >> (int) l_pdy;
 
                     l_product = l_pw * l_ph;
 
@@ -532,8 +532,8 @@ namespace OpenJpeg.Internal
 
                     py1 = MyMath.uint_ceildivpow2(l_ry1, (int)l_pdy) << (int)l_pdy;
 
-                    l_pw = (l_rx0 == l_rx1) ? 0 : ((l_px1 - l_px0) >> (int)l_pdx);
-                    l_ph = (l_ry0 == l_ry1) ? 0 : ((py1 - l_py0) >> (int)l_pdy);
+                    l_pw = l_rx0 == l_rx1 ? 0 : (l_px1 - l_px0) >> (int)l_pdx;
+                    l_ph = l_ry0 == l_ry1 ? 0 : (py1 - l_py0) >> (int)l_pdy;
 
                     l_product = l_pw * l_ph;
 
@@ -571,7 +571,7 @@ namespace OpenJpeg.Internal
             
             if (!(cp.specific_param.enc.tp_on && ((!cp.IsCinema && 
                 !cp.IsIMF &&
-                (t2_mode == T2_MODE.FINAL_PASS)) || cp.IsCinema || cp.IsIMF)))
+                t2_mode == T2_MODE.FINAL_PASS) || cp.IsCinema || cp.IsIMF)))
             {
                 pi[pino].poc.resno0 = tcp.resS;
                 pi[pino].poc.resno1 = tcp.resE;
@@ -661,9 +661,9 @@ namespace OpenJpeg.Internal
                                         tcp.tx0_t = tcp.txS;
                                         tcp.ty0_t = tcp.tyS;
                                         pi[pino].poc.tx0 = tcp.tx0_t;
-                                        pi[pino].poc.tx1 = (tcp.tx0_t + tcp.dx - (tcp.tx0_t % tcp.dx));
+                                        pi[pino].poc.tx1 = tcp.tx0_t + tcp.dx - tcp.tx0_t % tcp.dx;
                                         pi[pino].poc.ty0 = tcp.ty0_t;
-                                        pi[pino].poc.ty1 = (tcp.ty0_t + tcp.dy - (tcp.ty0_t % tcp.dy));
+                                        pi[pino].poc.ty1 = tcp.ty0_t + tcp.dy - tcp.ty0_t % tcp.dy;
                                         tcp.tx0_t = pi[pino].poc.tx1;
                                         tcp.ty0_t = pi[pino].poc.ty1;
                                         break;
@@ -700,9 +700,9 @@ namespace OpenJpeg.Internal
                                         pi[pino].poc.precno1 = tcp.prc_t;
                                         break;
                                     default:
-                                        pi[pino].poc.tx0 = (tcp.tx0_t - tcp.dx - (tcp.tx0_t % tcp.dx));
+                                        pi[pino].poc.tx0 = tcp.tx0_t - tcp.dx - tcp.tx0_t % tcp.dx;
                                         pi[pino].poc.tx1 = tcp.tx0_t;
-                                        pi[pino].poc.ty0 = (tcp.ty0_t - tcp.dy - (tcp.ty0_t % tcp.dy));
+                                        pi[pino].poc.ty0 = tcp.ty0_t - tcp.dy - tcp.ty0_t % tcp.dy;
                                         pi[pino].poc.ty1 = tcp.ty0_t;
                                         break;
                                 }
@@ -821,7 +821,7 @@ namespace OpenJpeg.Internal
                                                     {
                                                         tcp.ty0_t = tcp.tyS;
                                                         pi[pino].poc.ty0 = tcp.ty0_t;
-                                                        pi[pino].poc.ty1 = (tcp.ty0_t + tcp.dy - (tcp.ty0_t % tcp.dy));
+                                                        pi[pino].poc.ty1 = tcp.ty0_t + tcp.dy - tcp.ty0_t % tcp.dy;
                                                         tcp.ty0_t = pi[pino].poc.ty1;
                                                         incr_top = 1; resetX = 1;
                                                     }
@@ -833,7 +833,7 @@ namespace OpenJpeg.Internal
                                                 else
                                                 {
                                                     pi[pino].poc.ty0 = tcp.ty0_t;
-                                                    pi[pino].poc.ty1 = (tcp.ty0_t + tcp.dy - (tcp.ty0_t % tcp.dy));
+                                                    pi[pino].poc.ty1 = tcp.ty0_t + tcp.dy - tcp.ty0_t % tcp.dy;
                                                     tcp.ty0_t = pi[pino].poc.ty1;
                                                     incr_top = 0; resetX = 1;
                                                 }
@@ -841,14 +841,14 @@ namespace OpenJpeg.Internal
                                                 {
                                                     tcp.tx0_t = tcp.txS;
                                                     pi[pino].poc.tx0 = tcp.tx0_t;
-                                                    pi[pino].poc.tx1 = (tcp.tx0_t + tcp.dx - (tcp.tx0_t % tcp.dx));
+                                                    pi[pino].poc.tx1 = tcp.tx0_t + tcp.dx - tcp.tx0_t % tcp.dx;
                                                     tcp.tx0_t = pi[pino].poc.tx1;
                                                 }
                                             }
                                             else
                                             {
                                                 pi[pino].poc.tx0 = tcp.tx0_t;
-                                                pi[pino].poc.tx1 = (tcp.tx0_t + tcp.dx - (tcp.tx0_t % tcp.dx));
+                                                pi[pino].poc.tx1 = tcp.tx0_t + tcp.dx - tcp.tx0_t % tcp.dx;
                                                 tcp.tx0_t = pi[pino].poc.tx1;
                                                 incr_top = 0;
                                             }
@@ -1056,7 +1056,7 @@ namespace OpenJpeg.Internal
             }
             else
             {
-                UpdateEncodeNotPoc(cp, numcomps, (OPJ_UINT32)tileno, tx0, tx1, ty0, ty1, max_prec, max_res, dx_min, dy_min);
+                UpdateEncodeNotPoc(cp, numcomps, tileno, tx0, tx1, ty0, ty1, max_prec, max_res, dx_min, dy_min);
             }
 
             return pi_ar;
@@ -1097,10 +1097,10 @@ namespace OpenJpeg.Internal
             current_poc.prcS = 0;
 
             current_poc.prcE = max_prec;
-            current_poc.txS = (OPJ_UINT32)tx0;
-            current_poc.txE = (OPJ_UINT32)tx1;
-            current_poc.tyS = (OPJ_UINT32)ty0;
-            current_poc.tyE = (OPJ_UINT32)ty1;
+            current_poc.txS = tx0;
+            current_poc.txE = tx1;
+            current_poc.tyS = ty0;
+            current_poc.tyE = ty1;
             current_poc.dx = dx_min;
             current_poc.dy = dy_min;
 
@@ -1116,13 +1116,13 @@ namespace OpenJpeg.Internal
                 current_poc.prg = current_poc.prg1;
                 current_poc.prcS = 0;
                 // special treatment here different from the first element
-                current_poc.layS = (current_poc.layE > tcp.pocs[pino - 1].layE) ? current_poc.layE : 0;
+                current_poc.layS = current_poc.layE > tcp.pocs[pino - 1].layE ? current_poc.layE : 0;
 
                 current_poc.prcE = max_prec;
-                current_poc.txS = (OPJ_UINT32)tx0;
-                current_poc.txE = (OPJ_UINT32)tx1;
-                current_poc.tyS = (OPJ_UINT32)ty0;
-                current_poc.tyE = (OPJ_UINT32)ty1;
+                current_poc.txS = tx0;
+                current_poc.txE = tx1;
+                current_poc.tyS = ty0;
+                current_poc.tyE = ty1;
                 current_poc.dx = dx_min;
                 current_poc.dy = dy_min;
             }
@@ -1231,8 +1231,8 @@ namespace OpenJpeg.Internal
 	        ImageComp[] img_comps = image.comps;
 
 	        // position in x and y of tile
-            OPJ_UINT32 p = tileno % (OPJ_UINT32) cp.tw;
-            OPJ_UINT32 q = tileno / (OPJ_UINT32) cp.tw;
+            OPJ_UINT32 p = tileno % cp.tw;
+            OPJ_UINT32 q = tileno / cp.tw;
 
             // here calculation of tx0, tx1, ty0, ty1 
             {
@@ -1312,8 +1312,8 @@ namespace OpenJpeg.Internal
                     py0 = MyMath.uint_floordivpow2(ry0, (int)pdy) << (int)pdy;
                     px1 = MyMath.uint_ceildivpow2(rx1, (int)pdx) << (int)pdx;
                     py1 = MyMath.uint_ceildivpow2(ry1, (int)pdy) << (int)pdy;
-			        pw = (rx0==rx1)?0:(OPJ_UINT32)((px1 - px0) >> (int)pdx);
-			        ph = (ry0==ry1)?0:(OPJ_UINT32)((py1 - py0) >> (int)pdy);
+			        pw = rx0==rx1?0:(px1 - px0) >> (int)pdx;
+			        ph = ry0==ry1?0:(py1 - py0) >> (int)pdy;
                     resolutions[resolution_ptr++] = pw;
                     resolutions[resolution_ptr++] = ph;
 			        product = pw * ph;
@@ -1385,7 +1385,7 @@ namespace OpenJpeg.Internal
             OPJ_UINT32 dx_min, dy_min;
             OPJ_UINT32 step_p, step_c, step_r, step_l;
 
-            var pi_ar = Create(image, cp, (uint) tileno, cinfo);
+            var pi_ar = Create(image, cp, tileno, cinfo);
 
             // C# l_encoding_value_ptr is a pointer, so we don't use it. The workaround is
             //    to add tmp_data as a parameter to GetAllEncodingParameters
@@ -1394,7 +1394,7 @@ namespace OpenJpeg.Internal
             for (uint compno = 1; compno < tmp_ptr.Length; compno++)
                 tmp_ptr[compno] = compno * data_stride;
 
-            GetAllEncodingParameters(image, cp, (OPJ_UINT32)tileno, out tx0, out tx1, out ty0, out ty1, out dx_min, out dy_min, out max_prec, out max_res, tmp_ptr, ref tmp_data);
+            GetAllEncodingParameters(image, cp, tileno, out tx0, out tx1, out ty0, out ty1, out dx_min, out dy_min, out max_prec, out max_res, tmp_ptr, ref tmp_data);
 
             // step calculations
             step_p = 1;
@@ -1766,9 +1766,9 @@ namespace OpenJpeg.Internal
 
             for (resno = poc.resno0; resno < poc.resno1; resno++)
             {
-                for (y = poc.ty0; y < poc.ty1; y += dy - (y % dy))
+                for (y = poc.ty0; y < poc.ty1; y += dy - y % dy)
                 {
-                    for (x = poc.tx0; x < poc.tx1; x += dx - (x % dx))
+                    for (x = poc.tx0; x < poc.tx1; x += dx - x % dx)
                     {
                         for (compno = poc.compno0; compno < poc.compno1; compno++)
                         {
@@ -1801,12 +1801,12 @@ namespace OpenJpeg.Internal
                             }
 
                             /* See ISO-15441. B.12.1.3 Resolution level-position-component-layer progression */
-                            if (!(((ulong)y % ((ulong)comp.dy << (int) rpy) == 0) || ((y == ty0) && (((ulong)try0 << (int) levelno) % ((ulong)1U << (int) rpy)) != 0)))
+                            if (!(y % ((ulong)comp.dy << (int) rpy) == 0 || (y == ty0 && ((ulong)try0 << (int) levelno) % ((ulong)1U << (int) rpy) != 0)))
                                 continue;
-                            if (!(((ulong)x % ((ulong)comp.dx << (int) rpx) == 0) || ((x == tx0) && (((ulong)trx0 << (int)levelno) % ((ulong)1U << (int)rpx)) != 0)))
+                            if (!(x % ((ulong)comp.dx << (int) rpx) == 0 || (x == tx0 && ((ulong)trx0 << (int)levelno) % ((ulong)1U << (int)rpx) != 0)))
                                 continue;
-                            if ((res.pw == 0) || (res.ph == 0)) continue;
-                            if ((trx0 == trx1) || (try0 == try1)) continue;
+                            if (res.pw == 0 || res.ph == 0) continue;
+                            if (trx0 == trx1 || try0 == try1) continue;
 
                             prci = MyMath.uint_floordivpow2(MyMath.uint64_ceildiv_res_uint32(x, (ulong)comp.dx << (int)levelno), (int)res.pdx)
                                     - MyMath.uint_floordivpow2(trx0, (int)res.pdx);
@@ -1894,9 +1894,9 @@ namespace OpenJpeg.Internal
                 poc.tx1 = tx1;
             }
 
-            for (y = poc.ty0; y < poc.ty1; y += dy - (y % dy))
+            for (y = poc.ty0; y < poc.ty1; y += dy - y % dy)
             {
-                for (x = poc.tx0; x < poc.tx1; x += dx - (x % dx))
+                for (x = poc.tx0; x < poc.tx1; x += dx - x % dx)
                 {
                     for (compno = poc.compno0; compno < poc.compno1; compno++)
                     {
@@ -1929,12 +1929,12 @@ namespace OpenJpeg.Internal
                             }
 
                             /* See ISO-15441. B.12.1.3 Resolution level-position-component-layer progression */
-                            if (!(((ulong)y % ((ulong)comp.dy << (int)rpy) == 0) || ((y == ty0) && (((ulong)try0 << (int)levelno) % ((ulong)1U << (int)rpy)) != 0)))
+                            if (!(y % ((ulong)comp.dy << (int)rpy) == 0 || (y == ty0 && ((ulong)try0 << (int)levelno) % ((ulong)1U << (int)rpy) != 0)))
                                 continue;
-                            if (!(((ulong)x % ((ulong)comp.dx << (int)rpx) == 0) || ((x == tx0) && (((ulong)trx0 << (int)levelno) % ((ulong)1U << (int)rpx)) != 0)))
+                            if (!(x % ((ulong)comp.dx << (int)rpx) == 0 || (x == tx0 && ((ulong)trx0 << (int)levelno) % ((ulong)1U << (int)rpx) != 0)))
                                 continue;
-                            if ((res.pw == 0) || (res.ph == 0)) continue;
-                            if ((trx0 == trx1) || (try0 == try1)) continue;
+                            if (res.pw == 0 || res.ph == 0) continue;
+                            if (trx0 == trx1 || try0 == try1) continue;
 
                             prci = MyMath.uint_floordivpow2(MyMath.uint64_ceildiv_res_uint32(x, (ulong)comp.dx << (int)levelno), (int)res.pdx)
                                     - MyMath.uint_floordivpow2(trx0, (int)res.pdx);
@@ -2032,9 +2032,9 @@ namespace OpenJpeg.Internal
                     y = poc.ty0;
                 }
 
-                for (; y < poc.ty1; y += dy - (y % dy))
+                for (; y < poc.ty1; y += dy - y % dy)
                 {
-                    for (x = poc.tx0; x < poc.tx1; x += dx - (x % dx))
+                    for (x = poc.tx0; x < poc.tx1; x += dx - x % dx)
                     {
                         for (resno = poc.resno0; resno < MyMath.uint_min(poc.resno1, comp.numresolutions); resno++)
                         {
@@ -2064,12 +2064,12 @@ namespace OpenJpeg.Internal
                             }
 
                             /* See ISO-15441. B.12.1.3 Resolution level-position-component-layer progression */
-                            if (!(((ulong)y % ((ulong)comp.dy << (int)rpy) == 0) || ((y == ty0) && (((ulong)try0 << (int)levelno) % ((ulong)1U << (int)rpy)) != 0)))
+                            if (!(y % ((ulong)comp.dy << (int)rpy) == 0 || (y == ty0 && ((ulong)try0 << (int)levelno) % ((ulong)1U << (int)rpy) != 0)))
                                 continue;
-                            if (!(((ulong)x % ((ulong)comp.dx << (int)rpx) == 0) || ((x == tx0) && (((ulong)trx0 << (int)levelno) % ((ulong)1U << (int)rpx)) != 0)))
+                            if (!(x % ((ulong)comp.dx << (int)rpx) == 0 || (x == tx0 && ((ulong)trx0 << (int)levelno) % ((ulong)1U << (int)rpx) != 0)))
                                 continue;
-                            if ((res.pw == 0) || (res.ph == 0)) continue;
-                            if ((trx0 == trx1) || (try0 == try1)) continue;
+                            if (res.pw == 0 || res.ph == 0) continue;
+                            if (trx0 == trx1 || try0 == try1) continue;
 
                             prci = MyMath.uint_floordivpow2(MyMath.uint64_ceildiv_res_uint32(x, (ulong)comp.dx << (int)levelno), (int)res.pdx)
                                     - MyMath.uint_floordivpow2(trx0, (int)res.pdx);

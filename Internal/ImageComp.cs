@@ -219,17 +219,17 @@ namespace OpenJpeg.Internal
                 //Scale up
                 if (Signed)
                 {
-                    long newMax = 1u << (new_prec);
+                    long newMax = 1u << new_prec;
                     long oldMax = 1u << (int)prec;
                     for (int c = 0; c < data.Length; c++)
-                        data[c] = (int)((data[c] * newMax) / oldMax);
+                        data[c] = (int)(data[c] * newMax / oldMax);
                 }
                 else
                 {
-                    ulong newMax = 1u << (new_prec);
+                    ulong newMax = 1u << new_prec;
                     ulong oldMax = 1u << (int)prec;
                     for (int c = 0; c < data.Length; c++)
-                        data[c] = (int)(((ulong)data[c] * newMax) / oldMax);
+                        data[c] = (int)((ulong)data[c] * newMax / oldMax);
                 }
             }
             else
@@ -244,7 +244,7 @@ namespace OpenJpeg.Internal
                 else
                 {
                     for (int c = 0; c < data.Length; c++)
-                        data[c] = (int)(((uint)data[c]) >> shift);
+                        data[c] = (int)((uint)data[c] >> shift);
                 }
             }
             prec = (uint)new_prec;

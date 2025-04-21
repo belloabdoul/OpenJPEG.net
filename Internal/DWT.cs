@@ -139,7 +139,7 @@ namespace OpenJpeg.Internal
             int last_res = cur_res - 1; //<-- pointer to tilec.resolutions
 
             uint data_size = MaxResolution(tilec.resolutions, (int)tilec.numresolutions);
-            if (data_size > (Constants.SIZE_MAX / (NB_ELTS_V8 * sizeof(int))))
+            if (data_size > Constants.SIZE_MAX / (NB_ELTS_V8 * sizeof(int)))
                 return false;
             data_size *= NB_ELTS_V8; //C# org impl is number of bytes, here it's number of ints
             int[] bj = new int[data_size];
@@ -192,7 +192,7 @@ namespace OpenJpeg.Internal
                             num_jobs = (int)rw;
                         }
 
-                        uint step_j = ((rw / (uint)num_jobs) / NB_ELTS_V8) * NB_ELTS_V8;
+                        uint step_j = rw / (uint)num_jobs / NB_ELTS_V8 * NB_ELTS_V8;
 
                         reset.Reset();
                         //Alternativly, we can set this to num_jobs and remove the Interlocked.Increment
@@ -213,7 +213,7 @@ namespace OpenJpeg.Internal
                                 tiledp,
                                 0,
                                 j * step_j,
-                                (j + 1 == num_jobs) ? rw : (j + 1) * step_j,
+                                j + 1 == num_jobs ? rw : (j + 1) * step_j,
                                 encode_and_deinterleave_v
                              );
 
@@ -361,17 +361,17 @@ namespace OpenJpeg.Internal
                 double stepsize;
                 uint resno, level, orient, gain;
 
-                resno = (bandno == 0) ? 0 : ((bandno - 1) / 3 + 1);
-                orient = (bandno == 0) ? 0 : ((bandno - 1) % 3 + 1);
+                resno = bandno == 0 ? 0 : (bandno - 1) / 3 + 1;
+                orient = bandno == 0 ? 0 : (bandno - 1) % 3 + 1;
                 level = tccp.numresolutions - 1 - resno;
-                gain = (tccp.qmfbid == 0) ? 0U : ((orient == 0) ? 0U : (((orient == 1) || 
-                                                  (orient == 2)) ? 1U : 2U));
+                gain = tccp.qmfbid == 0 ? 0U : orient == 0 ? 0U : orient == 1 || 
+                                                                  orient == 2 ? 1U : 2U;
                 if (tccp.qntsty == CCP_QNTSTY.NOQNT)
                     stepsize = 1.0;
                 else
                 {
                     double norm = GetNormReal(level, orient);
-                    stepsize = (1 << ((int)gain)) / norm;
+                    stepsize = (1 << (int)gain) / norm;
                 }
                 EncodeStepsize((int)Math.Floor(stepsize * 8192.0), (int)(prec + gain), out tccp.stepsizes[bandno]);
             }
@@ -462,7 +462,7 @@ namespace OpenJpeg.Internal
             data_size = MaxResolution(tr_ar, (int)numres);
             // overflow check
             // C# 
-            if (data_size > (Constants.SIZE_MAX / NB_ELTS_V8 * (sizeof(float))))
+            if (data_size > Constants.SIZE_MAX / NB_ELTS_V8 * sizeof(float))
             {
                 return false;
             }
@@ -670,7 +670,7 @@ namespace OpenJpeg.Internal
 
             data_size = MaxResolution(res_ar, (int)numres);
             /* overflow check */
-            if (data_size > (Constants.SIZE_MAX / NB_ELTS_V8 * sizeof(float)))
+            if (data_size > Constants.SIZE_MAX / NB_ELTS_V8 * sizeof(float))
             {
                 return false;
             }
@@ -752,12 +752,12 @@ namespace OpenJpeg.Internal
                     {
                         int num_jobs = num_threads;
 
-                        if ((rh / NB_ELTS_V8) < num_jobs)
+                        if (rh / NB_ELTS_V8 < num_jobs)
                         {
                             num_jobs = (int)rh / NB_ELTS_V8;
                         }
 
-                        uint step_j = ((rh / (uint)num_jobs) / NB_ELTS_V8) * NB_ELTS_V8;
+                        uint step_j = rh / (uint)num_jobs / NB_ELTS_V8 * NB_ELTS_V8;
 
                         reset.Reset();
                         //Alternativly, we can set this to num_jobs and remove the Interlocked.Increment
@@ -768,7 +768,7 @@ namespace OpenJpeg.Internal
                         {
                             var job = new dwt97_decode_h_job(
                                 h.Clone(), rw, (uint)w, aj_ar, aj,
-                                (j + 1 == num_jobs) ? (rh & unchecked((uint)~(NB_ELTS_V8 - 1))) - (uint)j * step_j : step_j
+                                j + 1 == num_jobs ? (rh & unchecked((uint)~(NB_ELTS_V8 - 1))) - (uint)j * step_j : step_j
                             );
                             job.h.wavelet = new float[h.wavelet.Length];
 
@@ -818,7 +818,7 @@ namespace OpenJpeg.Internal
                     aj = 0;
                     if (num_threads <= 1 || rw < 2 * NB_ELTS_V8)
                     {
-                        for (j = (int)rw; j > (NB_ELTS_V8 - 1); j -= NB_ELTS_V8)
+                        for (j = (int)rw; j > NB_ELTS_V8 - 1; j -= NB_ELTS_V8)
                         {
                             IntOrFloat faa;
                             faa.I = 0;
@@ -827,7 +827,7 @@ namespace OpenJpeg.Internal
                             v8dwt_decode(v);
                             for (int k = 0; k < rh; ++k)
                             {
-                                Buffer.BlockCopy(v.wavelet, k * NB_ELTS_V8 * sizeof(float), aj_ar, (aj + (k * w)) * sizeof(float), NB_ELTS_V8 * sizeof(float));
+                                Buffer.BlockCopy(v.wavelet, k * NB_ELTS_V8 * sizeof(float), aj_ar, (aj + k * w) * sizeof(float), NB_ELTS_V8 * sizeof(float));
                             }
 
                             aj += NB_ELTS_V8;
@@ -843,12 +843,12 @@ namespace OpenJpeg.Internal
                         int num_jobs = Math.Max(num_threads / 2, 2);
                         //num_jobs = 1;
 
-                        if ((rw / NB_ELTS_V8) < num_jobs)
+                        if (rw / NB_ELTS_V8 < num_jobs)
                         {
                             num_jobs = (int)rw / NB_ELTS_V8;
                         }
 
-                        uint step_j = ((rw / (uint)num_jobs) / NB_ELTS_V8) * NB_ELTS_V8;
+                        uint step_j = rw / (uint)num_jobs / NB_ELTS_V8 * NB_ELTS_V8;
 
                         reset.Reset();
                         //Alternativly, we can set this to num_jobs and remove the Interlocked.Increment
@@ -859,11 +859,11 @@ namespace OpenJpeg.Internal
                         {
                             var job = new dwt97_decode_v_job(
                                 v.Clone(), rh, (uint)w, aj_ar, aj,
-                                (j + 1 == num_jobs) ? (rw & unchecked((uint)~(NB_ELTS_V8 - 1))) - (uint)j * step_j : step_j
+                                j + 1 == num_jobs ? (rw & unchecked((uint)~(NB_ELTS_V8 - 1))) - (uint)j * step_j : step_j
                             );
                             job.v.wavelet = new float[v.wavelet.Length];
 
-                            aj += (int)(job.nb_columns);
+                            aj += (int)job.nb_columns;
 
                             Interlocked.Increment(ref n_thread_workers);
                             ThreadPool.QueueUserWorkItem((x) =>
@@ -889,7 +889,7 @@ namespace OpenJpeg.Internal
                         v8dwt_decode(v);
 
                         for (int k = 0; k < rh; ++k)
-                            Buffer.BlockCopy(v.wavelet, k * NB_ELTS_V8 * sizeof(float), aj_ar, (aj + (k * w)) * sizeof(float), j * sizeof(float));
+                            Buffer.BlockCopy(v.wavelet, k * NB_ELTS_V8 * sizeof(float), aj_ar, (aj + k * w) * sizeof(float), j * sizeof(float));
                     }
                 }
             }
@@ -939,14 +939,14 @@ namespace OpenJpeg.Internal
             int a, b;
             if (dwt.cas == 0)
             {
-                if (!((dwt.dn > 0) || (dwt.sn > 1)))
+                if (!(dwt.dn > 0 || dwt.sn > 1))
                     return;
                 a = 0;
                 b = 1;
             }
             else
             {
-                if (!((dwt.sn > 0) || (dwt.dn > 1)))
+                if (!(dwt.sn > 0 || dwt.dn > 1))
                     return;
                 a = 1;
                 b = 0;
@@ -1023,7 +1023,7 @@ namespace OpenJpeg.Internal
                     fli.I = f[fl +  0 * NB_ELTS_V8 + c];
                     fwi.I = f[fw +  0 * NB_ELTS_V8 + c];
 #if TEST_MATH_MODE
-                    fli.F = (float)(fli.F + fwi.F) * cst;
+                    fli.F = (fli.F + fwi.F) * cst;
 #else
                     fli.F = (fli.F + fwi.F) * cst;
 #endif
@@ -1039,7 +1039,7 @@ namespace OpenJpeg.Internal
                         fli.I = f[fw + -2 * NB_ELTS_V8 + c];
                         fwi.I = f[fw +  0 * NB_ELTS_V8 + c];
 #if TEST_MATH_MODE
-                        fli.F = (float)(fli.F + fwi.F) * cst;
+                        fli.F = (fli.F + fwi.F) * cst;
 #else
                         fli.F = (fli.F + fwi.F) * cst;
 #endif
@@ -1057,7 +1057,7 @@ namespace OpenJpeg.Internal
                 {
                     fwi.I = f[fw + -2 * NB_ELTS_V8 + c];
 #if TEST_MATH_MODE
-                    fli.F = (float)(2 * fwi.F) * cst;
+                    fli.F = 2 * fwi.F * cst;
 #else
                     fli.F = (2 * fwi.F) * cst;
 #endif
@@ -1099,14 +1099,14 @@ namespace OpenJpeg.Internal
 #if TEST_MATH_MODE
                 //C# We have a problem. AFAICT, C# likes to do double precision math
                 //   Liberal use of (float) seems to fix the issue. 
-                f[fw - 8] = f[fw - 8] + (float)((float)(f[fl + 0] + f[fw + 0]) * (float)c);
-                f[fw - 7] = f[fw - 7] + (float)((float)(f[fl + 1] + f[fw + 1]) * (float)c);
-                f[fw - 6] = f[fw - 6] + (float)((float)(f[fl + 2] + f[fw + 2]) * (float)c);
-                f[fw - 5] = f[fw - 5] + (float)((float)(f[fl + 3] + f[fw + 3]) * (float)c);
-                f[fw - 4] = f[fw - 4] + (float)((float)(f[fl + 4] + f[fw + 4]) * (float)c);
-                f[fw - 3] = f[fw - 3] + (float)((float)(f[fl + 5] + f[fw + 5]) * (float)c);
-                f[fw - 2] = f[fw - 2] + (float)((float)(f[fl + 6] + f[fw + 6]) * (float)c);
-                f[fw - 1] = f[fw - 1] + (float)((float)(f[fl + 7] + f[fw + 7]) * (float)c); 
+                f[fw - 8] = f[fw - 8] + (f[fl + 0] + f[fw + 0]) * c;
+                f[fw - 7] = f[fw - 7] + (f[fl + 1] + f[fw + 1]) * c;
+                f[fw - 6] = f[fw - 6] + (f[fl + 2] + f[fw + 2]) * c;
+                f[fw - 5] = f[fw - 5] + (f[fl + 3] + f[fw + 3]) * c;
+                f[fw - 4] = f[fw - 4] + (f[fl + 4] + f[fw + 4]) * c;
+                f[fw - 3] = f[fw - 3] + (f[fl + 5] + f[fw + 5]) * c;
+                f[fw - 2] = f[fw - 2] + (f[fl + 6] + f[fw + 6]) * c;
+                f[fw - 1] = f[fw - 1] + (f[fl + 7] + f[fw + 7]) * c; 
 #else
                 //It's not a bug to have greater precision, it's a problem for verifying
                 //the result against original libary.
@@ -1127,14 +1127,14 @@ namespace OpenJpeg.Internal
                 Debug.Assert(m + 1 == end);
                 c += c;
 #if TEST_MATH_MODE
-                f[fw - 8] = f[fw - 8] + (float)(f[fl + 0] * (float)c);
-                f[fw - 7] = f[fw - 7] + (float)(f[fl + 1] * (float)c);
-                f[fw - 6] = f[fw - 6] + (float)(f[fl + 2] * (float)c);
-                f[fw - 5] = f[fw - 5] + (float)(f[fl + 3] * (float)c);
-                f[fw - 4] = f[fw - 4] + (float)(f[fl + 4] * (float)c);
-                f[fw - 3] = f[fw - 3] + (float)(f[fl + 5] * (float)c);
-                f[fw - 2] = f[fw - 2] + (float)(f[fl + 6] * (float)c);
-                f[fw - 1] = f[fw - 1] + (float)(f[fl + 7] * (float)c);
+                f[fw - 8] = f[fw - 8] + f[fl + 0] * c;
+                f[fw - 7] = f[fw - 7] + f[fl + 1] * c;
+                f[fw - 6] = f[fw - 6] + f[fl + 2] * c;
+                f[fw - 5] = f[fw - 5] + f[fl + 3] * c;
+                f[fw - 4] = f[fw - 4] + f[fl + 4] * c;
+                f[fw - 3] = f[fw - 3] + f[fl + 5] * c;
+                f[fw - 2] = f[fw - 2] + f[fl + 6] * c;
+                f[fw - 1] = f[fw - 1] + f[fl + 7] * c;
 #else
                 f[fw - 8] = f[fw - 8] + (f[fl + 0] * c);
                 f[fw - 7] = f[fw - 7] + (f[fl + 1] * c);
@@ -1228,7 +1228,7 @@ namespace OpenJpeg.Internal
                 fw1.I = f[fl + 0];
                 fw2.I = f[fw + 0];
 #if TEST_MATH_MODE
-                fw2.F = (float)(fw1.F + fw2.F) * c;
+                fw2.F = (fw1.F + fw2.F) * c;
 #else
                 fw2.F = (fw1.F + fw2.F) * c;
 #endif
@@ -1243,7 +1243,7 @@ namespace OpenJpeg.Internal
                     fw1.I = f[fw - 2];
                     fw2.I = f[fw + 0];
 #if TEST_MATH_MODE
-                    fw2.F = (float)(fw1.F + fw2.F) * c;
+                    fw2.F = (fw1.F + fw2.F) * c;
 #else
                     fw2.F = (fw1.F + fw2.F) * c;
 #endif
@@ -1255,7 +1255,7 @@ namespace OpenJpeg.Internal
                     fw1.I = f[fw + 0];
                     fw2.I = f[fw + 2];
 #if TEST_MATH_MODE
-                    fw2.F = (float)(fw1.F + fw2.F) * c;
+                    fw2.F = (fw1.F + fw2.F) * c;
 #else
                     fw2.F = (fw1.F + fw2.F) * c;
 #endif
@@ -1267,7 +1267,7 @@ namespace OpenJpeg.Internal
                     fw1.I = f[fw + 2];
                     fw2.I = f[fw + 4];
 #if TEST_MATH_MODE
-                    fw2.F = (float)(fw1.F + fw2.F) * c;
+                    fw2.F = (fw1.F + fw2.F) * c;
 #else
                     fw2.F = (fw1.F + fw2.F) * c;
 #endif
@@ -1279,7 +1279,7 @@ namespace OpenJpeg.Internal
                     fw1.I = f[fw + 4];
                     fw2.I = f[fw + 6];
 #if TEST_MATH_MODE
-                    fw2.F = (float)(fw1.F + fw2.F) * c;
+                    fw2.F = (fw1.F + fw2.F) * c;
 #else
                     fw2.F = (fw1.F + fw2.F) * c;
 #endif
@@ -1295,7 +1295,7 @@ namespace OpenJpeg.Internal
                     fw1.I = f[fw - 2];
                     fw2.I = f[fw + 0];
 #if TEST_MATH_MODE
-                    fw2.F = (float)(fw1.F + fw2.F) * c;
+                    fw2.F = (fw1.F + fw2.F) * c;
 #else
                     fw2.F = (fw1.F + fw2.F) * c;
 #endif
@@ -1312,7 +1312,7 @@ namespace OpenJpeg.Internal
                 //fw[-1] += (2 * fw[-2]) * c;
                 fw2.I = f[fw - 2];
 #if TEST_MATH_MODE
-                fw2.F = (float)(2 * fw2.F) * c;
+                fw2.F = 2 * fw2.F * c;
 #else
                 fw2.F = (2 * fw2.F) * c;
 #endif
@@ -1354,7 +1354,7 @@ namespace OpenJpeg.Internal
 
             h_mem_size = MaxResolution(tr_ar, (int)numres);
             /* overflow check */
-            if (h_mem_size > (Constants.SIZE_MAX / PARALLEL_COLS_53 / sizeof(int)))
+            if (h_mem_size > Constants.SIZE_MAX / PARALLEL_COLS_53 / sizeof(int))
             {
                 return false;
             }
@@ -1398,7 +1398,7 @@ namespace OpenJpeg.Internal
                             num_jobs = (int)rh;
                         }
 
-                        uint step_j = (rh / (uint)num_jobs);
+                        uint step_j = rh / (uint)num_jobs;
                         
                         reset.Reset();
                         //Alternativly, we can set this to num_jobs and remove the Interlocked.Increment
@@ -1408,7 +1408,7 @@ namespace OpenJpeg.Internal
                         for (j = 0; j < num_jobs; j++)
                         {
                             var max_j = (j + 1U) * step_j; // this will overflow
-                            if (j == (num_jobs - 1)) //So we clamp max_j
+                            if (j == num_jobs - 1) //So we clamp max_j
                                 max_j = rh;
                             var job = new decode_h_job(
                                 h.Clone(), rw, w, tilec.data, tiledp,
@@ -1454,7 +1454,7 @@ namespace OpenJpeg.Internal
                             num_jobs = (int)rw;
                         }
 
-                        uint step_j = (rw / (uint)num_jobs);
+                        uint step_j = rw / (uint)num_jobs;
 
                         reset.Reset();
                         int n_thread_workers = 1;
@@ -1462,7 +1462,7 @@ namespace OpenJpeg.Internal
                         for (j = 0; j < num_jobs; j++)
                         {
                             var max_j = (j + 1U) * step_j; // this can overflow
-                            if (j == (num_jobs - 1))
+                            if (j == num_jobs - 1)
                                 max_j = rw;
                             var job = new decode_v_job(
                                 v.Clone(), rh, w, tilec.data, tiledp,
@@ -1543,7 +1543,7 @@ namespace OpenJpeg.Internal
             h_mem_size = MaxResolution(tr_ar, (int) numres);
             // overflow check
             // in vertical pass, we process 4 columns at a time
-            if (h_mem_size > (Constants.SIZE_MAX / (4 * sizeof(int))))
+            if (h_mem_size > Constants.SIZE_MAX / (4 * sizeof(int)))
             {
                 return false;
             }
@@ -1808,7 +1808,7 @@ namespace OpenJpeg.Internal
 
             if (cas == 0)
             {
-                if ((dn > 0) || (sn > 1))
+                if (dn > 0 || sn > 1)
                 { 
                     i = win_l_x0;
                     if (i < win_l_x1)
@@ -1816,8 +1816,8 @@ namespace OpenJpeg.Internal
                         int i_max;
 
                         /* Left-most case */
-                        a[i * 2] -= (((i - 1) < 0 ? a[(1 + (0) * 2)] : ((i - 1) >= dn ? a[(1 + (dn - 1) * 2)] : a[(1 + (i - 1) * 2)]))
-                                   + ((i) < 0 ? a[(1 + (0) * 2)] : ((i) >= dn ? a[(1 + (dn - 1) * 2)] : a[(1 + (i) * 2)]))
+                        a[i * 2] -= ((i - 1 < 0 ? a[1 + 0 * 2] : i - 1 >= dn ? a[1 + (dn - 1) * 2] : a[1 + (i - 1) * 2])
+                                   + (i < 0 ? a[1 + 0 * 2] : i >= dn ? a[1 + (dn - 1) * 2] : a[1 + i * 2])
                                    + 2) >> 2;
                         i++;
 
@@ -1834,8 +1834,8 @@ namespace OpenJpeg.Internal
                         for (; i < win_l_x1; i++)
                         {
                             /* Right-most case */
-                            a[i * 2] -= (((i - 1) < 0 ? a[(1 + (0) * 2)] : ((i - 1) >= dn ? a[(1 + (dn - 1) * 2)] : a[(1 + (i - 1) * 2)]))
-                                       + ((i) < 0 ? a[(1 + (0) * 2)] : ((i) >= dn ? a[(1 + (dn - 1) * 2)] : a[(1 + (i) * 2)]))
+                            a[i * 2] -= ((i - 1 < 0 ? a[1 + 0 * 2] : i - 1 >= dn ? a[1 + (dn - 1) * 2] : a[1 + (i - 1) * 2])
+                                       + (i < 0 ? a[1 + 0 * 2] : i >= dn ? a[1 + (dn - 1) * 2] : a[1 + i * 2])
                                        + 2) >> 2;
                         }
                     }
@@ -1851,13 +1851,13 @@ namespace OpenJpeg.Internal
                         for (; i < i_max; i++)
                         {
                             /* No bound checking */
-                            a[1 + i * 2] += (a[(i) * 2] + a[(i + 1) * 2]) >> 1;
+                            a[1 + i * 2] += (a[i * 2] + a[(i + 1) * 2]) >> 1;
                         }
                         for (; i < win_h_x1; i++)
                         {
                             /* Right-most case */
-                            a[1 + i * 2] += (((i) < 0 ? a[0] : ((i) >= sn ? a[(sn - 1) * 2] : a[(i) * 2]))
-                                           + ((i + 1) < 0 ? a[0] : ((i + 1) >= sn ? a[(sn - 1) * 2] : a[(i + 1) * 2]))
+                            a[1 + i * 2] += ((i < 0 ? a[0] : i >= sn ? a[(sn - 1) * 2] : a[i * 2])
+                                           + (i + 1 < 0 ? a[0] : i + 1 >= sn ? a[(sn - 1) * 2] : a[(i + 1) * 2])
                                            ) >> 1;
                         }
                     }
@@ -1877,8 +1877,8 @@ namespace OpenJpeg.Internal
                                               a[1 + i * 2],
                                               MyMath.int_add_no_overflow(
                                                   MyMath.int_add_no_overflow(
-                                                      ((i) < 0 ? a[0] : ((i) >= dn ? a[(dn - 1) * 2] : a[(i) * 2])),
-                                                      ((i + 1) < 0 ? a[0] : ((i + 1) >= dn ? a[(dn - 1) * 2] : a[(i + 1) * 2]))),
+                                                      i < 0 ? a[0] : i >= dn ? a[(dn - 1) * 2] : a[i * 2],
+                                                      i + 1 < 0 ? a[0] : i + 1 >= dn ? a[(dn - 1) * 2] : a[(i + 1) * 2]),
                                                   2) >> 2);
                     }
                     for (i = win_h_x0; i < win_h_x1; i++)
@@ -1886,8 +1886,8 @@ namespace OpenJpeg.Internal
                         a[i * 2] = MyMath.int_add_no_overflow(
                                           a[i * 2],
                                           MyMath.int_add_no_overflow(
-                                              ((i) < 0 ? a[1] : ((i) >= sn ? a[(1 + (sn - 1) * 2)] : a[(1 + (i) * 2)])),
-                                              ((i - 1) < 0 ? a[1] : ((i - 1) >= sn ? a[(1 + (sn - 1) * 2)] : a[(1 + (i - 1) * 2)])))
+                                              i < 0 ? a[1] : i >= sn ? a[1 + (sn - 1) * 2] : a[1 + i * 2],
+                                              i - 1 < 0 ? a[1] : i - 1 >= sn ? a[1 + (sn - 1) * 2] : a[1 + (i - 1) * 2])
                                           >> 1);
                     }
                 }
@@ -1928,7 +1928,7 @@ namespace OpenJpeg.Internal
 
             if (cas == 0)
             {
-                if ((dn > 0) || (sn > 1))
+                if (dn > 0 || sn > 1)
                 {
                     i = win_l_x0;
                     if (i < win_l_x1)
@@ -1938,9 +1938,9 @@ namespace OpenJpeg.Internal
                         /* Left-most case */
                         for (off = 0; off < 4; off++)
                         {
-                            a[(uint)(i) * 2 * 4 + off] -= (
-                                ((i - 1) < 0 ? a[(1) * 4 + off] : ((i - 1) >= dn ? a[(1 + (uint)(dn - 1) * 2) * 4 + off] : a[(1 + (uint)(i - 1) * 2) * 4 + off])) 
-                              + ((i) < 0 ? a[(1) * 4 + off] : ((i) >= dn ? a[(1 + (uint)(dn - 1) * 2) * 4 + off] : a[(1 + (uint)(i) * 2) * 4 + off])) 
+                            a[(uint)i * 2 * 4 + off] -= (
+                                (i - 1 < 0 ? a[1 * 4 + off] : i - 1 >= dn ? a[(1 + (uint)(dn - 1) * 2) * 4 + off] : a[(1 + (uint)(i - 1) * 2) * 4 + off]) 
+                              + (i < 0 ? a[1 * 4 + off] : i >= dn ? a[(1 + (uint)(dn - 1) * 2) * 4 + off] : a[(1 + (uint)i * 2) * 4 + off]) 
                               + 2
                              ) >> 2;
                         }
@@ -1959,9 +1959,9 @@ namespace OpenJpeg.Internal
                             /* No bound checking */
                             for (off = 0; off < 4; off++)
                             {
-                                a[(uint)(i) * 2 * 4 + off] -= (
+                                a[(uint)i * 2 * 4 + off] -= (
                                     a[(1 + (uint)(i - 1) * 2) * 4 + off] 
-                                  + a[(1 + (uint)(i) * 2) * 4 + off] 
+                                  + a[(1 + (uint)i * 2) * 4 + off] 
                                   + 2
                                 ) >> 2;
                             }
@@ -1971,9 +1971,9 @@ namespace OpenJpeg.Internal
                             /* Right-most case */
                             for (off = 0; off < 4; off++)
                             {
-                                a[(uint)(i) * 2 * 4 + off] -= (
-                                    ((i - 1) < 0 ? a[(1) * 4 + off] : ((i - 1) >= dn ? a[(1 + (uint)(dn - 1) * 2) * 4 + off] : a[(1 + (uint)(i - 1) * 2) * 4 + off])) 
-                                  + ((i) < 0 ? a[(1) * 4 + off] : ((i) >= dn ? a[(1 + (uint)(dn - 1) * 2) * 4 + off] : a[(1 + (uint)(i) * 2) * 4 + off])) 
+                                a[(uint)i * 2 * 4 + off] -= (
+                                    (i - 1 < 0 ? a[1 * 4 + off] : i - 1 >= dn ? a[(1 + (uint)(dn - 1) * 2) * 4 + off] : a[(1 + (uint)(i - 1) * 2) * 4 + off]) 
+                                  + (i < 0 ? a[1 * 4 + off] : i >= dn ? a[(1 + (uint)(dn - 1) * 2) * 4 + off] : a[(1 + (uint)i * 2) * 4 + off]) 
                                   + 2
                                 ) >> 2;
                             }
@@ -1996,8 +1996,8 @@ namespace OpenJpeg.Internal
                             /* No bound checking */
                             for (off = 0; off < 4; off++)
                             {
-                                a[(1 + (uint)(i) * 2) * 4 + off] += (
-                                    a[(uint)(i) * 2 * 4 + off]
+                                a[(1 + (uint)i * 2) * 4 + off] += (
+                                    a[(uint)i * 2 * 4 + off]
                                   + a[(uint)(i + 1) * 2 * 4 + off]
                                 ) >> 1;
                             }
@@ -2007,9 +2007,9 @@ namespace OpenJpeg.Internal
                             /* Right-most case */
                             for (off = 0; off < 4; off++)
                             {
-                                a[(1 + (uint)(i) * 2) * 4 + off] += (
-                                    ((i) < 0 ? a[off] : ((i) >= sn ? a[(uint)(sn - 1) * 2 * 4 + off] : a[(uint)(i) * 2 * 4 + off])) 
-                                  + ((i + 1) < 0 ? a[off] : ((i + 1) >= sn ? a[(uint)(sn - 1) * 2 * 4 + off] : a[(uint)(i + 1) * 2 * 4 + off]))
+                                a[(1 + (uint)i * 2) * 4 + off] += (
+                                    (i < 0 ? a[off] : i >= sn ? a[(uint)(sn - 1) * 2 * 4 + off] : a[(uint)i * 2 * 4 + off]) 
+                                  + (i + 1 < 0 ? a[off] : i + 1 >= sn ? a[(uint)(sn - 1) * 2 * 4 + off] : a[(uint)(i + 1) * 2 * 4 + off])
                                 ) >> 1;
                             }
                         }
@@ -2028,25 +2028,25 @@ namespace OpenJpeg.Internal
                     for (i = win_l_x0; i < win_l_x1; i++)
                     {
                         for (off = 0; off < 4; off++)
-                           a[(1 + (uint)(i) * 2) * 4 + off] = 
+                           a[(1 + (uint)i * 2) * 4 + off] = 
                                 MyMath.int_sub_no_overflow(
-                                            a[(1 + (uint)(i) * 2) * 4 + off],
+                                            a[(1 + (uint)i * 2) * 4 + off],
                                             MyMath.int_add_no_overflow(
                                                 MyMath.int_add_no_overflow(
-                                                    ((i) < 0 ? a[(uint)(0) * 2 * 4 + off] : ((i) >= dn ? a[(uint)(dn - 1) * 2 * 4 + off] : a[(uint)(i) * 2 * 4 + off])), 
-                                                    ((i + 1) < 0 ? a[(uint)(0) * 2 * 4 + off] : ((i + 1) >= dn ? a[(uint)(dn - 1) * 2 * 4 + off] : a[(uint)(i + 1) * 2 * 4 + off]))), 
+                                                    i < 0 ? a[(uint)0 * 2 * 4 + off] : i >= dn ? a[(uint)(dn - 1) * 2 * 4 + off] : a[(uint)i * 2 * 4 + off], 
+                                                    i + 1 < 0 ? a[(uint)0 * 2 * 4 + off] : i + 1 >= dn ? a[(uint)(dn - 1) * 2 * 4 + off] : a[(uint)(i + 1) * 2 * 4 + off]), 
                                                 2) 
                                             >> 2);
                     }
                     for (i = win_h_x0; i < win_h_x1; i++)
                     {
                         for (off = 0; off < 4; off++)
-                            a[(uint)(i) * 2 * 4 + off] = 
+                            a[(uint)i * 2 * 4 + off] = 
                                 MyMath.int_add_no_overflow(
-                                          a[(uint)(i) * 2 * 4 + off],
+                                          a[(uint)i * 2 * 4 + off],
                                           MyMath.int_add_no_overflow(
-                                              ((i) < 0 ? a[(1 + (uint)(0) * 2) * 4 + off] : ((i) >= sn ? a[(1 + (uint)(sn - 1) * 2) * 4 + off] : a[(1 + (uint)(i) * 2) * 4 + off])), 
-                                              ((i - 1) < 0 ? a[(1 + (uint)(0) * 2) * 4 + off] : ((i - 1) >= sn ? a[(1 + (uint)(sn - 1) * 2) * 4 + off] : a[(1 + (uint)(i - 1) * 2) * 4 + off]))) 
+                                              i < 0 ? a[(1 + (uint)0 * 2) * 4 + off] : i >= sn ? a[(1 + (uint)(sn - 1) * 2) * 4 + off] : a[(1 + (uint)i * 2) * 4 + off], 
+                                              i - 1 < 0 ? a[(1 + (uint)0 * 2) * 4 + off] : i - 1 >= sn ? a[(1 + (uint)(sn - 1) * 2) * 4 + off] : a[(1 + (uint)(i - 1) * 2) * 4 + off]) 
                                           >> 1);
                     }
                 }
@@ -2151,7 +2151,7 @@ namespace OpenJpeg.Internal
             for (int i = (int)dwt.win_l_x0; i < dwt.win_l_x1; ++i)
                 Buffer.BlockCopy(a_ar, (a + i * width) * sizeof(float), bi_ar, (bi + i * 2) * NB_ELTS_V8 * sizeof(float), n_elts_read * sizeof(float));
             a += dwt.sn * width;
-            bi = (1 - dwt.cas);
+            bi = 1 - dwt.cas;
             for (int i = (int)dwt.win_h_x0; i < dwt.win_h_x1; ++i)
                 Buffer.BlockCopy(a_ar, (a + i * width) * sizeof(float), bi_ar, (bi + i * 2) * NB_ELTS_V8 * sizeof(float), n_elts_read * sizeof(float));
         }
@@ -2331,32 +2331,32 @@ namespace OpenJpeg.Internal
                     {
                         for (c = 0; c < 8; c++)
                         {
-                            tmp[((1 + (i) * 2)) * 8 + c] -= (tmp[(i) * 2 * 8 + c] + tmp[(i + 1) * 2 * 8 + c]) >> 1;
+                            tmp[(1 + i * 2) * 8 + c] -= (tmp[i * 2 * 8 + c] + tmp[(i + 1) * 2 * 8 + c]) >> 1;
                         }
                     }
-                    if (((height) % 2) == 0)
+                    if (height % 2 == 0)
                     {
                         for (c = 0; c < 8; c++)
                         {
-                            tmp[((1 + (i) * 2)) * 8 + c] -= tmp[(i) * 2 * 8 + c];
+                            tmp[(1 + i * 2) * 8 + c] -= tmp[i * 2 * 8 + c];
                         }
                     }
                     for (c = 0; c < 8; c++)
                     {
-                        tmp[(0) * 2 * 8 + c] += (tmp[((1 + (0) * 2)) * 8 + c] + tmp[((1 + (0) * 2)) * 8 + c] + 2) >> 2;
+                        tmp[0 * 2 * 8 + c] += (tmp[(1 + 0 * 2) * 8 + c] + tmp[(1 + 0 * 2) * 8 + c] + 2) >> 2;
                     }
                     for (i = 1; i < dn; i++)
                     {
                         for (c = 0; c < 8; c++)
                         {
-                            tmp[(i) * 2 * 8 + c] += (tmp[((1 + (i - 1) * 2)) * 8 + c] + tmp[((1 + (i) * 2)) * 8 + c] + 2) >> 2;
+                            tmp[i * 2 * 8 + c] += (tmp[(1 + (i - 1) * 2) * 8 + c] + tmp[(1 + i * 2) * 8 + c] + 2) >> 2;
                         }
                     }
-                    if (((height) % 2) == 1)
+                    if (height % 2 == 1)
                     {
                         for (c = 0; c < 8; c++)
                         {
-                            tmp[(i) * 2 * 8 + c] += (tmp[((1 + (i - 1) * 2)) * 8 + c] + tmp[((1 + (i - 1) * 2)) * 8 + c] + 2) >> 2;
+                            tmp[i * 2 * 8 + c] += (tmp[(1 + (i - 1) * 2) * 8 + c] + tmp[(1 + (i - 1) * 2) * 8 + c] + 2) >> 2;
                         }
                     }
                 }
@@ -2368,7 +2368,7 @@ namespace OpenJpeg.Internal
                 {
                     for (c = 0; c < 8; c++)
                     {
-                        tmp[(0) * 2 * 8 + c] *= 2;
+                        tmp[0 * 2 * 8 + c] *= 2;
                     }
                 }
                 else
@@ -2376,34 +2376,34 @@ namespace OpenJpeg.Internal
                     uint i;
                     for (c = 0; c < 8; c++)
                     {
-                        tmp[(0) * 2 * 8 + c] -= tmp[((1 + (0) * 2)) * 8 + c];
+                        tmp[0 * 2 * 8 + c] -= tmp[(1 + 0 * 2) * 8 + c];
                     }
                     for (i = 1; i < sn; i++)
                     {
                         for (c = 0; c < 8; c++)
                         {
-                            tmp[(i) * 2 * 8 + c] -= (tmp[((1 + (i) * 2)) * 8 + c] + tmp[((1 + (i - 1) * 2)) * 8 + c]) >> 1;
+                            tmp[i * 2 * 8 + c] -= (tmp[(1 + i * 2) * 8 + c] + tmp[(1 + (i - 1) * 2) * 8 + c]) >> 1;
                         }
                     }
-                    if (((height) % 2) == 1)
+                    if (height % 2 == 1)
                     {
                         for (c = 0; c < 8; c++)
                         {
-                            tmp[(i) * 2 * 8 + c] -= tmp[((1 + (i - 1) * 2)) * 8 + c];
+                            tmp[i * 2 * 8 + c] -= tmp[(1 + (i - 1) * 2) * 8 + c];
                         }
                     }
                     for (i = 0; i + 1 < dn; i++)
                     {
                         for (c = 0; c < 8; c++)
                         {
-                            tmp[((1 + (i) * 2)) * 8 + c] += (tmp[(i) * 2 * 8 + c] + tmp[(i + 1) * 2 * 8 + c] + 2) >> 2;
+                            tmp[(1 + i * 2) * 8 + c] += (tmp[i * 2 * 8 + c] + tmp[(i + 1) * 2 * 8 + c] + 2) >> 2;
                         }
                     }
-                    if (((height) % 2) == 0)
+                    if (height % 2 == 0)
                     {
                         for (c = 0; c < 8; c++)
                         {
-                            tmp[((1 + (i) * 2)) * 8 + c] += (tmp[(i) * 2 * 8 + c] + tmp[(i) * 2 * 8 + c] + 2) >> 2;
+                            tmp[(1 + i * 2) * 8 + c] += (tmp[i * 2 * 8 + c] + tmp[i * 2 * 8 + c] + 2) >> 2;
                         }
                     }
                 }
@@ -2515,18 +2515,18 @@ namespace OpenJpeg.Internal
                     int i;
                     for (i = 0; i < sn - 1; i++)
                     {
-                        tmp[sn + i] = row[row_pt + 2 * i + 1] - ((row[row_pt + (i) * 2] + row[row_pt + (i + 1) * 2]) >> 1);
+                        tmp[sn + i] = row[row_pt + 2 * i + 1] - ((row[row_pt + i * 2] + row[row_pt + (i + 1) * 2]) >> 1);
                     }
-                    if ((width % 2) == 0)
+                    if (width % 2 == 0)
                     {
-                        tmp[sn + i] = row[row_pt + 2 * i + 1] - row[row_pt + (i) * 2];
+                        tmp[sn + i] = row[row_pt + 2 * i + 1] - row[row_pt + i * 2];
                     }
                     row[row_pt + 0] += (tmp[sn] + tmp[sn] + 2) >> 2;
                     for (i = 1; i < dn; i++)
                     {
                         row[row_pt + i] = row[row_pt + 2 * i] + ((tmp[sn + (i - 1)] + tmp[sn + i] + 2) >> 2);
                     }
-                    if ((width % 2) == 1)
+                    if (width % 2 == 1)
                     {
                         row[row_pt + i] = row[row_pt + 2 * i] + ((tmp[sn + (i - 1)] + tmp[sn + (i - 1)] + 2) >> 2);
                     }
@@ -2547,7 +2547,7 @@ namespace OpenJpeg.Internal
                     {
                         tmp[sn + i] = row[row_pt + 2 * i] - ((row[row_pt + 2 * i + 1] + row[row_pt + 2 * (i - 1) + 1]) >> 1);
                     }
-                    if ((width % 2) == 1)
+                    if (width % 2 == 1)
                     {
                         tmp[sn + i] = row[row_pt + 2 * i] - row[row_pt + 2 * (i - 1) + 1];
                     }
@@ -2556,7 +2556,7 @@ namespace OpenJpeg.Internal
                     {
                         row[row_pt + i] = row[row_pt + 2 * i + 1] + ((tmp[sn + i] + tmp[sn + i + 1] + 2) >> 2);
                     }
-                    if ((width % 2) == 0)
+                    if (width % 2 == 0)
                     {
                         row[row_pt + i] = row[row_pt + 2 * i + 1] + ((tmp[sn + i] + tmp[sn + i] + 2) >> 2);
                     }
@@ -2572,7 +2572,7 @@ namespace OpenJpeg.Internal
         {
             if (cols == NB_ELTS_V8) {
                 for (int k = 0; k < height; ++k) {
-                    Buffer.BlockCopy(a, (array + k * stride_width) * sizeof(int), tmp, (NB_ELTS_V8 * k) * sizeof(int), NB_ELTS_V8 * sizeof(int));
+                    Buffer.BlockCopy(a, (array + k * stride_width) * sizeof(int), tmp, NB_ELTS_V8 * k * sizeof(int), NB_ELTS_V8 * sizeof(int));
                 }
             } else {
                 for (int k = 0; k < height; ++k) {
@@ -2654,7 +2654,7 @@ namespace OpenJpeg.Internal
                 v8dwt_interleave_v(job.v, aj_ar, aj, (int)job.w, NB_ELTS_V8);
                 v8dwt_decode(job.v);
                 for (int k = 0; k < job.rh; ++k)
-                    Buffer.BlockCopy(job.v.wavelet, k * NB_ELTS_V8 * sizeof(float), aj_ar, (aj + (k * (int)job.w)) * sizeof(float), NB_ELTS_V8 * sizeof(float));
+                    Buffer.BlockCopy(job.v.wavelet, k * NB_ELTS_V8 * sizeof(float), aj_ar, (aj + k * (int)job.w) * sizeof(float), NB_ELTS_V8 * sizeof(float));
 
                 aj += NB_ELTS_V8;
             }
@@ -2855,7 +2855,7 @@ namespace OpenJpeg.Internal
             d1n = tiled[in_odd];
             s0n = s1n - ((d1n + 1) >> 1);
 
-            for (i = 0, j = 1; i < (len - 3); i += 2, j++)
+            for (i = 0, j = 1; i < len - 3; i += 2, j++)
             {
                 d1c = d1n;
                 s0c = s0n;
@@ -2974,7 +2974,7 @@ namespace OpenJpeg.Internal
             d1n = tiled[tiledp_col + sn * stride];
             s0n = s1n - ((d1n + 1) >> 1);
 
-            for (i = 0, j = 0; i < (len - 3); i += 2, j++)
+            for (i = 0, j = 0; i < len - 3; i += 2, j++)
             {
                 d1c = d1n;
                 s0c = s0n;
@@ -2995,7 +2995,7 @@ namespace OpenJpeg.Internal
             if ((len & 1) != 0)
             {
                 tmp[len - 1] =
-                    tiled[tiledp_col + ((len - 1) / 2) * stride] -
+                    tiled[tiledp_col + (len - 1) / 2 * stride] -
                     ((d1n + 1) >> 1);
                 tmp[len - 2] = d1n + ((s0n + tmp[len - 1]) >> 1);
             }
@@ -3218,7 +3218,7 @@ namespace OpenJpeg.Internal
                 out uint tby1)
         {
             // Compute number of decomposition for this band. See table F-1
-            int nb = (resno == 0) ?
+            int nb = resno == 0 ?
                       (int)tilec.numresolutions - 1 :
                       (int)(tilec.numresolutions - resno);
             /* Map above tile-based coordinates to sub-band-based coordinates per */
@@ -3227,26 +3227,26 @@ namespace OpenJpeg.Internal
             uint y0b = bandno >> 1;
             //if (tbx0)
             {
-                tbx0 = (nb == 0) ? tcx0 :
-                       (tcx0 <= (1U << (int)(nb - 1)) * x0b) ? 0 :
+                tbx0 = nb == 0 ? tcx0 :
+                       tcx0 <= (1U << nb - 1) * x0b ? 0 :
                        MyMath.uint_ceildivpow2(tcx0 - (1U << (nb - 1)) * x0b, nb);
             }
             //if (tby0)
             {
-                tby0 = (nb == 0) ? tcy0 :
-                       (tcy0 <= (1U << (nb - 1)) * y0b) ? 0 :
+                tby0 = nb == 0 ? tcy0 :
+                       tcy0 <= (1U << (nb - 1)) * y0b ? 0 :
                        MyMath.uint_ceildivpow2(tcy0 - (1U << (nb - 1)) * y0b, nb);
             }
             //if (tbx1)
             {
-                tbx1 = (nb == 0) ? tcx1 :
-                       (tcx1 <= (1U << (nb - 1)) * x0b) ? 0 :
+                tbx1 = nb == 0 ? tcx1 :
+                       tcx1 <= (1U << (nb - 1)) * x0b ? 0 :
                        MyMath.uint_ceildivpow2(tcx1 - (1U << (nb - 1)) * x0b, nb);
             }
             //if (tby1)
             {
-                tby1 = (nb == 0) ? tcy1 :
-                       (tcy1 <= (1U << (nb - 1)) * y0b) ? 0 :
+                tby1 = nb == 0 ? tcy1 :
+                       tcy1 <= (1U << (nb - 1)) * y0b ? 0 :
                        MyMath.uint_ceildivpow2(tcy1 - (1U << (nb - 1)) * y0b, nb);
             }
         }

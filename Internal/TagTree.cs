@@ -386,7 +386,7 @@ namespace OpenJpeg.Internal
                 node = stk[stk_pos--];
             }
 
-            return (node.value < threshold);
+            return node.value < threshold;
         }
     }
 

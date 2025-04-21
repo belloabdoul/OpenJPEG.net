@@ -213,7 +213,7 @@ namespace OpenJpeg.Internal
         internal uint BypassGetExtraBytes(bool erterm)
         {
             Debug.Assert(_bp - 1 > 0, "C# Trouble ahead");
-            return (ct < 7 || (ct == 7 && (erterm || _data[_bp - 1] != 0xff))) ? 1u : 0;
+            return ct < 7 || (ct == 7 && (erterm || _data[_bp - 1] != 0xff)) ? 1u : 0;
         }
 
         /// <summary>
@@ -386,7 +386,7 @@ namespace OpenJpeg.Internal
 
             for (int i = 1; i < 5; i++)
             {
-                Encode((i % 2) != 0);
+                Encode(i % 2 != 0);
             }
         }
 
@@ -526,7 +526,7 @@ namespace OpenJpeg.Internal
         {
             bool d;
             a -= curctx.P.qeval;
-            if ((c >> 16) < curctx.P.qeval)
+            if (c >> 16 < curctx.P.qeval)
             {
                 d = LpsExchange();
                 Renormd();

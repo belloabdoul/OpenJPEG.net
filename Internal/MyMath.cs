@@ -15,7 +15,7 @@
         /// </summary>
         public static int fix_mul(int a, int b)
         {
-            long temp = (long)a * (long)b;
+            long temp = a * (long)b;
             temp += temp & 4096;
             return (int)(temp >> 13);
         }
@@ -41,7 +41,7 @@
 
         public static int int_max(int a, int b)
         {
-            return (a > b) ? a : b;
+            return a > b ? a : b;
         }
 
         public static int int_min(int a, int b)
@@ -131,8 +131,8 @@
         /// <returns>Returns saturated sum of a+b</returns>
         public static uint uint_adds(uint a, uint b)
         {
-            var sum = (ulong) a + (ulong)b;
-            return (uint)(-(uint)(sum >> 32)) | (uint)sum;
+            var sum = a + (ulong)b;
+            return (uint)-(uint)(sum >> 32) | (uint)sum;
         }
 
         /// <summary>
@@ -141,7 +141,7 @@
         /// <returns>Returns saturated sum of a-b</returns>
         public static uint uint_subs(uint a, uint b)
         {
-            return (a >= b) ? a - b : 0;
+            return a >= b ? a - b : 0;
         }
 
         /// <summary>

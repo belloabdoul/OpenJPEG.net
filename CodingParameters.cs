@@ -357,12 +357,12 @@ namespace OpenJpeg
 
         public bool IsBroadcast
         {
-            get { return rsiz >= J2K_PROFILE.BC_SINGLE && ((int)rsiz) <= ((int)J2K_PROFILE.BC_MULTI_R | 0x000b); }
+            get { return rsiz >= J2K_PROFILE.BC_SINGLE && (int)rsiz <= ((int)J2K_PROFILE.BC_MULTI_R | 0x000b); }
         }
 
         public bool IsIMF
         {
-            get { return rsiz >= J2K_PROFILE.IMF_2K && ((int)rsiz) <= ((int)J2K_PROFILE.IMF_8K_R | 0x009b); }
+            get { return rsiz >= J2K_PROFILE.IMF_2K && (int)rsiz <= ((int)J2K_PROFILE.IMF_8K_R | 0x009b); }
         }
 
         public bool IsPart2
@@ -861,12 +861,12 @@ namespace OpenJpeg
 
         public bool IsBroadcast
         {
-            get { return rsiz >= J2K_PROFILE.BC_SINGLE && ((int)rsiz) <= ((int)J2K_PROFILE.BC_MULTI_R | 0x000b); }
+            get { return rsiz >= J2K_PROFILE.BC_SINGLE && (int)rsiz <= ((int)J2K_PROFILE.BC_MULTI_R | 0x000b); }
         }
 
         public bool IsIMF
         {
-            get { return rsiz >= J2K_PROFILE.IMF_2K && ((int)rsiz) <= ((int)J2K_PROFILE.IMF_8K_R | 0x009b); }
+            get { return rsiz >= J2K_PROFILE.IMF_2K && (int)rsiz <= ((int)J2K_PROFILE.IMF_8K_R | 0x009b); }
         }
 
         public bool IsPart2

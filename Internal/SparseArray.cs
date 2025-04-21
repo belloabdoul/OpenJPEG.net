@@ -64,7 +64,7 @@ namespace OpenJpeg.Internal
                 uint x, block_x;
                 uint x_incr = 0;
                 uint block_y_offset;
-                y_incr = (y == y0) ? block_height - (y0 % block_height) :
+                y_incr = y == y0 ? block_height - y0 % block_height :
                          block_height;
                 block_y_offset = block_height - y_incr;
                 y_incr = Math.Min(y_incr, y1 - y);
@@ -74,7 +74,7 @@ namespace OpenJpeg.Internal
                     uint j;
                     uint block_x_offset;
                     int[] src_block;
-                    x_incr = (x == x0) ? block_width - (x0 % block_width) : block_width;
+                    x_incr = x == x0 ? block_width - x0 % block_width : block_width;
                     block_x_offset = block_width - x_incr;
                     x_incr = Math.Min(x_incr, x1 - x);
                     src_block = data_blocks[block_y * block_count_hor + block_x];
@@ -109,7 +109,7 @@ namespace OpenJpeg.Internal
                         }
                         else
                         {
-                            uint src_ptr = (block_y_offset * block_width + block_x_offset);
+                            uint src_ptr = block_y_offset * block_width + block_x_offset;
                             if (buf_col_stride == 1)
                             {
                                 int dest_ptr = (int)(buf_pos + (y - y0) * buf_line_stride
@@ -140,9 +140,9 @@ namespace OpenJpeg.Internal
                             }
                             else
                             {
-                                uint dest_ptr = ((uint)buf_pos + (y - y0) * buf_line_stride
-                                                               +
-                                                                 (x - x0) * buf_col_stride);
+                                uint dest_ptr = (uint)buf_pos + (y - y0) * buf_line_stride
+                                                              +
+                                                              (x - x0) * buf_col_stride;
                                 if (x_incr == 1)
                                 {
                                     for (j = 0; j < y_incr; j++)
@@ -242,10 +242,10 @@ namespace OpenJpeg.Internal
                         }
                         else
                         {
-                            uint dest_ptr = (0 + block_y_offset *
-                                                 block_width + block_x_offset);
-                            uint src_ptr = ((uint)buf_pos + (y - y0) *
-                                                buf_line_stride + (x - x0) * buf_col_stride);
+                            uint dest_ptr = 0 + block_y_offset *
+                                block_width + block_x_offset;
+                            uint src_ptr = (uint)buf_pos + (y - y0) *
+                                buf_line_stride + (x - x0) * buf_col_stride;
                             if (x_incr == 1)
                             {
                                 for (j = 0; j < y_incr; j++)
@@ -330,7 +330,7 @@ namespace OpenJpeg.Internal
                 uint x, block_x;
                 uint x_incr;
                 uint block_y_offset;
-                y_incr = (y == y0) ? block_height - (y0 % block_height) :
+                y_incr = y == y0 ? block_height - y0 % block_height :
                          block_height;
                 block_y_offset = block_height - y_incr;
                 y_incr = Math.Min(y_incr, y1 - y);
@@ -340,7 +340,7 @@ namespace OpenJpeg.Internal
                     uint j;
                     uint block_x_offset;
                     int[] src_block;
-                    x_incr = (x == x0) ? block_width - (x0 % block_width) : block_width;
+                    x_incr = x == x0 ? block_width - x0 % block_width : block_width;
                     block_x_offset = block_width - x_incr;
                     x_incr = Math.Min(x_incr, x1 - x);
                     src_block = data_blocks[block_y * block_count_hor + block_x];
@@ -375,7 +375,7 @@ namespace OpenJpeg.Internal
                         }
                         else
                         {
-                            uint src_ptr = (block_y_offset * block_width + block_x_offset);
+                            uint src_ptr = block_y_offset * block_width + block_x_offset;
                             if (buf_col_stride == 1)
                             {
                                 int dest_ptr = (int)(buf_pos + (y - y0) * buf_line_stride
@@ -405,9 +405,9 @@ namespace OpenJpeg.Internal
                             }
                             else
                             {
-                                uint dest_ptr = ((uint)buf_pos + (y - y0) * buf_line_stride
-                                                               +
-                                                                 (x - x0) * buf_col_stride);
+                                uint dest_ptr = (uint)buf_pos + (y - y0) * buf_line_stride
+                                                              +
+                                                              (x - x0) * buf_col_stride;
                                 if (x_incr == 1)
                                 {
                                     for (j = 0; j < y_incr; j++)
@@ -507,10 +507,10 @@ namespace OpenJpeg.Internal
                         }
                         else
                         {
-                            uint dest_ptr = (0 + block_y_offset *
-                                                 block_width + block_x_offset);
-                            uint src_ptr = ((uint)buf_pos + (y - y0) *
-                                                buf_line_stride + (x - x0) * buf_col_stride);
+                            uint dest_ptr = 0 + block_y_offset *
+                                block_width + block_x_offset;
+                            uint src_ptr = (uint)buf_pos + (y - y0) *
+                                buf_line_stride + (x - x0) * buf_col_stride;
                             if (x_incr == 1)
                             {
                                 for (j = 0; j < y_incr; j++)
@@ -645,14 +645,14 @@ namespace OpenJpeg.Internal
             {
                 return null;
             }
-            if (block_width > (~0U) / block_height / sizeof(int))
+            if (block_width > ~0U / block_height / sizeof(int))
             {
                 return null;
             }
 
             uint bch = MyMath.uint_ceildiv(width, block_width);
             uint bcv = MyMath.uint_ceildiv(height, block_height);
-            if (bch > (~0U) / bcv)
+            if (bch > ~0U / bcv)
             {
                 return null;
             }

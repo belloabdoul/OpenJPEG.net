@@ -148,9 +148,9 @@ namespace OpenJpeg.Internal
                 u.F = -0.16875f * r.F - 0.331260f * g.F + 0.5f * b.F;
                 v.F = 0.5f * r.F - 0.41869f * g.F - 0.08131f * b.F;
 #else
-                y.F = (float)((float)(0.299f * r.F) + (float)(0.587f * g.F)) + (float)(0.114f * b.F);
-                u.F = (float)((float)(-0.16875f * r.F) - (float)(0.331260f * g.F)) + (float)(0.5f * b.F);
-                v.F = (float)((float)(0.5f * r.F) - (float)(0.41869f * g.F)) - (float)(0.08131f * b.F);
+                y.F = 0.299f * r.F + 0.587f * g.F + 0.114f * b.F;
+                u.F = -0.16875f * r.F - 0.331260f * g.F + 0.5f * b.F;
+                v.F = 0.5f * r.F - 0.41869f * g.F - 0.08131f * b.F;
 #endif
                 c0[i] = y.I;
                 c1[i] = u.I;
@@ -175,7 +175,7 @@ namespace OpenJpeg.Internal
                 int r = c0[i];
                 int g = c1[i];
                 int b = c2[i];
-                int y = (r + (g * 2) + b) >> 2;
+                int y = (r + g * 2 + b) >> 2;
                 int u = b - g;
                 int v = r - g;
                 c0[i] = y;
@@ -244,8 +244,8 @@ namespace OpenJpeg.Internal
                 g.F = y.F - (u.F * 0.34413f) - (v.F * 0.71414f);
                 b.F = y.F + (u.F * 1.772f);
 #else
-                r.F = y.F + (float)(v.F * 1.402f);
-                g.F = y.F - (float)(u.F * 0.34413f) - (float)(v.F * 0.71414f);
+                r.F = y.F + v.F * 1.402f;
+                g.F = y.F - u.F * 0.34413f - v.F * 0.71414f;
                 {
                     //c# This isn't more correct than the formula above, the goal
                     //   here is to have the exact same result as the c impl. 
@@ -261,7 +261,7 @@ namespace OpenJpeg.Internal
                     tmp = v.F * 0.714139998f;
                     g.F -= tmp;
                 }
-                b.F = y.F + (float)(u.F * 1.772f);
+                b.F = y.F + u.F * 1.772f;
 #endif
                 c0[i] = r.I;
                 c1[i] = g.I;

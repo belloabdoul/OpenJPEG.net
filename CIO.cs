@@ -290,9 +290,9 @@ namespace OpenJpeg
                 throw new EndOfStreamException();
 
             return
-                (_bytes[0]) << 24 |
-                (_bytes[1]) << 16 |
-                (_bytes[2]) << 8 |
+                _bytes[0] << 24 |
+                _bytes[1] << 16 |
+                _bytes[2] << 8 |
                  _bytes[3];
         }
 
@@ -302,19 +302,19 @@ namespace OpenJpeg
                 throw new EndOfStreamException();
 
             return
-                ((uint)_bytes[0]) << 24 |
-                ((uint)_bytes[1]) << 16 |
-                ((uint)_bytes[2]) << 8 |
-                 (uint)_bytes[3];
+                (uint)_bytes[0] << 24 |
+                (uint)_bytes[1] << 16 |
+                (uint)_bytes[2] << 8 |
+                 _bytes[3];
         }
 
         internal static uint ReadUInt(byte[] data, int pos)
         {
             return
-                ((uint)data[pos + 0]) << 24 |
-                ((uint)data[pos + 1]) << 16 |
-                ((uint)data[pos + 2]) << 8 |
-                 (uint)data[pos + 3];
+                (uint)data[pos + 0] << 24 |
+                (uint)data[pos + 1] << 16 |
+                (uint)data[pos + 2] << 8 |
+                 data[pos + 3];
         }
 
         #endregion
@@ -443,12 +443,12 @@ namespace OpenJpeg
 
         public void WriteByte(uint b)
         {
-            _buffer[_pos++] = ((byte)b);
+            _buffer[_pos++] = (byte)b;
         }
 
         public void WriteByte(int b)
         {
-            _buffer[_pos++] = ((byte)b);
+            _buffer[_pos++] = (byte)b;
         }
 
         public void WriteByte(byte b)

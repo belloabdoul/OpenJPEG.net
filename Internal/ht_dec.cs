@@ -25,10 +25,10 @@ namespace OpenJpeg.Internal
             //    throw new EndOfStreamException();
 
             return
-                ((uint)source[pos + 3]) << 24 |
-                ((uint)source[pos + 2]) << 16 |
-                ((uint)source[pos + 1]) << 8 |
-                 (uint)source[pos];
+                (uint)source[pos + 3] << 24 |
+                (uint)source[pos + 2] << 16 |
+                (uint)source[pos + 1] << 8 |
+                 source[pos];
         }
 
         //internal static void WriteUIntLE(uint val, int pos, byte[] dest)
@@ -47,12 +47,12 @@ namespace OpenJpeg.Internal
         /// </remarks>
         internal static uint population_count(uint x)
         {
-            x -= ((x >> 1) & 0x55555555);
-            x = (((x >> 2) & 0x33333333) + (x & 0x33333333));
-            x = (((x >> 4) + x) & 0x0f0f0f0f);
-            x += (x >> 8);
-            x += (x >> 16);
-            return (x & 0x0000003f);
+            x -= (x >> 1) & 0x55555555;
+            x = ((x >> 2) & 0x33333333) + (x & 0x33333333);
+            x = ((x >> 4) + x) & 0x0f0f0f0f;
+            x += x >> 8;
+            x += x >> 16;
+            return x & 0x0000003f;
         }
 
         /// <summary>
@@ -132,12 +132,12 @@ namespace OpenJpeg.Internal
                 vlc >>= (int)(d & 0x3);                 //prefix length
                 consumed_bits += d & 0x3;
 
-                suffix_len = ((d >> 2) & 0x7);
+                suffix_len = (d >> 2) & 0x7;
                 consumed_bits += suffix_len;
 
                 d = (d >> 5) + (vlc & ((1U << (int)suffix_len) - 1)); // u value
-                u[0] = (mode == 1) ? d + 1 : 1; // kappa is 1 for initial line
-                u[1] = (mode == 1) ? 1 : d + 1; // kappa is 1 for initial line
+                u[0] = mode == 1 ? d + 1 : 1; // kappa is 1 for initial line
+                u[1] = mode == 1 ? 1 : d + 1; // kappa is 1 for initial line
             }
             else if (mode == 3)
             { // both u_off are 1, and MEL event is 0
@@ -154,7 +154,7 @@ namespace OpenJpeg.Internal
                     ++consumed_bits;
                     vlc >>= 1;
 
-                    suffix_len = ((d1 >> 2) & 0x7);
+                    suffix_len = (d1 >> 2) & 0x7;
                     consumed_bits += suffix_len;
                     d1 = (d1 >> 5) + (vlc & ((1U << (int)suffix_len) - 1)); // u value
                     u[0] = d1 + 1; //Kappa is 1 for initial line
@@ -168,14 +168,14 @@ namespace OpenJpeg.Internal
                     vlc >>= (int)(d2 & 0x3);                // Consume bits
                     consumed_bits += d2 & 0x3;
 
-                    suffix_len = ((d1 >> 2) & 0x7);
+                    suffix_len = (d1 >> 2) & 0x7;
                     consumed_bits += suffix_len;
 
                     d1 = (d1 >> 5) + (vlc & ((1U << (int)suffix_len) - 1)); // u value
                     u[0] = d1 + 1; //Kappa is 1 for initial line
                     vlc >>= (int)suffix_len;
 
-                    suffix_len = ((d2 >> 2) & 0x7);
+                    suffix_len = (d2 >> 2) & 0x7;
                     consumed_bits += suffix_len;
 
                     d2 = (d2 >> 5) + (vlc & ((1U << (int)suffix_len) - 1)); // u value
@@ -196,14 +196,14 @@ namespace OpenJpeg.Internal
                 vlc >>= (int)(d2 & 0x3);                // Consume bits
                 consumed_bits += d2 & 0x3;
 
-                suffix_len = ((d1 >> 2) & 0x7);
+                suffix_len = (d1 >> 2) & 0x7;
                 consumed_bits += suffix_len;
 
                 d1 = (d1 >> 5) + (vlc & ((1U << (int)suffix_len) - 1)); // u value
                 u[0] = d1 + 3; // add 2+kappa
                 vlc >>= (int)suffix_len;
 
-                suffix_len = ((d2 >> 2) & 0x7);
+                suffix_len = (d2 >> 2) & 0x7;
                 consumed_bits += suffix_len;
 
                 d2 = (d2 >> 5) + (vlc & ((1U << (int)suffix_len) - 1)); // u value
@@ -242,12 +242,12 @@ namespace OpenJpeg.Internal
                 vlc >>= (int)d & 0x3;                //prefix length
                 consumed_bits += d & 0x3;
 
-                suffix_len = ((d >> 2) & 0x7);
+                suffix_len = (d >> 2) & 0x7;
                 consumed_bits += suffix_len;
 
                 d = (d >> 5) + (vlc & ((1U << (int)suffix_len) - 1)); // u value
-                u[0] = (mode == 1) ? d + 1 : 1; //for kappa
-                u[1] = (mode == 1) ? 1 : d + 1; //for kappa
+                u[0] = mode == 1 ? d + 1 : 1; //for kappa
+                u[1] = mode == 1 ? 1 : d + 1; //for kappa
             }
             else if (mode == 3)
             { // both u_off are 1
@@ -263,14 +263,14 @@ namespace OpenJpeg.Internal
                 vlc >>= (int)d2 & 0x3;                // Consume bits
                 consumed_bits += d2 & 0x3;
 
-                suffix_len = ((d1 >> 2) & 0x7);
+                suffix_len = (d1 >> 2) & 0x7;
                 consumed_bits += suffix_len;
 
                 d1 = (d1 >> 5) + (vlc & ((1U << (int)suffix_len) - 1)); // u value
                 u[0] = d1 + 1;  //1 for kappa
                 vlc >>= (int)suffix_len;
 
-                suffix_len = ((d2 >> 2) & 0x7);
+                suffix_len = (d2 >> 2) & 0x7;
                 consumed_bits += suffix_len;
 
                 d2 = (d2 >> 5) + (vlc & ((1U << (int)suffix_len) - 1)); // u value
@@ -377,21 +377,21 @@ namespace OpenJpeg.Internal
                         fail = true;
                         return;
                     }
-                    d = (size > 0) ? src[data] : 0xFFu; // if buffer is consumed
+                    d = size > 0 ? src[data] : 0xFFu; // if buffer is consumed
                                                         // set data to 0xFF
                     if (size == 1)
                     {
                         d |= 0xF;    //if this is MEL+VLC-1, set LSBs to 0xF
                     }
                     // see the standard
-                    data += (size-- > 0) ? 1 : 0; //increment if the end is not reached
+                    data += size-- > 0 ? 1 : 0; //increment if the end is not reached
                     d_bits = 8 - (unstuff ? 1 : 0); //if unstuffing is needed, reduce by 1
                     tmp = (tmp << d_bits) | d; //store bits in tmp
                     bits += d_bits;  //increment tmp by number of bits
-                    unstuff = ((d & 0xFF) == 0xFF); //true of next byte needs
+                    unstuff = (d & 0xFF) == 0xFF; //true of next byte needs
                     //unstuffing
                 }
-                tmp <<= (64 - bits); //push all the way up so the first bit
+                tmp <<= 64 - bits; //push all the way up so the first bit
                 // is the MSB
 
                 fail = false;
@@ -451,7 +451,7 @@ namespace OpenJpeg.Internal
                     }
                     eval = num_runs * 7;            // 7 bits per run
                     runs &= ~((ulong)0x3F << eval); // 6 bits are sufficient
-                    runs |= ((ulong)run) << eval;   // store the value in runs
+                    runs |= (ulong)run << eval;   // store the value in runs
                     num_runs++;                     // increment count
                 }
             }
@@ -514,27 +514,27 @@ namespace OpenJpeg.Internal
                 // data is unstuffed and accumulated in t
                 // bits has the number of bits in t
                 t = val & 0xFF;
-                unstuff = ((val & 0xFF) == 0xFF) ? 1 : 0; // true if the byte needs unstuffing
+                unstuff = (val & 0xFF) == 0xFF ? 1 : 0; // true if the byte needs unstuffing
                 bits -= unstuff;                          // there is one less bit in t if unstuffing is needed
                 t = t << (8 - unstuff);                   // move up to make room for the next byte
 
                 //this is a repeat of the above
                 t |= (val >> 8) & 0xFF;
-                unstuff = (((val >> 8) & 0xFF) == 0xFF) ? 1 : 0;
+                unstuff = ((val >> 8) & 0xFF) == 0xFF ? 1 : 0;
                 bits -= unstuff;
                 t = t << (8 - unstuff);
 
                 t |= (val >> 16) & 0xFF;
-                unstuff = (((val >> 16) & 0xFF) == 0xFF) ? 1 : 0;
+                unstuff = ((val >> 16) & 0xFF) == 0xFF ? 1 : 0;
                 bits -= unstuff;
                 t = t << (8 - unstuff);
 
                 t |= (val >> 24) & 0xFF;
-                this.unstuff = (((val >> 24) & 0xFF) == 0xFF);
+                this.unstuff = ((val >> 24) & 0xFF) == 0xFF;
 
                 // move t to tmp, and push the result all the way up, so we read from
                 // the MSB
-                tmp |= ((ulong)t) << (64 - bits - this.bits);
+                tmp |= (ulong)t << (64 - bits - this.bits);
                 this.bits += bits; //increment the number of bits in tmp
             }
         }
@@ -608,7 +608,7 @@ namespace OpenJpeg.Internal
                 {
                     uint d = src[data--];   // read one byte (this is a half byte)
                     tmp = d >> 4;           // both initialize and set
-                    bits = 4 - (((tmp & 7) == 7) ? 1 : 0); //check standard
+                    bits = 4 - ((tmp & 7) == 7 ? 1 : 0); //check standard
                     unstuff = (d | 0xF) > 0x8F; //this is useful for the next byte
                 }
 
@@ -624,7 +624,7 @@ namespace OpenJpeg.Internal
                     uint d_bits;
                     ulong d = src[data--];  // read one byte and move read pointer
                     //check if the last byte was >0x8F (unstuff == true) and this is 0x7F
-                    d_bits = 8u - ((unstuff && ((d & 0x7F) == 0x7F)) ? 1u : 0u);
+                    d_bits = 8u - (unstuff && (d & 0x7F) == 0x7F ? 1u : 0u);
                     tmp |= d << bits; // move data to vlcp->tmp
                     bits += (int)d_bits;
                     unstuff = d > 0x8F; // for next byte
@@ -665,9 +665,9 @@ namespace OpenJpeg.Internal
                 for (int i = 0; i < num; ++i)
                 {
                     //read a byte, 0 if no more data
-                    ulong d = (size-- > 0) ? src[data--] : 0u;
+                    ulong d = size-- > 0 ? src[data--] : 0u;
                     //check if unstuffing is needed
-                    int d_bits = (int)(8u - ((unstuff && ((d & 0x7F) == 0x7F)) ? 1u : 0u));
+                    int d_bits = (int)(8u - (unstuff && (d & 0x7F) == 0x7F ? 1u : 0u));
                     tmp |= d << bits; // move data to vlcp->tmp
                     bits += d_bits;
                     unstuff = d > 0x8F; // for next byte
@@ -716,7 +716,7 @@ namespace OpenJpeg.Internal
                     while (size > 0)
                     {
                         uint v = src[data--]; // read one byte at a time
-                        val |= (v << i);      // put byte in its correct location
+                        val |= v << i;      // put byte in its correct location
                         --size;
                         i -= 8;
                     }
@@ -726,19 +726,19 @@ namespace OpenJpeg.Internal
                 uint tmp = val >> 24;  //start with the MSB byte
 
                 // test unstuff (previous byte is >0x8F), and this byte is 0x7F
-                int bits = (int) (8u - ((this.unstuff && (((val >> 24) & 0x7F) == 0x7F)) ? 1u : 0u));
-                bool unstuff = (val >> 24) > 0x8F; //this is for the next byte
+                int bits = (int) (8u - (this.unstuff && ((val >> 24) & 0x7F) == 0x7F ? 1u : 0u));
+                bool unstuff = val >> 24 > 0x8F; //this is for the next byte
 
                 tmp |= ((val >> 16) & 0xFF) << bits; //process the next byte
-                bits += (int)(8u - ((unstuff && (((val >> 16) & 0x7F) == 0x7F)) ? 1u : 0u));
+                bits += (int)(8u - (unstuff && ((val >> 16) & 0x7F) == 0x7F ? 1u : 0u));
                 unstuff = ((val >> 16) & 0xFF) > 0x8F;
 
                 tmp |= ((val >> 8) & 0xFF) << bits;
-                bits += (int)(8u - ((unstuff && (((val >> 8) & 0x7F) == 0x7F)) ? 1u : 0u));
+                bits += (int)(8u - (unstuff && ((val >> 8) & 0x7F) == 0x7F ? 1u : 0u));
                 unstuff = ((val >> 8) & 0xFF) > 0x8F;
 
                 tmp |= (val & 0xFF) << bits;
-                bits += (int)(8u - ((unstuff && ((val & 0x7F) == 0x7F)) ? 1u : 0u));
+                bits += (int)(8u - (unstuff && (val & 0x7F) == 0x7F ? 1u : 0u));
                 unstuff = (val & 0xFF) > 0x8F;
 
                 // now move the read and unstuffed bits into vlcp->tmp
@@ -773,7 +773,7 @@ namespace OpenJpeg.Internal
                     while (size > 0)
                     {
                         uint v = src[data--]; // read one byte at a time
-                        val |= (v << i);      // put byte in its correct location
+                        val |= v << i;      // put byte in its correct location
                         --size;
                         i -= 8;
                     }
@@ -783,20 +783,20 @@ namespace OpenJpeg.Internal
                 tmp = val >> 24;
 
                 //test if the last byte > 0x8F (unstuff must be true) and this is 0x7F
-                bits = (int)(8u - ((this.unstuff && (((val >> 24) & 0x7F) == 0x7F)) ? 1u : 0u));
-                unstuff = (val >> 24) > 0x8F;
+                bits = (int)(8u - (this.unstuff && ((val >> 24) & 0x7F) == 0x7F ? 1u : 0u));
+                unstuff = val >> 24 > 0x8F;
 
                 //process the next byte
                 tmp |= ((val >> 16) & 0xFF) << bits;
-                bits += (int)(8u - ((unstuff && (((val >> 16) & 0x7F) == 0x7F)) ? 1u : 0u));
+                bits += (int)(8u - (unstuff && ((val >> 16) & 0x7F) == 0x7F ? 1u : 0u));
                 unstuff = ((val >> 16) & 0xFF) > 0x8F;
 
                 tmp |= ((val >> 8) & 0xFF) << bits;
-                bits += (int)(8u - ((unstuff && (((val >> 8) & 0x7F) == 0x7F)) ? 1u : 0u));
+                bits += (int)(8u - (unstuff && ((val >> 8) & 0x7F) == 0x7F ? 1u : 0u));
                 unstuff = ((val >> 8) & 0xFF) > 0x8F;
 
                 tmp |= (val & 0xFF) << bits;
-                bits += (int)(8u - ((unstuff && ((val & 0x7F) == 0x7F)) ? 1u : 0u));
+                bits += (int)(8u - (unstuff && (val & 0x7F) == 0x7F ? 1u : 0u));
                 unstuff = (val & 0xFF) > 0x8F;
 
                 this.tmp |= (ulong)tmp << this.bits; // move data to mrp pointer
@@ -942,9 +942,9 @@ namespace OpenJpeg.Internal
                 {
                     //read a byte if the buffer is not exhausted, otherwise set it to X
                     ulong d = this.size-- > 0 ? buffer[data++] : this.X;
-                    tmp |= (d << bits);      // store data in msp->tmp
+                    tmp |= d << bits;      // store data in msp->tmp
                     bits += (int)(8u - (unstuff ? 1u : 0u)); // number of bits added to msp->tmp
-                    unstuff = ((d & 0xFF) == 0xFF); // unstuffing for next byte
+                    unstuff = (d & 0xFF) == 0xFF; // unstuffing for next byte
                 }
                 read(); // read 32 bits more
             }
@@ -985,21 +985,21 @@ namespace OpenJpeg.Internal
                 // we accumulate in t and keep a count of the number of bits in bits
                 bits = (int)(8u - (this.unstuff ? 1u : 0u));
                 t = val & 0xFF;
-                unstuff = ((val & 0xFF) == 0xFF);  // Do we need unstuffing next?
+                unstuff = (val & 0xFF) == 0xFF;  // Do we need unstuffing next?
 
                 t |= ((val >> 8) & 0xFF) << bits;
                 bits += (int)(8u - (unstuff ? 1u : 0u));
-                unstuff = (((val >> 8) & 0xFF) == 0xFF);
+                unstuff = ((val >> 8) & 0xFF) == 0xFF;
 
                 t |= ((val >> 16) & 0xFF) << bits;
                 bits += (int)(8u - (unstuff ? 1u : 0u));
-                unstuff = (((val >> 16) & 0xFF) == 0xFF);
+                unstuff = ((val >> 16) & 0xFF) == 0xFF;
 
                 t |= ((val >> 24) & 0xFF) << bits;
                 bits += (int)(8u - (unstuff ? 1u : 0u));
-                this.unstuff = (((val >> 24) & 0xFF) == 0xFF); // for next byte
+                this.unstuff = ((val >> 24) & 0xFF) == 0xFF; // for next byte
 
-                tmp |= ((ulong)t) << this.bits;  // move data to msp->tmp
+                tmp |= (ulong)t << this.bits;  // move data to msp->tmp
                 this.bits += bits;
             }
 

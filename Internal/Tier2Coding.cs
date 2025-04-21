@@ -300,7 +300,7 @@ namespace OpenJpeg.Internal
                 var band = res.bands[bandno];
                 var prc = band.precincts[pi.precno];
 
-                if ((band.x1 - band.x0 == 0) || (band.y1 - band.y0 == 0))
+                if (band.x1 - band.x0 == 0 || band.y1 - band.y0 == 0)
                 {
                     continue;
                 }
@@ -424,7 +424,7 @@ namespace OpenJpeg.Internal
                 var band = res.bands[bandno];
                 var prc = band.precincts[pi.precno];
 
-                if ((band.x1 - band.x0 == 0) || (band.y1 - band.y0 == 0)) continue;
+                if (band.x1 - band.x0 == 0 || band.y1 - band.y0 == 0) continue;
                 uint n_code_blocks = prc.cw * prc.ch;
 
                 for (int cblkno = 0; cblkno < n_code_blocks; cblkno++)
@@ -849,7 +849,7 @@ namespace OpenJpeg.Internal
             uint maxcomp = _cp.specific_param.enc.max_comp_size > 0 ? _image.numcomps : 1;
             uint n_pocs = tcp.numpocs + 1;
 
-            PacketIterator[] pi = PacketIterator.InitialiseEncode(_image, _cp, (uint)tileno, t2_mode, _cinfo);
+            PacketIterator[] pi = PacketIterator.InitialiseEncode(_image, _cp, tileno, t2_mode, _cinfo);
 
             data_written = 0;
 
@@ -1000,7 +1000,7 @@ namespace OpenJpeg.Internal
                 dest.WriteByte(0);
                 dest.WriteByte(4);
                 dest.WriteByte((tile.packno >> 8) & 0xff);
-                dest.WriteByte((tile.packno) & 0xff);
+                dest.WriteByte(tile.packno & 0xff);
                 length -= 6;
             }
 
@@ -1136,7 +1136,7 @@ namespace OpenJpeg.Internal
                         nump++;
                         len += pass.len;
 
-                        if (pass.term != 0 || passno == (cblk.numpasses + layer.numpasses) - 1)
+                        if (pass.term != 0 || passno == cblk.numpasses + layer.numpasses - 1)
                         {
                             increment = Math.Max(increment, MyMath.int_floorlog2((int)len) + 1 
                                                             - ((int)cblk.numlenbits + MyMath.int_floorlog2((int)nump)));
@@ -1156,7 +1156,7 @@ namespace OpenJpeg.Internal
                         nump++;
                         len += pass.len;
 
-                        if (pass.term != 0 || passno == (cblk.numpasses + layer.numpasses) - 1)
+                        if (pass.term != 0 || passno == cblk.numpasses + layer.numpasses - 1)
                         {
                             bio.Write(len, (int)cblk.numlenbits + MyMath.int_floorlog2((int)nump));
                             len = 0;
@@ -1225,7 +1225,7 @@ namespace OpenJpeg.Internal
                         dest.Write(layer.data, layer.data_pos, (int)layer.len);
                     else
                         dest.Skip((int)layer.len);
-                    cblk.numpasses += (uint)layer.numpasses;
+                    cblk.numpasses += layer.numpasses;
                     length -= (int)layer.len;
 
                     //Snip cstr_info code
@@ -1260,10 +1260,10 @@ namespace OpenJpeg.Internal
             if (!bio.ReadBool())
                 return 2;
             if ((n = (uint)bio.Read(2)) != 3)
-                return (3 + n);
+                return 3 + n;
             if ((n = (uint)bio.Read(5)) != 31)
-                return (6 + n);
-            return (37 + (uint)bio.Read0(7));
+                return 6 + n;
+            return 37 + (uint)bio.Read0(7);
         }
 
         //2.5.1 - opj_t2_putcommacode
@@ -1315,8 +1315,8 @@ namespace OpenJpeg.Internal
                 if (first)
                     seg.maxpasses = 10;
                 else
-                    seg.maxpasses = (dec.segs[index - 1].maxpasses == 1 || 
-                                     dec.segs[index - 1].maxpasses == 10) ? 2 : 1;
+                    seg.maxpasses = dec.segs[index - 1].maxpasses == 1 || 
+                                    dec.segs[index - 1].maxpasses == 10 ? 2 : 1;
             }
             else
             {

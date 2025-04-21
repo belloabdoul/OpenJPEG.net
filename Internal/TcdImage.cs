@@ -208,9 +208,9 @@ namespace OpenJpeg.Internal
         internal bool AllocTileComponentData()
         {
             //Console.WriteLine("Data needed: " + data_size_needed);
-            if ((data == null) ||
-                    ((data_size_needed > data_size) &&
-                     (ownsData == false)))
+            if (data == null ||
+                    (data_size_needed > data_size &&
+                     ownsData == false))
             {
                 //C# Note, data_size_needed is number of ints, not bytes like
                 //   in org impl.
@@ -276,7 +276,7 @@ namespace OpenJpeg.Internal
     {
         internal bool IsEmpty
         {
-            get { return (x1 - x0 == 0) || (y1 - y0 == 0); }
+            get { return x1 - x0 == 0 || y1 - y0 == 0; }
         }
 
         /// <summary>

@@ -289,7 +289,7 @@ namespace OpenJpeg.Internal
                 }
             }
 
-            cblk.numbps = max != 0 ? (uint)((MyMath.int_floorlog2(max) + 1) - Constants.T1_NMSEDEC_FRACBITS) : 0;
+            cblk.numbps = max != 0 ? (uint)(MyMath.int_floorlog2(max) + 1 - Constants.T1_NMSEDEC_FRACBITS) : 0;
             if (cblk.numbps == 0)
             {
                 cblk.totalpasses = 0;
@@ -308,8 +308,8 @@ namespace OpenJpeg.Internal
             for (passno = 0; bpno >= 0; ++passno)
             {
                 TcdPass pass = cblk.passes[passno];
-                type = ((bpno < ((int)cblk.numbps - 4)) && (passtype < 2) && 
-                        (cblksty & CCP_CBLKSTY.LAZY) != 0) ? T1_TYPE.RAW : T1_TYPE.MQ;
+                type = bpno < (int)cblk.numbps - 4 && passtype < 2 && 
+                       (cblksty & CCP_CBLKSTY.LAZY) != 0 ? T1_TYPE.RAW : T1_TYPE.MQ;
 
                 // If the previous pass was terminating, we need to reset the encoder
                 if (passno > 0 && cblk.passes[passno - 1].term != 0)
@@ -409,7 +409,7 @@ namespace OpenJpeg.Internal
                 if (cblk.data[pass.rate - 1] == 0xFF)
                     pass.rate--;
 
-                pass.len = pass.rate - ((passno == 0) ? 0 : cblk.passes[passno - 1].rate);
+                pass.len = pass.rate - (passno == 0 ? 0 : cblk.passes[passno - 1].rate);
             }
 
             return cumwmsedec;
@@ -435,13 +435,13 @@ namespace OpenJpeg.Internal
             if ((cblksty & CCP_CBLKSTY.LAZY) != 0)
             {
                 /* For bypass arithmetic bypass, terminate the 4th cleanup pass */
-                if ((bpno == ((int)cblk.numbps - 4)) && (passtype == 2))
+                if (bpno == (int)cblk.numbps - 4 && passtype == 2)
                 {
                     return true;
                 }
                 /* and beyond terminate all the magnitude refinement passes (in raw) */
                 /* and cleanup passes (in MQC) */
-                if ((bpno < ((int)(cblk.numbps) - 4)) && (passtype > 0))
+                if (bpno < (int)cblk.numbps - 4 && passtype > 0)
                 {
                     return true;
                 }
@@ -474,10 +474,10 @@ namespace OpenJpeg.Internal
             }
             else
             {
-                int log2_gain = (orient == 0) ? 0 :
-                                (orient == 3) ? 2 : 1;
+                int log2_gain = orient == 0 ? 0 :
+                                orient == 3 ? 2 : 1;
                 w2 = DWT.Getnorm_real(level, orient);
-                stepsize /= (1 << log2_gain);
+                stepsize /= 1 << log2_gain;
             }
             wmsedec = w1 * w2 * stepsize * (1 << bpno);
             wmsedec *= wmsedec * nmsedec / 8192.0;
@@ -727,7 +727,7 @@ namespace OpenJpeg.Internal
                                 }
                                 UpdateFlags(flagsp, ci, v ? 1u : 0, _w + 2, vsc);
                             }
-                            this.flags[flagsp] |= (T1)(((uint)T1.PI_THIS) << (ci * 3));
+                            this.flags[flagsp] |= (T1)((uint)T1.PI_THIS << (ci * 3));
                         }
                     }
 
@@ -773,7 +773,7 @@ namespace OpenJpeg.Internal
                                 }
                                 UpdateFlags(flagsp, ci, v ? 1u : 0, _w + 2, vsc);
                             }
-                            this.flags[flagsp] |= (T1)(((uint)T1.PI_THIS) << (ci * 3));
+                            this.flags[flagsp] |= (T1)((uint)T1.PI_THIS << (ci * 3));
                         }
                     }
 
@@ -819,7 +819,7 @@ namespace OpenJpeg.Internal
                                 }
                                 UpdateFlags(flagsp, ci, v ? 1u : 0, _w + 2, vsc);
                             }
-                            this.flags[flagsp] |= (T1)(((uint)T1.PI_THIS) << (ci * 3));
+                            this.flags[flagsp] |= (T1)((uint)T1.PI_THIS << (ci * 3));
                         }
                     }
 
@@ -865,7 +865,7 @@ namespace OpenJpeg.Internal
                                 }
                                 UpdateFlags(flagsp, ci, v ? 1u : 0, _w + 2, vsc);
                             }
-                            this.flags[flagsp] |= (T1)(((uint)T1.PI_THIS) << (ci * 3));
+                            this.flags[flagsp] |= (T1)((uint)T1.PI_THIS << (ci * 3));
                         }
                     }
                 }
@@ -925,7 +925,7 @@ namespace OpenJpeg.Internal
                                     }
                                     UpdateFlags(flagsp, ci, v ? 1u : 0, _w + 2, vsc);
                                 }
-                                this.flags[flagsp] |= (T1)(((uint)T1.PI_THIS) << (ci * 3));
+                                this.flags[flagsp] |= (T1)((uint)T1.PI_THIS << (ci * 3));
                             }
                         }
                     }
@@ -970,7 +970,7 @@ namespace OpenJpeg.Internal
                         mqc.Encode(runlen != 4);
                         if (runlen == 4) continue;
                         mqc.Setcurctx(T1_CTXNO.UNI);
-                        mqc.Encode((runlen >> 1) == 1);
+                        mqc.Encode(runlen >> 1 == 1);
                         mqc.Encode((runlen & 1) == 1);
                     }
                     else
@@ -983,7 +983,7 @@ namespace OpenJpeg.Internal
                     {
                         const uint lim = 4U;
                         T1 flagsp = flags[f];
-                        const T1 check = (T1.SIGMA_4 | T1.SIGMA_7 | T1.SIGMA_10 | T1.SIGMA_13 | T1.PI_0 | T1.PI_1 | T1.PI_2 | T1.PI_3);
+                        const T1 check = T1.SIGMA_4 | T1.SIGMA_7 | T1.SIGMA_10 | T1.SIGMA_13 | T1.PI_0 | T1.PI_1 | T1.PI_2 | T1.PI_3;
                         int l_datap = datap;
 
                         if ((flagsp & check) == check)
@@ -995,7 +995,7 @@ namespace OpenJpeg.Internal
                             else if (runlen == 2)
                                 flagsp &= ~(T1.PI_2 | T1.PI_3);
                             else if (runlen == 3)
-                                flagsp &= ~(T1.PI_3);
+                                flagsp &= ~T1.PI_3;
 
                             //C# org impl is writing to a pointer, so we have to write the final
                             //into the array.
@@ -1029,7 +1029,7 @@ namespace OpenJpeg.Internal
                                     v = smr_sign(_data[l_datap]);
                                     bool spb = T1Luts.Getspb(lu);
                                     mqc.Encode(v ^ spb);
-                                    vsc = ((cblksty & CCP_CBLKSTY.VSC) != 0 && ci == 0);
+                                    vsc = (cblksty & CCP_CBLKSTY.VSC) != 0 && ci == 0;
 
                                     UpdateFlags(f, ci, v ? 1u : 0, _w + 2, vsc);
 
@@ -1064,7 +1064,7 @@ namespace OpenJpeg.Internal
                     {
                         uint lim = _h - k;
                         T1 flagsp = flags[f];
-                        const T1 check = (T1.SIGMA_4 | T1.SIGMA_7 | T1.SIGMA_10 | T1.SIGMA_13 | T1.PI_0 | T1.PI_1 | T1.PI_2 | T1.PI_3);
+                        const T1 check = T1.SIGMA_4 | T1.SIGMA_7 | T1.SIGMA_10 | T1.SIGMA_13 | T1.PI_0 | T1.PI_1 | T1.PI_2 | T1.PI_3;
                         int l_datap = datap;
 
                         if ((flagsp & check) == check)
@@ -1104,7 +1104,7 @@ namespace OpenJpeg.Internal
                                     v = smr_sign(_data[l_datap]);
                                     bool spb = T1Luts.Getspb(lu);
                                     mqc.Encode(v ^ spb);
-                                    vsc = ((cblksty & CCP_CBLKSTY.VSC) != 0 && ci == 0);
+                                    vsc = (cblksty & CCP_CBLKSTY.VSC) != 0 && ci == 0;
 
                                     UpdateFlags(f, ci, v ? 1u : 0, _w + 2, vsc);
 
@@ -1223,7 +1223,7 @@ namespace OpenJpeg.Internal
                 file.Write(" -- " + flagssize + " flags\n");
                 for (int c=0; c < flagssize; c++)
                 {                                        
-                    file.Write("{1}: {0}\n", ((uint)flags[c]), c);
+                    file.Write("{1}: {0}\n", (uint)flags[c], c);
                 }
                 file.Write(" -- " + datasize + " ints\n");
                 for (int c = 0; c < datasize; c++)
@@ -1274,7 +1274,7 @@ namespace OpenJpeg.Internal
             uint cblk_w = t1._w;
             uint cblk_h = t1._h;
 
-            int tiledp = (y * (int)tile_w) + x; //Tile data pointer
+            int tiledp = y * (int)tile_w + x; //Tile data pointer
             int[] tiledp_ar = tilec.data;
 
             if (tccp.qmfbid == 1)
@@ -1317,13 +1317,13 @@ namespace OpenJpeg.Internal
 #if TEST_MATH_MODE
                         tmp.I = tiledp_ar[tiledp + (j + 0) * tile_w + i];
                         //lrintf == bankers rounding
-                        d1[t1data++] = (int)(float)Math.Round((float)((float)(tmp.F / band.stepsize) * (1 << Constants.T1_NMSEDEC_FRACBITS)));
+                        d1[t1data++] = (int)(float)Math.Round(tmp.F / band.stepsize * (1 << Constants.T1_NMSEDEC_FRACBITS));
                         tmp.I = tiledp_ar[tiledp + (j + 1) * tile_w + i];
-                        d1[t1data++] = (int)(float)Math.Round((float)((float)(tmp.F / band.stepsize) * (1 << Constants.T1_NMSEDEC_FRACBITS)));
+                        d1[t1data++] = (int)(float)Math.Round(tmp.F / band.stepsize * (1 << Constants.T1_NMSEDEC_FRACBITS));
                         tmp.I = tiledp_ar[tiledp + (j + 2) * tile_w + i];
-                        d1[t1data++] = (int)(float)Math.Round((float)((float)(tmp.F / band.stepsize) * (1 << Constants.T1_NMSEDEC_FRACBITS)));
+                        d1[t1data++] = (int)(float)Math.Round(tmp.F / band.stepsize * (1 << Constants.T1_NMSEDEC_FRACBITS));
                         tmp.I = tiledp_ar[tiledp + (j + 3) * tile_w + i];
-                        d1[t1data++] = (int)(float)Math.Round((float)((float)(tmp.F / band.stepsize) * (1 << Constants.T1_NMSEDEC_FRACBITS)));
+                        d1[t1data++] = (int)(float)Math.Round(tmp.F / band.stepsize * (1 << Constants.T1_NMSEDEC_FRACBITS));
 #else
                         tmp.I = tiledp_ar[tiledp + (j + 0) * tile_w + i];
                         //lrintf == bankers rounding
@@ -1345,7 +1345,7 @@ namespace OpenJpeg.Internal
                         {
 #if TEST_MATH_MODE
                             tmp.I = tiledp_ar[tiledp + k * tile_w + i];
-                            d1[t1data++] = (int)(float)Math.Round((float)((float)(tmp.F / band.stepsize) * (1 << Constants.T1_NMSEDEC_FRACBITS)));
+                            d1[t1data++] = (int)(float)Math.Round(tmp.F / band.stepsize * (1 << Constants.T1_NMSEDEC_FRACBITS));
 #else
                             tmp.I = tiledp_ar[tiledp + k * tile_w + i];
                             d1[t1data++] = (int)Math.Round((tmp.F / band.stepsize) * (1 << Constants.T1_NMSEDEC_FRACBITS));
@@ -1475,7 +1475,7 @@ namespace OpenJpeg.Internal
             cblk_w = t1._w;
             cblk_h = t1._h;
 
-            if ((tccp.roishift) != 0)
+            if (tccp.roishift != 0)
             {
                 if (tccp.roishift >= 31)
                 {
@@ -1483,7 +1483,7 @@ namespace OpenJpeg.Internal
                     {
                         for (int i = 0; i < cblk_w; ++i)
                         {
-                            datap[(j * cblk_w) + i] = 0;
+                            datap[j * cblk_w + i] = 0;
                         }
                     }
                 }
@@ -1494,12 +1494,12 @@ namespace OpenJpeg.Internal
                     {
                         for (int i = 0; i < cblk_w; ++i)
                         {
-                            int val = datap[(j * cblk_w) + i];
+                            int val = datap[j * cblk_w + i];
                             int mag = Math.Abs(val);
                             if (mag >= thresh)
                             {
                                 mag >>= tccp.roishift;
-                                datap[(j * cblk_w) + i] = val < 0 ? -mag : mag;
+                                datap[j * cblk_w + i] = val < 0 ? -mag : mag;
                             }
                         }
                     }
@@ -1570,10 +1570,10 @@ namespace OpenJpeg.Internal
                     uint i = 0, end = cblk_w & ~3U;
                     for (; i < end; i += 4U)
                     {
-                        int tmp0 = datap[(j * cblk_w) + i + 0U];
-                        int tmp1 = datap[(j * cblk_w) + i + 1U];
-                        int tmp2 = datap[(j * cblk_w) + i + 2U];
-                        int tmp3 = datap[(j * cblk_w) + i + 3U];
+                        int tmp0 = datap[j * cblk_w + i + 0U];
+                        int tmp1 = datap[j * cblk_w + i + 1U];
+                        int tmp2 = datap[j * cblk_w + i + 2U];
+                        int tmp3 = datap[j * cblk_w + i + 3U];
                         tiled[tiledp + j * tile_w + i + 0U] = tmp0 / 2;
                         tiled[tiledp + j * tile_w + i + 1U] = tmp1 / 2;
                         tiled[tiledp + j * tile_w + i + 2U] = tmp2 / 2;
@@ -1581,8 +1581,8 @@ namespace OpenJpeg.Internal
                     }
                     for (; i < cblk_w; ++i)
                     {
-                        int tmp = datap[(j * cblk_w) + i];
-                        tiled[tiledp + (j * tile_w) + i] = tmp / 2;
+                        int tmp = datap[j * cblk_w + i];
+                        tiled[tiledp + j * tile_w + i] = tmp / 2;
                     }
                 }
             }
@@ -1597,7 +1597,7 @@ namespace OpenJpeg.Internal
                     int tiledp2 = tiledp;
                     for (int i=0; i < cblk_w; i++)
                     {
-                        tmp.F = (float)datap[pp] * stepsize;
+                        tmp.F = datap[pp] * stepsize;
                         tiled[tiledp2] = tmp.I;
                         pp++;
                         tiledp2++;
@@ -1616,7 +1616,7 @@ namespace OpenJpeg.Internal
         private void set_byte_flag(int pt, byte f)
         {
             //Benchmarks show this to be faster than using a struct
-            flags[pt / 4] = (T1)(((uint)flags[pt / 4] & ~(0x000000FFU << 8 * (pt & 0x03))) | (((uint)f) << 8 * (pt & 0x03)));
+            flags[pt / 4] = (T1)(((uint)flags[pt / 4] & ~(0x000000FFU << 8 * (pt & 0x03))) | ((uint)f << 8 * (pt & 0x03)));
         }
 
         /// <remarks>
@@ -1653,7 +1653,7 @@ namespace OpenJpeg.Internal
                 return true;
 
             // numbps = Mb + 1 - zero_bplanes, Mb = Kmax, zero_bplanes = missing_msbs
-            uint zero_bplanes = (cblk.Mb + 1) - cblk.numbps;
+            uint zero_bplanes = cblk.Mb + 1 - cblk.numbps;
 
             //Compute whole codeblock length from chunk lengths
             uint cblk_len = 0;
@@ -1817,8 +1817,8 @@ namespace OpenJpeg.Internal
             // zero planes plus 1
             uint zero_bplanes_p1 = zero_bplanes + 1;
 
-            if (lengths1 < 2 || (uint)lengths1 > cblk_len ||
-                (uint)(lengths1 + lengths2) > cblk_len)
+            if (lengths1 < 2 || lengths1 > cblk_len ||
+                lengths1 + lengths2 > cblk_len)
             {
                 cinfo.ErrorMT("Malformed HT codeblock. " +
                               "Invalid codeblock length values.");
@@ -1827,7 +1827,7 @@ namespace OpenJpeg.Internal
             // read scup and fix the bytes there
             int lcup = (int)lengths1;  // length of CUP
             //scup is the length of MEL + VLC
-            int scup = (((int)cblkdata[coded_data + lcup - 1]) << 4) + (cblkdata[coded_data + lcup - 2] & 0xF);
+            int scup = (cblkdata[coded_data + lcup - 1] << 4) + (cblkdata[coded_data + lcup - 2] & 0xF);
             if (scup < 2 || scup > lcup || scup > 4079)
             { //something is wrong
                 // The standard stipulates 2 <= Scup <= min(Lcup, 4079)
@@ -1911,7 +1911,7 @@ namespace OpenJpeg.Internal
                     // Is the run terminated in 1? if so, use decoded VLC code,
                     // otherwise, discard decoded data, since we will decoded again
                     // using a different context
-                    qinf[0] = (run == -1) ? qinf[0] : 0;
+                    qinf[0] = run == -1 ? qinf[0] : 0;
 
                     // is run -1 or -2? this means a run has been consumed
                     if (run < 0)
@@ -1955,7 +1955,7 @@ namespace OpenJpeg.Internal
                         run -= 2; //subtract 2, since events number if multiplied by 2
 
                         // if event is 0, discard decoded qinf
-                        qinf[1] = (run == -1) ? qinf[1] : 0;
+                        qinf[1] = run == -1 ? qinf[1] : 0;
 
                         if (run < 0)
                         { // have we consumed all events in a run
@@ -1984,7 +1984,7 @@ namespace OpenJpeg.Internal
                 //                               0 0 0 0 0 0 c c
                 //                               0 0 0 0 0 0 0 0
                 //                               0 0 0 0 0 0 0 0
-                flags[sip] |= (T1)((((qinf[1] & 0x30) | ((qinf[1] & 0xC0) << 2))) << (4 + sip_shift));
+                flags[sip] |= (T1)(((qinf[1] & 0x30) | ((qinf[1] & 0xC0) << 2)) << (4 + sip_shift));
 
                 sip += (x & 0x7) != 0 ? 1 : 0; // move sigma pointer to next entry
                 sip_shift ^= 0x10;        // increment/decrement sip_shift by 16
@@ -1998,7 +1998,7 @@ namespace OpenJpeg.Internal
                 { // if both u_offset are set, get an event from
                   // the MEL run of events
                     run -= 2; //subtract 2, since events number if multiplied by 2
-                    uvlc_mode += (run == -1) ? 1u : 0u; //increment uvlc_mode if event is 1
+                    uvlc_mode += run == -1 ? 1u : 0u; //increment uvlc_mode if event is 1
                     if (run < 0)
                     { // if run is consumed (run is -1 or -2), get another run
                         run = mel.get_run();
@@ -2027,7 +2027,7 @@ namespace OpenJpeg.Internal
                 {
                     locs >>= (x + 4 - width) << 1;    // limits width
                 }
-                locs = height > 1 ? locs : (locs & 0x55);         // limits height
+                locs = height > 1 ? locs : locs & 0x55;         // limits height
 
                 if (((((qinf[0] & 0xF0) >> 4) | (qinf[1] & 0xF0)) & ~locs) != 0)
                 {
@@ -2099,7 +2099,7 @@ namespace OpenJpeg.Internal
                     magsgn.advance((int)m_n);
                     val = ms_val << 31;
                     v_n = ms_val & ((1U << (int)m_n) - 1);
-                    v_n |= (((qinf[0] & 0x400) >> 10) << (int)m_n);
+                    v_n |= ((qinf[0] & 0x400) >> 10) << (int)m_n;
                     v_n |= 1;
                     _data[sp] = (int) (val | ((v_n + 2) << (int) (p - 1)));
                 }
@@ -2141,7 +2141,7 @@ namespace OpenJpeg.Internal
                     magsgn.advance((int)m_n);
                     val = ms_val << 31;
                     v_n = ms_val & ((1U << (int)m_n) - 1);
-                    v_n |= (((qinf[1] & 0x100) >> 8) << (int)m_n);
+                    v_n |= ((qinf[1] & 0x100) >> 8) << (int)m_n;
                     v_n |= 1;
                     _data[sp] = (int)(val | ((v_n + 2) << (int)(p - 1)));
                 }
@@ -2159,7 +2159,7 @@ namespace OpenJpeg.Internal
                     magsgn.advance((int)m_n);
                     val = ms_val << 31;
                     v_n = ms_val & ((1U << (int)m_n) - 1);
-                    v_n |= (((qinf[1] & 0x200) >> 9) << (int)m_n);
+                    v_n |= ((qinf[1] & 0x200) >> 9) << (int)m_n;
                     v_n |= 1;
                     _data[sp + stride] = (int)(val | ((v_n + 2) << (int)(p - 1)));
 
@@ -2185,7 +2185,7 @@ namespace OpenJpeg.Internal
                     magsgn.advance((int)m_n);
                     val = ms_val << 31;
                     v_n = ms_val & ((1U << (int)m_n) - 1);
-                    v_n |= (((qinf[1] & 0x400) >> 10) << (int)m_n);
+                    v_n |= ((qinf[1] & 0x400) >> 10) << (int)m_n;
                     v_n |= 1;
                     _data[sp] = (int)(val | ((v_n + 2) << (int)(p - 1)));
                 }
@@ -2204,7 +2204,7 @@ namespace OpenJpeg.Internal
                     magsgn.advance((int)m_n);
                     val = ms_val << 31;
                     v_n = ms_val & ((1U << (int)m_n) - 1);
-                    v_n |= (((qinf[1] & 0x800) >> 11) << (int)m_n);
+                    v_n |= ((qinf[1] & 0x800) >> 11) << (int)m_n;
                     v_n |= 1; //center of bin
                     _data[sp + stride] = (int)(val | ((v_n + 2) << (int)(p - 1)));
 
@@ -2258,7 +2258,7 @@ namespace OpenJpeg.Internal
                     if (c_q == 0)
                     { //zero context
                         run -= 2;
-                        qinf[0] = (run == -1) ? qinf[0] : 0;
+                        qinf[0] = run == -1 ? qinf[0] : 0;
                         if (run < 0)
                         {
                             run = mel.get_run();
@@ -2291,7 +2291,7 @@ namespace OpenJpeg.Internal
                         if (c_q == 0)
                         { //zero context
                             run -= 2;
-                            qinf[1] = (run == -1) ? qinf[1] : 0;
+                            qinf[1] = run == -1 ? qinf[1] : 0;
                             if (run < 0)
                             {
                                 run = mel.get_run();
@@ -2316,18 +2316,18 @@ namespace OpenJpeg.Internal
                     vlc_val = vlc.advance((int)consumed_bits);
 
                     //calculate E^max and add it to U_q, eqns 5 and 6 in ITU T.814
-                    if (((qinf[0] & 0xF0) & ((qinf[0] & 0xF0) - 1)) != 0)
+                    if ((qinf[0] & 0xF0 & ((qinf[0] & 0xF0) - 1)) != 0)
                     { // is \gamma_q 1?
-                        uint E = (ls0 & 0x7Fu);
-                        E = E > ((uint)get_byte_flag(lsp + 1) & 0x7Fu) ? E : ((uint)get_byte_flag(lsp + 1) & 0x7Fu); //max(E, E^NE, E^NF)
+                        uint E = ls0 & 0x7Fu;
+                        E = E > ((uint)get_byte_flag(lsp + 1) & 0x7Fu) ? E : (uint)get_byte_flag(lsp + 1) & 0x7Fu; //max(E, E^NE, E^NF)
                                                                          //since U_q already has u_q + 1, we subtract 2 instead of 1
                         U_q[0] += E > 2 ? E - 2 : 0;
                     }
 
-                    if (((qinf[1] & 0xF0) & ((qinf[1] & 0xF0) - 1)) != 0)
+                    if ((qinf[1] & 0xF0 & ((qinf[1] & 0xF0) - 1)) != 0)
                     { //is \gamma_q 1?
-                        uint E = ((uint)get_byte_flag(lsp + 1) & 0x7Fu);
-                        E = E > ((uint)get_byte_flag(lsp + 2) & 0x7Fu) ? E : ((uint)get_byte_flag(lsp + 2) & 0x7Fu); //max(E, E^NE, E^NF)
+                        uint E = (uint)get_byte_flag(lsp + 1) & 0x7Fu;
+                        E = E > ((uint)get_byte_flag(lsp + 2) & 0x7Fu) ? E : (uint)get_byte_flag(lsp + 2) & 0x7Fu; //max(E, E^NE, E^NF)
                                                                          //since U_q already has u_q + 1, we subtract 2 instead of 1
                         U_q[1] += E > 2 ? E - 2 : 0;
                     }
@@ -2354,7 +2354,7 @@ namespace OpenJpeg.Internal
                     {
                         locs >>= (x + 4 - width) << 1;
                     }
-                    locs = y + 2 <= height ? locs : (locs & 0x55);
+                    locs = y + 2 <= height ? locs : locs & 0x55;
 
                     if (((((qinf[0] & 0xF0) >> 4) | (qinf[1] & 0xF0)) & ~locs) != 0)
                     {
@@ -2418,7 +2418,7 @@ namespace OpenJpeg.Internal
                         magsgn.advance((int)m_n);
                         val = ms_val << 31;
                         v_n = ms_val & ((1U << (int)m_n) - 1);
-                        v_n |= (((qinf[0] & 0x400) >> 10) << (int)m_n);
+                        v_n |= ((qinf[0] & 0x400) >> 10) << (int)m_n;
                         v_n |= 1;                            //center of bin
                         _data[sp] = (int)(val | ((v_n + 2) << (int)(p - 1)));
                     }
@@ -2459,7 +2459,7 @@ namespace OpenJpeg.Internal
                         magsgn.advance((int)m_n);
                         val = ms_val << 31;
                         v_n = ms_val & ((1U << (int)m_n) - 1);
-                        v_n |= (((qinf[1] & 0x100) >> 8) << (int)m_n);
+                        v_n |= ((qinf[1] & 0x100) >> 8) << (int)m_n;
                         v_n |= 1;                            //center of bin
                         _data[sp] = (int)(val | ((v_n + 2) << (int)(p - 1)));
                     }
@@ -2477,7 +2477,7 @@ namespace OpenJpeg.Internal
                         magsgn.advance((int)m_n);
                         val = ms_val << 31;
                         v_n = ms_val & ((1U << (int)m_n) - 1);
-                        v_n |= (((qinf[1] & 0x200) >> 9) << (int)m_n);
+                        v_n |= ((qinf[1] & 0x200) >> 9) << (int)m_n;
                         v_n |= 1; //center of bin
                         _data[sp + stride] = (int)(val | ((v_n + 2) << (int)(p - 1)));
 
@@ -2503,7 +2503,7 @@ namespace OpenJpeg.Internal
                         magsgn.advance((int)m_n);
                         val = ms_val << 31;
                         v_n = ms_val & ((1U << (int)m_n) - 1);
-                        v_n |= (((qinf[1] & 0x400) >> 10) << (int)m_n);
+                        v_n |= ((qinf[1] & 0x400) >> 10) << (int)m_n;
                         v_n |= 1;                            //center of bin
                         _data[sp] = (int)(val | ((v_n + 2) << (int)(p - 1)));
                     }
@@ -2521,7 +2521,7 @@ namespace OpenJpeg.Internal
                         magsgn.advance((int)m_n);
                         val = ms_val << 31;
                         v_n = ms_val & ((1U << (int)m_n) - 1);
-                        v_n |= (((qinf[1] & 0x800) >> 11) << (int)m_n);
+                        v_n |= ((qinf[1] & 0x800) >> 11) << (int)m_n;
                         v_n |= 1; //center of bin
                         _data[sp + stride] = (int)(val | ((v_n + 2) << (int)(p - 1)));
 
@@ -2992,7 +2992,7 @@ namespace OpenJpeg.Internal
                 }
 
                 st = height;
-                st -= height > 6 ? (((height + 1) & 3) + 3) : height;
+                st -= height > 6 ? ((height + 1) & 3) + 3 : height;
                 for (y = st; y < height; y += 4)
                 {
                     int cur_sig, cur_mbr, nxt_sig, nxt_mbr;
@@ -3339,8 +3339,8 @@ namespace OpenJpeg.Internal
                 TcdSeg seg = cblk.segs[segno];
 
                 // BYPASS mode. Note the (int)cblk.numbps, this is to prevent a wraparound when numbps < 4
-                type = ((bpno_plus_one <= ((int)cblk.numbps - 4) && (passtype < 2) &&
-                       (cblksty & CCP_CBLKSTY.LAZY) == CCP_CBLKSTY.LAZY))
+                type = bpno_plus_one <= (int)cblk.numbps - 4 && passtype < 2 &&
+                       (cblksty & CCP_CBLKSTY.LAZY) == CCP_CBLKSTY.LAZY
                        ? T1_TYPE.RAW : T1_TYPE.MQ;
 
                 if (type == T1_TYPE.RAW)
@@ -3447,7 +3447,7 @@ namespace OpenJpeg.Internal
         //2-5 T1_FLAGS (Macro). Returns int instead of pointer
         private int T1_FLAGS(uint x, uint y)
         {
-            return (int) (x + 1 + ((y / 4) + 1) * (_w + 2));
+            return (int) (x + 1 + (y / 4 + 1) * (_w + 2));
         }
 
         /// <summary>
@@ -3543,7 +3543,7 @@ namespace OpenJpeg.Internal
                                     const bool check_flags = false;
                                     const int data_stride = w;
                                     const int ci = 0;
-                                    if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                                    if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                                     {
                                         do
                                         {
@@ -3579,7 +3579,7 @@ namespace OpenJpeg.Internal
                                     const bool check_flags = false;
                                     const int data_stride = w;
                                     const int ci = 1;
-                                    if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                                    if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                                     {
                                         do
                                         {
@@ -3613,7 +3613,7 @@ namespace OpenJpeg.Internal
                                     const bool check_flags = false;
                                     const int data_stride = w;
                                     const int ci = 2;
-                                    if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                                    if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                                     {
                                         do
                                         {
@@ -3647,7 +3647,7 @@ namespace OpenJpeg.Internal
                                     const bool check_flags = false;
                                     const int data_stride = w;
                                     const int ci = 3;
-                                    if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                                    if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                                     {
                                         do
                                         {
@@ -3683,7 +3683,7 @@ namespace OpenJpeg.Internal
                             const bool check_flags = true;
                             const int data_stride = w;
                             const int ci = 0;
-                            if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                            if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
                                 do
                                 {
@@ -3714,7 +3714,7 @@ namespace OpenJpeg.Internal
                             const bool check_flags = true;
                             const int data_stride = w;
                             const int ci = 1;
-                            if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                            if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
                                 do
                                 {
@@ -3745,7 +3745,7 @@ namespace OpenJpeg.Internal
                             const bool check_flags = true;
                             const int data_stride = w;
                             const int ci = 2;
-                            if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                            if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
                                 do
                                 {
@@ -3776,7 +3776,7 @@ namespace OpenJpeg.Internal
                             const bool check_flags = true;
                             const int data_stride = w;
                             const int ci = 3;
-                            if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                            if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
                                 do
                                 {
@@ -3869,7 +3869,7 @@ namespace OpenJpeg.Internal
                                     const bool check_flags = false;
                                     int data_stride = w;
                                     const int ci = 0;
-                                    if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                                    if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                                     {
                                         do
                                         {
@@ -3905,7 +3905,7 @@ namespace OpenJpeg.Internal
                                     const bool check_flags = false;
                                     int data_stride = w;
                                     const int ci = 1;
-                                    if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                                    if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                                     {
                                         do
                                         {
@@ -3939,7 +3939,7 @@ namespace OpenJpeg.Internal
                                     const bool check_flags = false;
                                     int data_stride = w;
                                     const int ci = 2;
-                                    if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                                    if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                                     {
                                         do
                                         {
@@ -3973,7 +3973,7 @@ namespace OpenJpeg.Internal
                                     const bool check_flags = false;
                                     int data_stride = w;
                                     const int ci = 3;
-                                    if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                                    if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                                     {
                                         do
                                         {
@@ -4009,7 +4009,7 @@ namespace OpenJpeg.Internal
                             const bool check_flags = true;
                             int data_stride = w;
                             const int ci = 0;
-                            if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                            if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
                                 do
                                 {
@@ -4040,7 +4040,7 @@ namespace OpenJpeg.Internal
                             const bool check_flags = true;
                             int data_stride = w;
                             const int ci = 1;
-                            if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                            if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
                                 do
                                 {
@@ -4071,7 +4071,7 @@ namespace OpenJpeg.Internal
                             const bool check_flags = true;
                             int data_stride = w;
                             const int ci = 2;
-                            if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                            if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
                                 do
                                 {
@@ -4102,7 +4102,7 @@ namespace OpenJpeg.Internal
                             const bool check_flags = true;
                             int data_stride = w;
                             const int ci = 3;
-                            if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                            if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
                                 do
                                 {
@@ -4195,7 +4195,7 @@ namespace OpenJpeg.Internal
                                     const bool check_flags = false;
                                     const int data_stride = w;
                                     const int ci = 0;
-                                    if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                                    if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                                     {
                                         do
                                         {
@@ -4231,7 +4231,7 @@ namespace OpenJpeg.Internal
                                     const bool check_flags = false;
                                     const int data_stride = w;
                                     const int ci = 1;
-                                    if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                                    if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                                     {
                                         do
                                         {
@@ -4265,7 +4265,7 @@ namespace OpenJpeg.Internal
                                     const bool check_flags = false;
                                     const int data_stride = w;
                                     const int ci = 2;
-                                    if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                                    if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                                     {
                                         do
                                         {
@@ -4299,7 +4299,7 @@ namespace OpenJpeg.Internal
                                     const bool check_flags = false;
                                     const int data_stride = w;
                                     const int ci = 3;
-                                    if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                                    if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                                     {
                                         do
                                         {
@@ -4335,7 +4335,7 @@ namespace OpenJpeg.Internal
                             const bool check_flags = true;
                             const int data_stride = w;
                             const int ci = 0;
-                            if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                            if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
                                 do
                                 {
@@ -4366,7 +4366,7 @@ namespace OpenJpeg.Internal
                             const bool check_flags = true;
                             const int data_stride = w;
                             const int ci = 1;
-                            if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                            if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
                                 do
                                 {
@@ -4397,7 +4397,7 @@ namespace OpenJpeg.Internal
                             const bool check_flags = true;
                             const int data_stride = w;
                             const int ci = 2;
-                            if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                            if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
                                 do
                                 {
@@ -4428,7 +4428,7 @@ namespace OpenJpeg.Internal
                             const bool check_flags = true;
                             const int data_stride = w;
                             const int ci = 3;
-                            if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                            if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
                                 do
                                 {
@@ -4521,7 +4521,7 @@ namespace OpenJpeg.Internal
                                     const bool check_flags = false;
                                     int data_stride = w;
                                     const int ci = 0;
-                                    if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                                    if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                                     {
                                         do
                                         {
@@ -4557,7 +4557,7 @@ namespace OpenJpeg.Internal
                                     const bool check_flags = false;
                                     int data_stride = w;
                                     const int ci = 1;
-                                    if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                                    if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                                     {
                                         do
                                         {
@@ -4591,7 +4591,7 @@ namespace OpenJpeg.Internal
                                     const bool check_flags = false;
                                     int data_stride = w;
                                     const int ci = 2;
-                                    if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                                    if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                                     {
                                         do
                                         {
@@ -4625,7 +4625,7 @@ namespace OpenJpeg.Internal
                                     const bool check_flags = false;
                                     int data_stride = w;
                                     const int ci = 3;
-                                    if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                                    if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                                     {
                                         do
                                         {
@@ -4661,7 +4661,7 @@ namespace OpenJpeg.Internal
                             const bool check_flags = true;
                             int data_stride = w;
                             const int ci = 0;
-                            if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                            if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
                                 do
                                 {
@@ -4692,7 +4692,7 @@ namespace OpenJpeg.Internal
                             const bool check_flags = true;
                             int data_stride = w;
                             const int ci = 1;
-                            if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                            if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
                                 do
                                 {
@@ -4723,7 +4723,7 @@ namespace OpenJpeg.Internal
                             const bool check_flags = true;
                             int data_stride = w;
                             const int ci = 2;
-                            if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                            if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
                                 do
                                 {
@@ -4754,7 +4754,7 @@ namespace OpenJpeg.Internal
                             const bool check_flags = true;
                             int data_stride = w;
                             const int ci = 3;
-                            if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                            if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
                                 do
                                 {
@@ -4882,7 +4882,7 @@ namespace OpenJpeg.Internal
                                 uint ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
                                 _mqc.Setcurctx((T1_CTXNO)ctxt); //<-- opj_t1_setcurctx macro
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                _data[data + ci * data_stride] += (v ^ (_data[data + ci * data_stride] < 0)) ? poshalf : -poshalf;
+                                _data[data + ci * data_stride] += v ^ (_data[data + ci * data_stride] < 0) ? poshalf : -poshalf;
                                 flags |= (T1)((uint)T1.MU_THIS << (ci * 3));
                             }
                         }
@@ -4898,7 +4898,7 @@ namespace OpenJpeg.Internal
                                 uint ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
                                 _mqc.Setcurctx((T1_CTXNO)ctxt); //<-- opj_t1_setcurctx macro
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                _data[data + ci * data_stride] += (v ^ (_data[data + ci * data_stride] < 0)) ? poshalf : -poshalf;
+                                _data[data + ci * data_stride] += v ^ (_data[data + ci * data_stride] < 0) ? poshalf : -poshalf;
                                 flags |= (T1)((uint)T1.MU_THIS << (ci * 3));
                             }
                         }
@@ -4914,7 +4914,7 @@ namespace OpenJpeg.Internal
                                 uint ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
                                 _mqc.Setcurctx((T1_CTXNO)ctxt); //<-- opj_t1_setcurctx macro
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                _data[data + ci * data_stride] += (v ^ (_data[data + ci * data_stride] < 0)) ? poshalf : -poshalf;
+                                _data[data + ci * data_stride] += v ^ (_data[data + ci * data_stride] < 0) ? poshalf : -poshalf;
                                 flags |= (T1)((uint)T1.MU_THIS << (ci * 3));
                             }
                         }
@@ -4930,7 +4930,7 @@ namespace OpenJpeg.Internal
                                 uint ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
                                 _mqc.Setcurctx((T1_CTXNO)ctxt); //<-- opj_t1_setcurctx macro
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                _data[data + ci * data_stride] += (v ^ (_data[data + ci * data_stride] < 0)) ? poshalf : -poshalf;
+                                _data[data + ci * data_stride] += v ^ (_data[data + ci * data_stride] < 0) ? poshalf : -poshalf;
                                 flags |= (T1)((uint)T1.MU_THIS << (ci * 3));
                             }
                         }
@@ -4992,7 +4992,7 @@ namespace OpenJpeg.Internal
                                 uint ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
                                 _mqc.Setcurctx((T1_CTXNO)ctxt); //<-- opj_t1_setcurctx macro
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                _data[data + ci * data_stride] += (v ^ (_data[data + ci * data_stride] < 0)) ? poshalf : -poshalf;
+                                _data[data + ci * data_stride] += v ^ (_data[data + ci * data_stride] < 0) ? poshalf : -poshalf;
                                 flags |= (T1)((uint)T1.MU_THIS << (ci * 3));
                             }
                         }
@@ -5008,7 +5008,7 @@ namespace OpenJpeg.Internal
                                 uint ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
                                 _mqc.Setcurctx((T1_CTXNO)ctxt); //<-- opj_t1_setcurctx macro
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                _data[data + ci * data_stride] += (v ^ (_data[data + ci * data_stride] < 0)) ? poshalf : -poshalf;
+                                _data[data + ci * data_stride] += v ^ (_data[data + ci * data_stride] < 0) ? poshalf : -poshalf;
                                 flags |= (T1)((uint)T1.MU_THIS << (ci * 3));
                             }
                         }
@@ -5024,7 +5024,7 @@ namespace OpenJpeg.Internal
                                 uint ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
                                 _mqc.Setcurctx((T1_CTXNO)ctxt); //<-- opj_t1_setcurctx macro
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                _data[data + ci * data_stride] += (v ^ (_data[data + ci * data_stride] < 0)) ? poshalf : -poshalf;
+                                _data[data + ci * data_stride] += v ^ (_data[data + ci * data_stride] < 0) ? poshalf : -poshalf;
                                 flags |= (T1)((uint)T1.MU_THIS << (ci * 3));
                             }
                         }
@@ -5040,7 +5040,7 @@ namespace OpenJpeg.Internal
                                 uint ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
                                 _mqc.Setcurctx((T1_CTXNO)ctxt); //<-- opj_t1_setcurctx macro
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                _data[data + ci * data_stride] += (v ^ (_data[data + ci * data_stride] < 0)) ? poshalf : -poshalf;
+                                _data[data + ci * data_stride] += v ^ (_data[data + ci * data_stride] < 0) ? poshalf : -poshalf;
                                 flags |= (T1)((uint)T1.MU_THIS << (ci * 3));
                             }
                         }
@@ -5804,7 +5804,7 @@ namespace OpenJpeg.Internal
                     uint ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
                     _mqc.Setcurctx((T1_CTXNO)ctxt); //<-- opj_t1_setcurctx macro
                     bool v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                    _data[datap + ci * data_stride] += (v ^ (_data[datap + ci * data_stride] < 0)) ? poshalf : -poshalf;
+                    _data[datap + ci * data_stride] += v ^ (_data[datap + ci * data_stride] < 0) ? poshalf : -poshalf;
                     this.flags[flagsp] |= (T1)((uint)T1.MU_THIS << (ci * 3));
                 }
             }
@@ -5815,10 +5815,10 @@ namespace OpenJpeg.Internal
         {
             T1 flag = flags[flagsp];
             if ((flag & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) ==
-                ((T1)((uint)T1.SIGMA_THIS << (ci * 3))))
+                (T1)((uint)T1.SIGMA_THIS << (ci * 3)))
             {
                 bool v = _mqc.RawDecode();
-                _data[datap] += (v ^ (_data[datap] < 0)) ? poshalf : -poshalf;
+                _data[datap] += v ^ (_data[datap] < 0) ? poshalf : -poshalf;
                 flags[flagsp] |= (T1)((uint)T1.MU_THIS << (ci * 3));
             }
         }
@@ -5826,7 +5826,7 @@ namespace OpenJpeg.Internal
         //2.1
         private void DecRefpassStepRaw(int flag_pos, int data_pos, int poshalf, int neghalf, bool vsc)
         {
-            T1 flag = vsc ? (flags[flag_pos] & (~(T1.SIG_S | T1.SIG_SE | T1.SIG_SW | T1.SGN_S))) : flags[flag_pos];
+            T1 flag = vsc ? flags[flag_pos] & ~(T1.SIG_S | T1.SIG_SE | T1.SIG_SW | T1.SGN_S) : flags[flag_pos];
             if ((flag & (T1.SIG | T1.VISIT)) == T1.SIG)
             {
                 throw new NotImplementedException();
@@ -5870,7 +5870,7 @@ namespace OpenJpeg.Internal
                 const bool check_flags = true;
                 const int data_stride = 0;
                 uint flags_stride = _w + 2u;
-                if (!check_flags || ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0))
+                if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                 {
                     do
                     {
@@ -6027,14 +6027,14 @@ namespace OpenJpeg.Internal
                     Array.Clear(flags, 0, flagssize);
                 this.flagssize = flagssize;
 
-                for (int x = 0, b = ((flags_height + 1) * flags_stride); x < flags_stride; ++x)
+                for (int x = 0, b = (flags_height + 1) * flags_stride; x < flags_stride; ++x)
                 {
                     //magic value to hopefully stop any passes being interested in this entry
-                    flags[x] = (T1.PI_0 | T1.PI_1 | T1.PI_2 | T1.PI_3);
-                    flags[b++] = (T1.PI_0 | T1.PI_1 | T1.PI_2 | T1.PI_3);
+                    flags[x] = T1.PI_0 | T1.PI_1 | T1.PI_2 | T1.PI_3;
+                    flags[b++] = T1.PI_0 | T1.PI_1 | T1.PI_2 | T1.PI_3;
                 }
 
-                if ((h % 4) != 0)
+                if (h % 4 != 0)
                 {
                     T1 v = T1.NONE;
                     if (h % 4 == 1)
@@ -6049,7 +6049,7 @@ namespace OpenJpeg.Internal
                     {
                         v |= T1.PI_3;
                     }
-                    for (int b = ((flags_height) * flags_stride), x = 0; x < flags_stride; ++x)
+                    for (int b = flags_height * flags_stride, x = 0; x < flags_stride; ++x)
                     {
                         flags[b++] = v;
                     }
@@ -6064,15 +6064,15 @@ namespace OpenJpeg.Internal
 
         private static uint to_smr(int x)
         {
-            return x >= 0 ? (uint)x : (uint)(-x) | 0x80000000U;
+            return x >= 0 ? (uint)x : (uint)-x | 0x80000000U;
         }
         private static uint smr_abs(int x)
         {
-            return ((uint)x) & 0x7FFFFFFFU;
+            return (uint)x & 0x7FFFFFFFU;
         }
         private static bool smr_sign(int x)
         {
-            return (((uint)x) >> 31) != 0;
+            return (uint)x >> 31 != 0;
         }
 
         /// <summary>
