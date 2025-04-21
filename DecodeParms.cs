@@ -36,105 +36,108 @@ using System;
 using OPJ_UINT32 = System.Int32;
 #endregion
 
-namespace OpenJpeg
+namespace OpenJpeg;
+
+/// <summary>
+/// The decoding parameters
+/// </summary>
+internal struct DecodeParms
 {
-    /// <summary>
-    /// The decoding parameters
-    /// </summary>
-    internal struct DecodeParms
-    {
-        #region Variables and properties
+	#region Variables and properties
 
-        /// <summary>
-        /// Set the number of highest resolution levels to be discarded. 
-	    /// The image resolution is effectively divided by 2 to the power of the number of discarded levels. 
-	    /// The reduce factor is limited by the smallest total number of decomposition levels among tiles.
-	    /// if != 0, then original dimension divided by 2^(reduce); 
-	    /// if == 0 or not used, image is decoded to the full resolution 
-        /// </summary>
-        public uint reduce;
+	/// <summary>
+	/// Set the number of highest resolution levels to be discarded. 
+	/// The image resolution is effectively divided by 2 to the power of the number of discarded levels. 
+	/// The reduce factor is limited by the smallest total number of decomposition levels among tiles.
+	/// if != 0, then original dimension divided by 2^(reduce); 
+	/// if == 0 or not used, image is decoded to the full resolution 
+	/// </summary>
+	public uint reduce;
 
-        /// <summary>
-        /// Set the maximum number of quality layers to decode. 
-        /// If there are less quality layers than the specified number, all the quality layers are decoded.
-        /// if != 0, then only the first "layer" layers are decoded; 
-        /// if == 0 or not used, all the quality layers are decoded 
-        /// </summary>
-        public uint layer;
+	/// <summary>
+	/// Set the maximum number of quality layers to decode. 
+	/// If there are less quality layers than the specified number, all the quality layers are decoded.
+	/// if != 0, then only the first "layer" layers are decoded; 
+	/// if == 0 or not used, all the quality layers are decoded 
+	/// </summary>
+	public uint layer;
 
-        /// <summary>
-        /// Specify whether the decoding should be done on the entire codestream, or be limited to the main header
-	    /// Limiting the decoding to the main header makes it possible to extract the characteristics of the codestream
-	    /// if == NO_LIMITATION, the entire codestream is decoded; 
-	    /// if == LIMIT_TO_MAIN_HEADER, only the main header is decoded; 
-        /// </summary>
-        //public LimitDecoding LimitDecoding = LimitDecoding.NO_LIMITATION;
+	/// <summary>
+	/// Specify whether the decoding should be done on the entire codestream, or be limited to the main header
+	/// Limiting the decoding to the main header makes it possible to extract the characteristics of the codestream
+	/// if == NO_LIMITATION, the entire codestream is decoded; 
+	/// if == LIMIT_TO_MAIN_HEADER, only the main header is decoded; 
+	/// </summary>
+	//public LimitDecoding LimitDecoding = LimitDecoding.NO_LIMITATION;
 
-        #endregion
+	#endregion
 
-        #region Init
+	#region Init
 
-        #endregion
-    }
+	#endregion
+}
 
-    //2.1
-    public class DecompressionParameters
-    {
-        internal OPJ_UINT32 reduce;
+//2.1
+public class DecompressionParameters
+{
+	internal OPJ_UINT32 reduce;
 
-        /// <summary>
-        /// Set the number of highest resolution levels to be discarded. 
-	    /// The image resolution is effectively divided by 2 to the power of the number of discarded levels. 
-	    /// The reduce factor is limited by the smallest total number of decomposition levels among tiles.
-	    /// if != 0, then original dimension divided by 2^(reduce); 
-	    /// if == 0 or not used, image is decoded to the full resolution 
-        /// </summary>
-        public int Reduce { get { return reduce; } set { reduce = value; } }
+	/// <summary>
+	/// Set the number of highest resolution levels to be discarded. 
+	/// The image resolution is effectively divided by 2 to the power of the number of discarded levels. 
+	/// The reduce factor is limited by the smallest total number of decomposition levels among tiles.
+	/// if != 0, then original dimension divided by 2^(reduce); 
+	/// if == 0 or not used, image is decoded to the full resolution 
+	/// </summary>
+	public int Reduce { get => reduce;
+		set => reduce = value;
+	}
 
-        internal OPJ_UINT32 layer;
+	internal OPJ_UINT32 layer;
 
-        /// <summary>
-        /// When set, the color lookup table is not applied to the image
-        /// </summary>
-        public bool IgnoreColorLookupTable { get; set; }
+	/// <summary>
+	/// When set, the color lookup table is not applied to the image
+	/// </summary>
+	public bool IgnoreColorLookupTable { get; set; }
 
-        public bool DisableMultiThreading { get; set; }
+	public bool DisableMultiThreading { get; set; }
 
-        /// <summary>
-        /// Set the maximum number of quality layers to decode. 
-	    /// If there are less quality layers than the specified number, all the quality layers are decoded.
-	    /// if != 0, then only the first "layer" layers are decoded; 
-	    /// if == 0 or not used, all the quality layers are decoded 
-        /// </summary>
-        public int MaxLayer { get { return layer; } set { layer = value; } }
+	/// <summary>
+	/// Set the maximum number of quality layers to decode. 
+	/// If there are less quality layers than the specified number, all the quality layers are decoded.
+	/// if != 0, then only the first "layer" layers are decoded; 
+	/// if == 0 or not used, all the quality layers are decoded 
+	/// </summary>
+	public int MaxLayer { get => layer;
+		set => layer = value;
+	}
 
-        /// <summary>
-        /// Decoding area. For decoding parts of an image
-        /// </summary>
-        internal OPJ_UINT32 DA_x0, DAx1, DA_y0, DA_y1;
+	/// <summary>
+	/// Decoding area. For decoding parts of an image
+	/// </summary>
+	internal OPJ_UINT32 DA_x0, DAx1, DA_y0, DA_y1;
 
-        /// <summary>
-        /// Index of decoded tile
-        /// </summary>
-        internal OPJ_UINT32 tile_index;
+	/// <summary>
+	/// Index of decoded tile
+	/// </summary>
+	internal OPJ_UINT32 tile_index;
 
-        /// <summary>
-        /// For decoding a particular tile
-        /// </summary>
-        internal OPJ_UINT32 n_tile_to_decode;
+	/// <summary>
+	/// For decoding a particular tile
+	/// </summary>
+	internal OPJ_UINT32 n_tile_to_decode;
 
-        internal DPARAMETERS flags;
+	internal DPARAMETERS flags;
 
-        [Flags()]
-        public enum DPARAMETERS
-        {
-            //OPJ_DPARAMETERS_IGNORE_PCLR_CMAP_CDEF_FLAG  
-            IGNORE_PCLR_CMAP_CDEF_FLAG = 1,
-            /// <summary>
-            /// Has to be compiled with SUPPORT_DUMP_FLAG to take effect
-            /// </summary>
-            /// <remarks>OPJ_DPARAMETERS_DUMP_FLAG</remarks>
-            DUMP_FLAG = 2
-        }
-    }
+	[Flags()]
+	public enum DPARAMETERS
+	{
+		//OPJ_DPARAMETERS_IGNORE_PCLR_CMAP_CDEF_FLAG  
+		IGNORE_PCLR_CMAP_CDEF_FLAG = 1,
+		/// <summary>
+		/// Has to be compiled with SUPPORT_DUMP_FLAG to take effect
+		/// </summary>
+		/// <remarks>OPJ_DPARAMETERS_DUMP_FLAG</remarks>
+		DUMP_FLAG = 2
+	}
 }

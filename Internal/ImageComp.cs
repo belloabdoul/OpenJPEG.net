@@ -36,219 +36,218 @@ using System;
 using OPJ_UINT32 = System.UInt32;
 #endregion
 
-namespace OpenJpeg.Internal
+namespace OpenJpeg.Internal;
+
+public class ImageComp : ICloneable
 {
-    public class ImageComp : ICloneable
-    {
-        #region Variables and properties
+    #region Variables and properties
 
-        /// <summary>
-        /// XRsiz: horizontal separation of a sample of this component with respect to the reference grid
-        /// </summary>
-        internal uint dx;
+    /// <summary>
+    /// XRsiz: horizontal separation of a sample of this component with respect to the reference grid
+    /// </summary>
+    internal uint dx;
 
-        /// <summary>
-        /// YRsiz: vertical separation of a sample of this component with respect to the reference grid
-        /// </summary>
-        internal uint dy;
+    /// <summary>
+    /// YRsiz: vertical separation of a sample of this component with respect to the reference grid
+    /// </summary>
+    internal uint dy;
 
-        /// <summary>
-        /// Data width
-        /// </summary>
-        internal uint w;
+    /// <summary>
+    /// Data width
+    /// </summary>
+    internal uint w;
 
-        /// <summary>
-        /// Data height
-        /// </summary>
-        internal uint h;
+    /// <summary>
+    /// Data height
+    /// </summary>
+    internal uint h;
 
-        /// <summary>
-        /// x component offset compared to the whole image
-        /// </summary>
-        internal uint x0;
+    /// <summary>
+    /// x component offset compared to the whole image
+    /// </summary>
+    internal uint x0;
 
-        /// <summary>
-        /// y component offset compared to the whole image
-        /// </summary>
-        internal uint y0;
+    /// <summary>
+    /// y component offset compared to the whole image
+    /// </summary>
+    internal uint y0;
 
-        /// <summary>
-        /// Precision
-        /// </summary>
-        internal OPJ_UINT32 prec;
+    /// <summary>
+    /// Precision
+    /// </summary>
+    internal OPJ_UINT32 prec;
 
-        /// <summary>
-        /// Image depth in bits
-        /// </summary>
-        /// <remarks>Deprecated. Use prec instead</remarks>
-        internal int bpp;
+    /// <summary>
+    /// Image depth in bits
+    /// </summary>
+    /// <remarks>Deprecated. Use prec instead</remarks>
+    internal int bpp;
 
-        /// <summary>
-        /// signed (1) / unsigned (0)
-        /// </summary>
-        internal bool sgnd;
+    /// <summary>
+    /// signed (1) / unsigned (0)
+    /// </summary>
+    internal bool sgnd;
 
-        /// <summary>
-        /// Number of decoded resolution
-        /// </summary>
-        internal uint resno_decoded;
+    /// <summary>
+    /// Number of decoded resolution
+    /// </summary>
+    internal uint resno_decoded;
 
-        /// <summary>
-        /// Number of division by 2 of the out image compared to the original size of image
-        /// </summary>
-        internal uint factor;
+    /// <summary>
+    /// Number of division by 2 of the out image compared to the original size of image
+    /// </summary>
+    internal uint factor;
         
-        /// <summary>
-        /// Image component data
-        /// </summary>
-        internal int[] data;
+    /// <summary>
+    /// Image component data
+    /// </summary>
+    internal int[] data;
 
-        /// <summary>
-        /// Alpha channel
-        /// </summary>
-        internal ushort alpha;
+    /// <summary>
+    /// Alpha channel
+    /// </summary>
+    internal ushort alpha;
 
-        public bool IsAlpha
+    public bool IsAlpha
+    {
+        get => alpha != 0;
+        set => alpha = (ushort) (value ? 1 : 0);
+    }
+
+    /// <summary>
+    /// Bits per pixel for this component
+    /// </summary>
+    /// <remarks>Is usualy zero after opening an image</remarks>
+    public int BPP => bpp;
+
+    /// <summary>
+    /// Bits per pixel for this component
+    /// </summary>
+    public int Prec => (int) prec;
+
+    /// <summary>
+    /// If the component values are signed
+    /// </summary>
+    public bool Signed => sgnd;
+
+    /// <summary>
+    /// Width of this component
+    /// </summary>
+    public int Width => (int) w;
+
+    /// <summary>
+    /// Height of this component
+    /// </summary>
+    public int Height => (int) h;
+
+    /// <summary>
+    /// Image data
+    /// </summary>
+    public int[] Data => data;
+
+    /// <summary>
+    /// Horizontal separation of a sample of this component with respect to the reference grid
+    /// </summary>
+    public uint DX => dx;
+
+    /// <summary>
+    /// Vertical separation of a sample of this component with respect to the reference grid
+    /// </summary>
+    public uint DY => dy;
+
+    #endregion
+
+    #region Init
+
+    internal ImageComp() {}
+
+    /// <summary>
+    /// Creates an image component
+    /// </summary>
+    /// <param name="prec">Precisision</param>
+    /// <param name="bpp">Bits per pixel</param>
+    /// <param name="sgnd">Signed</param>
+    /// <param name="dx">Size compared with whole image</param>
+    /// <param name="dy">Size compared with whole image</param>
+    /// <param name="w">Width</param>
+    /// <param name="h">Height</param>
+    /// <param name="data">Component data</param>
+    public ImageComp(int prec, int bpp, bool sgnd, int dx, int dy, int w, int h, int[] data)
+    {
+        this.prec = (uint) prec;
+        this.bpp = bpp;
+        this.sgnd = sgnd;
+        this.dx = (uint) dx;
+        this.dy = (uint) dy;
+        this.w = (uint) w;
+        this.h = (uint) h;
+        this.data = data;
+    }
+
+    #endregion
+
+    #region ICloneable
+
+    public object Clone() { return MemberwiseClone(); }
+
+    #endregion
+
+    /// <summary>
+    /// Makes this a 1bpp channel
+    /// </summary>
+    /// <param name="threshold">Colors above this value are set 1</param>
+    public void MakeBILevel(int threshold)
+    {
+        prec = 1;
+        bpp = 1;
+
+        for (int c = 0; c < data.Length; c++)
+            data[c] = data[c] > threshold ? 1 : 0;
+    }
+
+    /// <summary>
+    /// Change the precision of the component
+    /// </summary>
+    /// <param name="new_prec">New precision</param>
+    public void ScaleBPC(int new_prec)
+    {
+        if (new_prec == prec)
+            return;
+
+        if (new_prec > prec)
         {
-            get { return alpha != 0; }
-            set { alpha = (ushort) (value ? 1 : 0); }
-        }
-
-        /// <summary>
-        /// Bits per pixel for this component
-        /// </summary>
-        /// <remarks>Is usualy zero after opening an image</remarks>
-        public int BPP { get { return bpp; } }
-
-        /// <summary>
-        /// Bits per pixel for this component
-        /// </summary>
-        public int Prec { get { return (int) prec; } }
-
-        /// <summary>
-        /// If the component values are signed
-        /// </summary>
-        public bool Signed => sgnd;
-
-        /// <summary>
-        /// Width of this component
-        /// </summary>
-        public int Width { get { return (int) w; } }
-
-        /// <summary>
-        /// Height of this component
-        /// </summary>
-        public int Height { get { return (int) h; } }
-
-        /// <summary>
-        /// Image data
-        /// </summary>
-        public int[] Data { get { return data; } }
-
-        /// <summary>
-        /// Horizontal separation of a sample of this component with respect to the reference grid
-        /// </summary>
-        public uint DX => dx;
-
-        /// <summary>
-        /// Vertical separation of a sample of this component with respect to the reference grid
-        /// </summary>
-        public uint DY => dy;
-
-        #endregion
-
-        #region Init
-
-        internal ImageComp() {}
-
-        /// <summary>
-        /// Creates an image component
-        /// </summary>
-        /// <param name="prec">Precisision</param>
-        /// <param name="bpp">Bits per pixel</param>
-        /// <param name="sgnd">Signed</param>
-        /// <param name="dx">Size compared with whole image</param>
-        /// <param name="dy">Size compared with whole image</param>
-        /// <param name="w">Width</param>
-        /// <param name="h">Height</param>
-        /// <param name="data">Component data</param>
-        public ImageComp(int prec, int bpp, bool sgnd, int dx, int dy, int w, int h, int[] data)
-        {
-            this.prec = (uint) prec;
-            this.bpp = bpp;
-            this.sgnd = sgnd;
-            this.dx = (uint) dx;
-            this.dy = (uint) dy;
-            this.w = (uint) w;
-            this.h = (uint) h;
-            this.data = data;
-        }
-
-        #endregion
-
-        #region ICloneable
-
-        public object Clone() { return MemberwiseClone(); }
-
-        #endregion
-
-        /// <summary>
-        /// Makes this a 1bpp channel
-        /// </summary>
-        /// <param name="threshold">Colors above this value are set 1</param>
-        public void MakeBILevel(int threshold)
-        {
-            prec = 1;
-            bpp = 1;
-
-            for (int c = 0; c < data.Length; c++)
-                data[c] = data[c] > threshold ? 1 : 0;
-        }
-
-        /// <summary>
-        /// Change the precision of the component
-        /// </summary>
-        /// <param name="new_prec">New precision</param>
-        public void ScaleBPC(int new_prec)
-        {
-            if (new_prec == prec)
-                return;
-
-            if (new_prec > prec)
+            //Scale up
+            if (Signed)
             {
-                //Scale up
-                if (Signed)
-                {
-                    long newMax = 1u << new_prec;
-                    long oldMax = 1u << (int)prec;
-                    for (int c = 0; c < data.Length; c++)
-                        data[c] = (int)(data[c] * newMax / oldMax);
-                }
-                else
-                {
-                    ulong newMax = 1u << new_prec;
-                    ulong oldMax = 1u << (int)prec;
-                    for (int c = 0; c < data.Length; c++)
-                        data[c] = (int)((ulong)data[c] * newMax / oldMax);
-                }
+                long newMax = 1u << new_prec;
+                long oldMax = 1u << (int)prec;
+                for (int c = 0; c < data.Length; c++)
+                    data[c] = (int)(data[c] * newMax / oldMax);
             }
             else
             {
-                //Scale down
-                int shift = (int)(prec - new_prec);
-                if (Signed)
-                {
-                    for (int c = 0; c < data.Length; c++)
-                        data[c] >>= shift;
-                }
-                else
-                {
-                    for (int c = 0; c < data.Length; c++)
-                        data[c] = (int)((uint)data[c] >> shift);
-                }
+                ulong newMax = 1u << new_prec;
+                ulong oldMax = 1u << (int)prec;
+                for (int c = 0; c < data.Length; c++)
+                    data[c] = (int)((ulong)data[c] * newMax / oldMax);
             }
-            prec = (uint)new_prec;
-            bpp = new_prec;
         }
+        else
+        {
+            //Scale down
+            int shift = (int)(prec - new_prec);
+            if (Signed)
+            {
+                for (int c = 0; c < data.Length; c++)
+                    data[c] >>= shift;
+            }
+            else
+            {
+                for (int c = 0; c < data.Length; c++)
+                    data[c] = (int)((uint)data[c] >> shift);
+            }
+        }
+        prec = (uint)new_prec;
+        bpp = new_prec;
     }
 }
