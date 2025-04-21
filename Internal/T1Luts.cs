@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace OpenJpeg.Internal
+﻿namespace OpenJpeg.Internal
 {
     internal static class T1Luts
     {
