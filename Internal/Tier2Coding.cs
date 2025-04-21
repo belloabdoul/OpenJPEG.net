@@ -58,18 +58,18 @@ namespace OpenJpeg.Internal
         /// Encoding: pointer to the src image. 
         /// Decoding: pointer to the dst image.
         /// </summary>
-        JPXImage _image;
+        private readonly JPXImage _image;
 
         /// <summary>
         /// Coding parameters
         /// </summary>
-        CodingParameters _cp;
+        private readonly CodingParameters _cp;
 
         /// <summary>
         /// The parent compression info obj.
         /// </summary>
         /// <remarks>Not needed for encode</remarks>
-        readonly CompressionInfo _cinfo;
+        private readonly CompressionInfo _cinfo;
 
         #endregion
 
@@ -288,7 +288,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5.3 - opj_t2_read_packet_data
-        bool ReadPacketData(TcdTile tile, PacketIterator pi, byte[] src, int src_pos, out int data_read, int max_length)
+        private bool ReadPacketData(TcdTile tile, PacketIterator pi, byte[] src, int src_pos, out int data_read, int max_length)
         {
             TcdResolution res = tile.comps[pi.compno].resolutions[pi.resno];
             int start_pos = src_pos;
@@ -413,7 +413,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5.3 - opj_t2_skip_packet_data
-        bool SkipPacketData(TcdTile tile, PacketIterator pi, byte[] src, int src_pos, out int data_read, int max_length)
+        private bool SkipPacketData(TcdTile tile, PacketIterator pi, byte[] src, int src_pos, out int data_read, int max_length)
         {
             TcdResolution res = tile.comps[pi.compno].resolutions[pi.resno];
             data_read = 0;
@@ -495,7 +495,7 @@ namespace OpenJpeg.Internal
 
         /// <param name="max_length">How much data can be read from src, can be shorter than "src.Lenght - src_pos"</param>
         /// <remarks>2.5.3 - opj_t2_read_packet_header</remarks>>
-        bool ReadPacketHeader(TcdTile tile, TileCodingParams tcp, PacketIterator pi, out bool is_data_present, byte[] src, int src_pos, out int data_dread, int max_length)
+        private bool ReadPacketHeader(TcdTile tile, TileCodingParams tcp, PacketIterator pi, out bool is_data_present, byte[] src, int src_pos, out int data_dread, int max_length)
         {
             int start_pos = src_pos; //<-- Used to calc num read
             int header_length;
@@ -1239,7 +1239,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5
-        static uint GetCommaCode(BIO bio)
+        private static uint GetCommaCode(BIO bio)
         {
             uint n = 0;
             while (bio.ReadBool())
@@ -1252,7 +1252,7 @@ namespace OpenJpeg.Internal
         /// </summary>
         /// <returns>Number of passes</returns>
         /// <remarks>2.5</remarks>
-        static uint GetNumPasses(BIO bio)
+        private static uint GetNumPasses(BIO bio)
         {
             uint n;
             if (!bio.ReadBool())
@@ -1267,7 +1267,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5.1 - opj_t2_putcommacode
-        static void PutCommaCode(WBIO bio, int n)
+        private static void PutCommaCode(WBIO bio, int n)
         {
             while (--n >= 0)
                 bio.WriteBit(1u);
@@ -1280,7 +1280,7 @@ namespace OpenJpeg.Internal
         /// <param name="bio">Bit Input/Output component</param>
         /// <param name="n">delta Zil</param>
         /// <remarks>2.5.1 - opj_t2_putnumpasses</remarks>
-        static void PutNumPasses(WBIO bio, uint n)
+        private static void PutNumPasses(WBIO bio, uint n)
         {
             if (n == 1)
                 bio.WriteBit(0u);
@@ -1295,7 +1295,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5.1 - opj_t2_init_seg
-        static void InitSegment(TcdCblkDec dec, uint index, CCP_CBLKSTY cblksty, bool first)
+        private static void InitSegment(TcdCblkDec dec, uint index, CCP_CBLKSTY cblksty, bool first)
         {
             if (dec.segs == null)
                 dec.segs = new TcdSeg[index + 1];

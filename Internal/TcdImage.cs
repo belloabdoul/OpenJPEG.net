@@ -185,7 +185,7 @@ namespace OpenJpeg.Internal
         internal uint win_y1;
 
 #if DEBUG
-        float[] FloatData 
+        private float[] FloatData 
         {
             get 
             {

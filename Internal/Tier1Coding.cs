@@ -66,10 +66,10 @@ namespace OpenJpeg.Internal
     {
         #region Variables and properties
 
-        MQCoder _mqc;
+        private readonly MQCoder _mqc;
 
-        int[] _data;
-        T1[] flags;
+        private int[] _data;
+        private T1[] flags;
 #if DEBUG
         public uint[] DEBUG_FLAGS
         {
@@ -84,9 +84,10 @@ namespace OpenJpeg.Internal
         }
 #endif
 
-        uint _w;
-        uint _h;
-        int datasize
+        private uint _w;
+        private uint _h;
+
+        private int datasize
         {
             get { return _data != null ? _data.Length : 0; }
             set
@@ -95,7 +96,8 @@ namespace OpenJpeg.Internal
                     throw new NotImplementedException("Datasize different from _data.Length");
             }
         }
-        int flagssize
+
+        private int flagssize
         {
             get { return flags != null ? flags.Length : 0; }
             set
@@ -106,9 +108,9 @@ namespace OpenJpeg.Internal
         }
 
         //TODO v.2.5: Remove
-        int flags_stride;
+        private int flags_stride;
 
-        static readonly T1[] MOD = {
+        private static readonly T1[] MOD = {
 		    T1.SIG_S, T1.SIG_S|T1.SGN_S,
 		    T1.SIG_E, T1.SIG_E|T1.SGN_E,
 		    T1.SIG_W, T1.SIG_W|T1.SGN_W,
@@ -120,17 +122,17 @@ namespace OpenJpeg.Internal
         /// <summary>
         /// Set to TRUE in multithreaded context
         /// </summary>
-        bool mustuse_cblkdatabuffer;
+        private bool mustuse_cblkdatabuffer;
 
         /// <summary>
         /// Temporary buffer to concatenate all chunks of a codebock
         /// </summary>
-        byte[] cblkdatabuffer;
+        private byte[] cblkdatabuffer;
 
         /// <summary>
         /// Maximum size available in cblkdatabuffer
         /// </summary>
-        uint cblkdatabuffersize
+        private uint cblkdatabuffersize
         {
             get { return cblkdatabuffer != null ? (uint)cblkdatabuffer.Length : 0; }
             set
@@ -417,7 +419,7 @@ namespace OpenJpeg.Internal
         /// Returns whether the pass (bpno, passtype) is terminated
         /// </summary>
         /// <remarks>2.5 - opj_t1_enc_is_term_pass</remarks>
-        static bool EncIsTermPass(TcdCblkEnc cblk, CCP_CBLKSTY cblksty, int bpno, uint passtype)
+        private static bool EncIsTermPass(TcdCblkEnc cblk, CCP_CBLKSTY cblksty, int bpno, uint passtype)
         {
             // Is it the last cleanup pass ?
             if (passtype == 2 && bpno == 0)
@@ -449,7 +451,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_t1_getwmsedec
-        double Getwmsedec(
+        private double Getwmsedec(
                 int nmsedec,
                 uint compno,
                 uint level,
@@ -487,7 +489,7 @@ namespace OpenJpeg.Internal
         /// Encode refinement pass
         /// </summary>
         /// <remarks>2.5 - opj_t1_enc_refpass</remarks>
-        void EncRefpass(int bpno, ref int nmsedec, T1_TYPE type, CCP_CBLKSTY cblksty)
+        private void EncRefpass(int bpno, ref int nmsedec, T1_TYPE type, CCP_CBLKSTY cblksty)
         {
             int one = 1 << (bpno + Constants.T1_NMSEDEC_FRACBITS);
             int f = T1_FLAGS(0, 0); //<-- pointer to this.flags
@@ -662,7 +664,7 @@ namespace OpenJpeg.Internal
         /// Encode significant pass
         /// </summary>
         /// <remarks>2.5 - opj_t1_enc_sigpass</remarks>
-        void EncSigpass(int bpno, ref int nmsedec, T1_TYPE type, CCP_CBLKSTY cblksty)
+        private void EncSigpass(int bpno, ref int nmsedec, T1_TYPE type, CCP_CBLKSTY cblksty)
         {
             nmsedec = 0;
             int one = 1 << (bpno + Constants.T1_NMSEDEC_FRACBITS);
@@ -937,7 +939,7 @@ namespace OpenJpeg.Internal
         /// Encode clean-up pass
         /// </summary>
         /// <remarks>2.5 - opj_t1_enc_clnpass</remarks>
-        void EncClnpass(int bpno, ref int nmsedec, CCP_CBLKSTY cblksty)
+        private void EncClnpass(int bpno, ref int nmsedec, CCP_CBLKSTY cblksty)
         {
             bool v;
             int one = 1 << (bpno + Constants.T1_NMSEDEC_FRACBITS);
@@ -1212,8 +1214,8 @@ namespace OpenJpeg.Internal
         }
 
 #if DEBUG
-        static int cblk_count = 0, n_dumps = 0;
-        void DumpData(string txt)
+        private static int cblk_count = 0, n_dumps = 0;
+        private void DumpData(string txt)
         {
             using (var file = new System.IO.StreamWriter("c:/temp/t1_dump.txt", append: n_dumps++ > 0))
             {
@@ -3407,7 +3409,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_t1_dec_sigpass_raw
-        void DecSigpassRaw(int bpno, CCP_CBLKSTY cblksty)
+        private void DecSigpassRaw(int bpno, CCP_CBLKSTY cblksty)
         {
             int data = 0; //<- pointer to _data
             int flagsp = T1_FLAGS(0, 0); //<- pointer to flags
@@ -3454,7 +3456,7 @@ namespace OpenJpeg.Internal
         /// <remarks>
         /// 2.5 - opj_t1_dec_clnpass
         /// </remarks>
-        void DecClnpass(int bpno, CCP_CBLKSTY cblksty)
+        private void DecClnpass(int bpno, CCP_CBLKSTY cblksty)
         {
             if (_w == 64 && _h == 64)
             {
@@ -3474,7 +3476,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_t1_dec_clnpass_check_segsym
-        void DecClnpassCheckSegsym(CCP_CBLKSTY cblksty)
+        private void DecClnpassCheckSegsym(CCP_CBLKSTY cblksty)
         {
             if ((cblksty & CCP_CBLKSTY.SEGSYM) != 0)
             {
@@ -3495,7 +3497,7 @@ namespace OpenJpeg.Internal
         /// 
         /// Based on macro opj_t1_dec_clnpass_internal
         /// </remarks>
-        void DecClnpass64x64_vsc(int bpno)
+        private void DecClnpass64x64_vsc(int bpno)
         {
             //opj_t1_dec_clnpass_internal
             //(t1, bpno,      vsc,  w,  h, flags_stride)
@@ -3821,7 +3823,7 @@ namespace OpenJpeg.Internal
         /// 
         /// Based on macro opj_t1_dec_clnpass_internal
         /// </remarks>
-        void DecClnpassGeneric_vsc(int bpno)
+        private void DecClnpassGeneric_vsc(int bpno)
         {
             //opj_t1_dec_clnpass_internal
             //(t1, bpno,      vsc,  w,  h, flags_stride)
@@ -4147,7 +4149,7 @@ namespace OpenJpeg.Internal
         /// 
         /// Based on macro opj_t1_dec_clnpass_internal
         /// </remarks>
-        void DecClnpass64x64_novsc(int bpno)
+        private void DecClnpass64x64_novsc(int bpno)
         {
             //opj_t1_dec_clnpass_internal
             //(t1, bpno,      vsc,  w,  h, flags_stride)
@@ -4473,7 +4475,7 @@ namespace OpenJpeg.Internal
         /// 
         /// Based on macro opj_t1_dec_clnpass_internal
         /// </remarks>
-        void DecClnpassGeneric_novsc(int bpno)
+        private void DecClnpassGeneric_novsc(int bpno)
         {
             //opj_t1_dec_clnpass_internal
             //(t1, bpno,      vsc,  w,  h, flags_stride)
@@ -4795,7 +4797,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_t1_dec_refpass_raw
-        void DecRefpassRaw(int bpno)
+        private void DecRefpassRaw(int bpno)
         {
             int one, poshalf;
             int i, j, k;
@@ -4831,7 +4833,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_t1_dec_refpass_mqc
-        void DecRefpassMqc(int bpno)
+        private void DecRefpassMqc(int bpno)
         {
             if (_w == 64 && _h == 64)
                 DecRefpassMqc64x64(bpno);
@@ -4844,7 +4846,7 @@ namespace OpenJpeg.Internal
         /// 
         /// Based on macro opj_t1_dec_refpass_mqc_internal
         /// </remarks>
-        void DecRefpassMqc64x64(int bpno)
+        private void DecRefpassMqc64x64(int bpno)
         {
             //opj_t1_dec_refpass_mqc_internal
             //(t1, bpno,  w,  h, flags_stride)
@@ -4954,7 +4956,7 @@ namespace OpenJpeg.Internal
         /// 
         /// Based on macro opj_t1_dec_refpass_mqc_internal
         /// </remarks>
-        void DecRefpassMqcGeneric(int bpno)
+        private void DecRefpassMqcGeneric(int bpno)
         {
             //opj_t1_dec_refpass_mqc_internal
             //(t1, bpno,     w,     h, flags_stride)
@@ -5060,7 +5062,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_t1_dec_sigpass_mqc
-        void DecSigpassMqc(int bpno, CCP_CBLKSTY cblksty)
+        private void DecSigpassMqc(int bpno, CCP_CBLKSTY cblksty)
         {
             if (_w == 64 && _h == 64)
             {
@@ -5083,7 +5085,7 @@ namespace OpenJpeg.Internal
         /// 
         /// Based on the opj_t1_dec_sigpass_mqc_internal macro
         /// </remarks>
-        void DecSigpassMqc64x64_vsc(int bpno)
+        private void DecSigpassMqc64x64_vsc(int bpno)
         {
             const int flags_stride = 66;
             const int width = 64;
@@ -5252,7 +5254,7 @@ namespace OpenJpeg.Internal
         /// 
         /// Based on the opj_t1_dec_sigpass_mqc_internal macro
         /// </remarks>
-        void DecSigpassMqcGeneric_vsc(int bpno)
+        private void DecSigpassMqcGeneric_vsc(int bpno)
         {
             uint flags_stride = _w + 2u;
             const bool vsc = true;
@@ -5419,7 +5421,7 @@ namespace OpenJpeg.Internal
         /// 
         /// Based on the opj_t1_dec_sigpass_mqc_internal macro
         /// </remarks>
-        void DecSigpassMqc64x64_novsc(int bpno)
+        private void DecSigpassMqc64x64_novsc(int bpno)
         {
             const int flags_stride = 66;
             const int width = 64;
@@ -5588,7 +5590,7 @@ namespace OpenJpeg.Internal
         /// 
         /// Based on the opj_t1_dec_sigpass_mqc_internal macro
         /// </remarks>
-        void DecSigpassMqcGeneric_novsc(int bpno)
+        private void DecSigpassMqcGeneric_novsc(int bpno)
         {
             uint flags_stride = _w + 2u;
             const bool vsc = false;
@@ -5755,7 +5757,7 @@ namespace OpenJpeg.Internal
         /// 
         /// Based on opj_t1_dec_sigpass_step_mqc_macro
         /// </remarks>
-        void DecSigpassStepMqc(int flagsp, int datap, int oneplushalf, int ci, uint flags_stride, bool vsc)
+        private void DecSigpassStepMqc(int flagsp, int datap, int oneplushalf, int ci, uint flags_stride, bool vsc)
         {
             //opj_t1_dec_sigpass_step_mqc_macro
             //(flags,  flagsp, flags_stride,  data, data_stride, ci, mqc,      curctx, v,      a,      c,      ct, oneplushalf, vsc)
@@ -5788,7 +5790,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_t1_dec_refpass_step_mqc
-        void DecRefpassStepMqc(int flagsp, int datap, int poshalf, int ci)
+        private void DecRefpassStepMqc(int flagsp, int datap, int poshalf, int ci)
         {
             T1 flags = this.flags[flagsp];
             //opj_t1_dec_refpass_step_mqc_macro
@@ -5809,7 +5811,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_t1_dec_refpass_step_raw
-        void DecRefpassStepRaw(int flagsp, int datap, int poshalf, int ci)
+        private void DecRefpassStepRaw(int flagsp, int datap, int poshalf, int ci)
         {
             T1 flag = flags[flagsp];
             if ((flag & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) ==
@@ -5822,7 +5824,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.1
-        void DecRefpassStepRaw(int flag_pos, int data_pos, int poshalf, int neghalf, bool vsc)
+        private void DecRefpassStepRaw(int flag_pos, int data_pos, int poshalf, int neghalf, bool vsc)
         {
             T1 flag = vsc ? (flags[flag_pos] & (~(T1.SIG_S | T1.SIG_SE | T1.SIG_SW | T1.SGN_S))) : flags[flag_pos];
             if ((flag & (T1.SIG | T1.VISIT)) == T1.SIG)
@@ -5836,7 +5838,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_t1_dec_sigpass_step_raw
-        void DecSigpassStepRaw(int flagsp, int datap, int oneplushalf, bool vsc, int ci)
+        private void DecSigpassStepRaw(int flagsp, int datap, int oneplushalf, bool vsc, int ci)
         {
             T1 flags = this.flags[flagsp];
 
@@ -5858,7 +5860,7 @@ namespace OpenJpeg.Internal
         /// 
         /// Based on opj_t1_dec_clnpass_step_macro
         /// </remarks>
-        void DecClnpassStep(int flagsp, int datap, int oneplushalf, int ci, bool vsc)
+        private void DecClnpassStep(int flagsp, int datap, int oneplushalf, int ci, bool vsc)
         {
             T1 flags = this.flags[flagsp];
             //opj_t1_dec_clnpass_step_macro
@@ -5897,7 +5899,7 @@ namespace OpenJpeg.Internal
         /// <remarks>
         /// 2.5 - opj_t1_update_flags
         /// </remarks>
-        void UpdateFlags(int flagsp, int ci, uint s, uint stride, bool vsc)
+        private void UpdateFlags(int flagsp, int ci, uint s, uint stride, bool vsc)
         {
             UpdateFlagsMacro(ref flags[flagsp], flagsp, ci, s, stride, vsc);
         }
@@ -5905,7 +5907,7 @@ namespace OpenJpeg.Internal
         /// <remarks>
         /// 2.5 - opj_t1_update_flags_macro
         /// </remarks>
-        void UpdateFlagsMacro(ref T1 flags, int flagsp, int ci, uint s, uint stride, bool vsc)
+        private void UpdateFlagsMacro(ref T1 flags, int flagsp, int ci, uint s, uint stride, bool vsc)
         {
             // East
             this.flags[flagsp - 1] |= (T1)((uint)T1.SIGMA_5 << (3 * ci));
@@ -5945,7 +5947,7 @@ namespace OpenJpeg.Internal
         /// 
         /// This function should be moved to the ht_dec.cs file to align with the original impl.
         /// </remarks>
-        void ht_dec_allocate_buffers(int w, int h)
+        private void ht_dec_allocate_buffers(int w, int h)
         {
             //w * h can at most be 4096
 
@@ -5992,7 +5994,7 @@ namespace OpenJpeg.Internal
         /// <remarks>
         /// 2.5 - opj_t1_allocate_buffers
         /// </remarks>
-        void allocate_buffers(int w, int h)
+        private void allocate_buffers(int w, int h)
         {
             //w * h can at most be 4096
 

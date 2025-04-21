@@ -36,7 +36,7 @@ namespace OpenJpeg.Internal
     {
         #region Variables and properties
 
-        readonly J2kMarker[] _marks;
+        private readonly J2kMarker[] _marks;
 
         internal J2kMarker this[J2K_Marker mark]
         {
@@ -117,5 +117,5 @@ namespace OpenJpeg.Internal
         { Mark = mark; States = states; Handler = handler; }
     }
 
-    delegate bool J2K_Action(uint header_size);
+    internal delegate bool J2K_Action(uint header_size);
 }

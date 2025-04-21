@@ -16,9 +16,9 @@
         /***
          * Used to transform X from window til viewport.
          */
-        readonly double MAPPING_U;
+        private readonly double MAPPING_U;
 
-        readonly double _y_min, _x_min;
+        private readonly double _y_min, _x_min;
 
         #endregion
 

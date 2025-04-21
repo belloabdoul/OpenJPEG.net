@@ -64,38 +64,38 @@ namespace OpenJpeg
         /// table to ease the situation with callbacks
         /// a little.
         /// </summary>
-        readonly DecMstabent _dec_tab;
+        private readonly DecMstabent _dec_tab;
 
         /// <summary>
         /// The parent compression info obj.
         /// </summary>
-        readonly CompressionInfo _cinfo;
+        private readonly CompressionInfo _cinfo;
 
         /// <summary>
         /// If this is a decompressoer
         /// </summary>
-        bool _is_decompressor;
+        private readonly bool _is_decompressor;
 
         /// <summary>
         /// Parameters relevant to encoding or decoding
         /// </summary>
-        J2KEncOrDec _specific_param;
+        private J2KEncOrDec _specific_param;
         internal int NumcompsToDecode { get { return _specific_param.decoder.numcomps_to_decode; } }
 
         /// <summary>
         /// The coding parameters
         /// </summary>
-        CodingParameters _cp;
+        private readonly CodingParameters _cp;
 
         /// <summary>
         /// Index structure of the codestream
         /// </summary>
-        CodestreamIndex _cstr_index;
+        private CodestreamIndex _cstr_index;
 
         /// <summary>
         /// Number of the tile curently concern by coding/decoding
         /// </summary>
-        uint _current_tile_number;
+        private uint _current_tile_number;
 
         /// <summary>
         /// locate the start position of the SOT marker of the current coded tile:
@@ -107,30 +107,31 @@ namespace OpenJpeg
         /// as the J2K-file is written in several parts during encoding, 
 	    /// it enables to make the right correction in position return by cio_tell
         /// </summary>
-        int pos_correction;
+        private int pos_correction;
 
 	    /// <summary>
         /// array used to store the length of each tile
 	    /// </summary>
-	    int[] _tile_len;
+        private int[] _tile_len;
 
         //Decompression only:
 
         /// <summary>
         /// Image being decoded/encoded (m_private_image)
         /// </summary>
-        JPXImage _private_image, _output_image;
+        private JPXImage _private_image, _output_image;
 
         /// <summary>
         /// Stream being decoded/encoded
         /// </summary>
-        CIO _cio;
-        BufferCIO _bcio;
+        private CIO _cio;
+
+        private BufferCIO _bcio;
 
         /// <summary>
         /// Current tile coder/decoder
         /// </summary>
-        TileCoder _tcd;
+        private TileCoder _tcd;
 
         /// <summary>
         /// Image width coming from JP2 IHDR box. 0 from a pure codestream
@@ -855,7 +856,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_j2k_check_poc_val
-        bool CheckPOCval(ProgOrdChang[] pocs, uint tileno, uint n_pocs, uint n_resolutions, uint num_comps, uint num_layers)
+        private bool CheckPOCval(ProgOrdChang[] pocs, uint tileno, uint n_pocs, uint n_resolutions, uint num_comps, uint num_layers)
         {
             uint[] packet_array;
             uint index , resno, compno, layno;
@@ -921,7 +922,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_j2k_setup_mct_encoding
-        bool SetupMCTencoding(TileCodingParams tcp, JPXImage image)
+        private bool SetupMCTencoding(TileCodingParams tcp, JPXImage image)
         {
             uint i;
             uint indix = 1;
@@ -1039,7 +1040,7 @@ namespace OpenJpeg
 
 
         //2.5 - opj_j2k_set_imf_parameters
-        void SetIMF_Parameters(CompressionParameters parameters, JPXImage image)
+        private void SetIMF_Parameters(CompressionParameters parameters, JPXImage image)
         {
             var rsiz = parameters.rsiz;
             var profile = parameters.GetIMF_Profile();
@@ -1124,7 +1125,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_j2k_get_imf_max_NL
-        int GetIMF_MaxNL(CompressionParameters parameters, JPXImage image)
+        private int GetIMF_MaxNL(CompressionParameters parameters, JPXImage image)
         {
             /* Decomposition levels */
             var profile = parameters.GetIMF_Profile();
@@ -1193,7 +1194,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_j2k_set_cinema_parameters
-        void SetCinemaParameters(CompressionParameters parameters, JPXImage image)
+        private void SetCinemaParameters(CompressionParameters parameters, JPXImage image)
         {
             /* Configure cinema parameters */
             int i;
@@ -1338,7 +1339,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_j2k_initialise_4K_poc
-        int Initialise4K_poc(ProgOrdChang[] POC, int numres)
+        private int Initialise4K_poc(ProgOrdChang[] POC, int numres)
         {
             POC[0] = new ProgOrdChang();
             POC[0].tile = 1;
@@ -1360,7 +1361,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_j2k_is_imf_compliant
-        bool IsIMF_Compliant(CompressionParameters parameters, JPXImage image)
+        private bool IsIMF_Compliant(CompressionParameters parameters, JPXImage image)
         {
             OPJ_UINT32 i;
             var profile = parameters.GetIMF_Profile();
@@ -1836,7 +1837,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_j2k_is_cinema_compliant
-        bool IsCinemaCompliant(JPXImage image, J2K_PROFILE rsiz)
+        private bool IsCinemaCompliant(JPXImage image, J2K_PROFILE rsiz)
         {
             /* Number of components */
             if (image.numcomps != 3){
@@ -1895,7 +1896,7 @@ namespace OpenJpeg
         #region Validation
 
         //2.5 - opj_j2k_encoding_validation
-        bool EncodingValidation()
+        private bool EncodingValidation()
         {
             bool l_is_valid = true;
 
@@ -1928,7 +1929,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_j2k_mct_validation
-        bool MctValidation()
+        private bool MctValidation()
         {
             bool l_is_valid = true;
             int i, j;
@@ -2148,7 +2149,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_j2k_end_encoding
-        void EndEncoding()
+        private void EndEncoding()
         {
             _tcd = null;
             _specific_param.encoder.tlm_sot_offsets_buffer = null;
@@ -2156,7 +2157,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_j2k_pre_write_tile
-        bool PreWriteTile (uint p_tile_index)
+        private bool PreWriteTile (uint p_tile_index)
         {
             if (p_tile_index != _current_tile_number) {
                 _cinfo.Error("The given tile index does not match." );
@@ -2173,7 +2174,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_j2k_post_write_tile
-        bool PostWriteTile()
+        private bool PostWriteTile()
         {            
             OPJ_UINT32 n_bytes_written;
 
@@ -2202,7 +2203,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_j2k_write_first_tile_part
-        bool WriteFirstTilePart(out OPJ_UINT32 data_written, uint total_data_size)
+        private bool WriteFirstTilePart(out OPJ_UINT32 data_written, uint total_data_size)
         {
             //Debug.Assert(avalible_data == _cio.BufferBytesLeft);
             OPJ_UINT32 current_n_bytes_written;
@@ -2256,7 +2257,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_j2k_write_all_tile_parts
-        bool WriteAllTileParts(out uint data_written, OPJ_UINT32 total_data_size)
+        private bool WriteAllTileParts(out uint data_written, OPJ_UINT32 total_data_size)
         {
             // Gets the number of tile parts
             OPJ_UINT32 tot_num_tp = GetNumTP(0, _current_tile_number);
@@ -2341,7 +2342,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_j2k_init_info
-        bool InitInfo()
+        private bool InitInfo()
         {
             return CalculateTP(out _specific_param.encoder.total_tile_parts);
         }
@@ -2350,7 +2351,7 @@ namespace OpenJpeg
         /// Writes the SOC marker (Start Of Codestream)
         /// </summary>
         /// <remarks>2.5 - opj_j2k_write_soc</remarks>
-        void WriteSOC()
+        private void WriteSOC()
         {
             _bcio.SetBuffer(ref _specific_param.encoder.header_tile_data, 2);
             _bcio.Write(J2K_Marker.SOC);
@@ -2361,7 +2362,7 @@ namespace OpenJpeg
         /// Writes a SIZ marker (image and tile size)
         /// </summary>
         /// <remarks>2.5 - opj_j2k_write_siz</remarks>
-        void WriteSIZ()
+        private void WriteSIZ()
         {
             //Calculates how much data this marker needs.
             uint size_len = 40 + 3 * _private_image.numcomps;
@@ -2393,7 +2394,7 @@ namespace OpenJpeg
         /// Writes the COD marker (Coding style default)
         /// </summary>
         /// <remarks>2.5 - opj_j2k_write_cod</remarks>
-        bool WriteCOD()
+        private bool WriteCOD()
         {
             //Calculates how much data this marker needs.
             uint code_size = 9u + GetSPCodSPCocSize(_current_tile_number, 0);
@@ -2428,7 +2429,7 @@ namespace OpenJpeg
         /// <param name="compno">the component number to output</param>
         /// <returns>Bytes written</returns>
         /// <remarks>2.5 - opj_j2k_write_SPCod_SPCoc</remarks>
-        bool WriteSPCodSPCoc(int compno, ref uint header_size)
+        private bool WriteSPCodSPCoc(int compno, ref uint header_size)
         {
             var tcp = _cp.tcps[_current_tile_number];
             var tccp = tcp.tccps[compno];
@@ -2468,7 +2469,7 @@ namespace OpenJpeg
         /// Writes QCC marker for each component
         /// </summary>
         /// <remarks>2.5 - opj_j2k_write_all_qcc</remarks>
-        bool WriteAllQCC()
+        private bool WriteAllQCC()
         {
             for (uint compno = 1; compno < _private_image.numcomps; compno++)
             {
@@ -2486,7 +2487,7 @@ namespace OpenJpeg
         /// Compare QCC markers (quantization component)
         /// </summary>
         /// <remarks>2.5 - opj_j2k_compare_qcc</remarks>
-        bool CompareQCC(uint first_comp_no, uint second_comp_no)
+        private bool CompareQCC(uint first_comp_no, uint second_comp_no)
         {
             return CompareSQcdSQcc(_current_tile_number, first_comp_no, second_comp_no);
         }
@@ -2496,7 +2497,7 @@ namespace OpenJpeg
         /// values of a band in the QCD or QCC
         /// </summary>
         /// <remarks>2.5 - opj_j2k_compare_SQcd_SQcc</remarks>
-        bool CompareSQcdSQcc(uint tile_no, uint first_comp_no, uint second_comp_no)
+        private bool CompareSQcdSQcc(uint tile_no, uint first_comp_no, uint second_comp_no)
         {
             uint num_bands;
 
@@ -2538,7 +2539,7 @@ namespace OpenJpeg
         /// Writes COC marker for each component
         /// </summary>
         /// <remarks>2.5 - opj_j2k_write_all_coc</remarks>
-        bool WriteAllCOC()
+        private bool WriteAllCOC()
         {
             for(uint compno = 1; compno < _private_image.numcomps; compno++)
             {
@@ -2556,7 +2557,7 @@ namespace OpenJpeg
         /// Compares 2 COC markers (Coding style component)
         /// </summary>
         /// <remarks>2.5 - opj_j2k_compare_coc</remarks>
-        bool CompareCOC(uint first_comp_no, uint second_comp_no)
+        private bool CompareCOC(uint first_comp_no, uint second_comp_no)
         {
             var tcp = _cp.tcps[_current_tile_number];
             if (tcp.tccps[first_comp_no].csty != tcp.tccps[second_comp_no].csty)
@@ -2569,7 +2570,7 @@ namespace OpenJpeg
         ///  Compare 2 a SPCod/ SPCoc elements, i.e. the coding style of a given component of a tile.
         /// </summary>
         /// <remarks>2.5 - opj_j2k_compare_SPCod_SPCoc</remarks>
-        bool CompareSPCodSPCoc(uint tile_no, uint first_comp_no, uint second_comp_no)
+        private bool CompareSPCodSPCoc(uint tile_no, uint first_comp_no, uint second_comp_no)
         {
             var tcp = _cp.tcps[tile_no];
             var tccp0 = tcp.tccps[first_comp_no];
@@ -2599,7 +2600,7 @@ namespace OpenJpeg
         /// Writes the COC marker (Coding style component)
         /// </summary>
         /// <remarks>2.5 - opj_j2k_write_coc</remarks>
-        void WriteCOC(uint compno)
+        private void WriteCOC(uint compno)
         {
             uint comp_room = (_private_image.numcomps <= 256) ? 1u : 2u;
 
@@ -2614,7 +2615,7 @@ namespace OpenJpeg
         /// Writes the COC marker (Coding style component)
         /// </summary>
         /// <remarks>2.5 - opj_j2k_write_coc_in_memory</remarks>
-        uint WriteCOC_InMemory(uint comp_no)
+        private uint WriteCOC_InMemory(uint comp_no)
         {
             var tcp = _cp.tcps[_current_tile_number];
             uint comp_room = (_private_image.numcomps <= 256) ? 1u : 2u;
@@ -2634,7 +2635,7 @@ namespace OpenJpeg
         /// Writes a SPCod or SPCoc element, i.e. the coding style of a given component of a tile.
         /// </summary>
         /// <remarks>2.5 - opj_j2k_write_SPCod_SPCoc</remarks>
-        bool WiteSPCodSPCoc(uint tile_no, uint comp_no, ref uint header_size)
+        private bool WiteSPCodSPCoc(uint tile_no, uint comp_no, ref uint header_size)
         {
             var tcp = _cp.tcps[_current_tile_number];
             var tccp = tcp.tccps[comp_no];
@@ -2676,7 +2677,7 @@ namespace OpenJpeg
         /// Writes the QCD marker (quantization default)
         /// </summary>
         /// <remarks>2.5 - opj_j2k_write_qcd</remarks>
-        bool WriteQCD()
+        private bool WriteQCD()
         {
             uint qcd_size = 4 + GetSQcdSQccSize(_current_tile_number, 0);
             uint remaining_size = qcd_size;
@@ -2696,7 +2697,7 @@ namespace OpenJpeg
             return true;
         }
 
-        uint GetSQcdSQccSize(uint tileno, uint compno)
+        private uint GetSQcdSQccSize(uint tileno, uint compno)
         {
             var tcp = _cp.tcps[tileno];
             var tccp = tcp.tccps[compno];
@@ -2714,7 +2715,7 @@ namespace OpenJpeg
         /// Writes a SQcd or SQcc element, i.e. the quantization values of a band in the QCD or QCC.
         /// </summary>
         /// <remarks>2.5 - opj_j2k_write_SQcd_SQcc</remarks>
-        bool WriteSQcdSQcc(uint tileno, uint compno, ref uint header_size)
+        private bool WriteSQcdSQcc(uint tileno, uint compno, ref uint header_size)
         {
             var tcp = _cp.tcps[tileno];
             var tccp = tcp.tccps[compno];
@@ -2767,7 +2768,7 @@ namespace OpenJpeg
         /// Writes the QCC marker (quantization component)
         /// </summary>
         /// <remarks>2.5 - opj_j2k_write_qcc</remarks>
-        void WriteQCC(uint compno)
+        private void WriteQCC(uint compno)
         {
             uint qcc_size = 5 + GetSQcdSQccSize(_current_tile_number, compno);
             qcc_size += _private_image.numcomps <= 256 ? 0u : 1u;
@@ -2778,7 +2779,7 @@ namespace OpenJpeg
             _bcio.Commit();
         }
 
-        void WriteQCC_InMemory(uint compno, ref uint header_size)
+        private void WriteQCC_InMemory(uint compno, ref uint header_size)
         {
             uint qcc_size = 6 + GetSQcdSQccSize(_current_tile_number, compno);
             uint remaining_size = qcc_size;
@@ -2811,7 +2812,7 @@ namespace OpenJpeg
         /// Writes the CBD marker (Component bit depth definition)
         /// </summary>
         /// <remarks>2.5 - opj_j2k_write_cbd</remarks>
-        void WriteCBD()
+        private void WriteCBD()
         {
             uint cbd_size = 6 + _private_image.numcomps;
             _bcio.SetBuffer(ref _specific_param.encoder.header_tile_data, cbd_size);
@@ -2838,7 +2839,7 @@ namespace OpenJpeg
         /// Writes the CBD-MCT-MCC-MCO markers (Multi components transform)
         /// </summary>
         /// <remarks>2.5 - opj_j2k_write_mct_data_group</remarks>
-        void WriteMCTdataGroup()
+        private void WriteMCTdataGroup()
         {
             WriteCBD();
 
@@ -2860,7 +2861,7 @@ namespace OpenJpeg
         /// Writes the MCT marker (Multiple Component Transform)
         /// </summary>
         /// <remarks>2.5 - opj_j2k_write_mct_record</remarks>
-        void WriteMCTRecord(MctData mct_record)
+        private void WriteMCTRecord(MctData mct_record)
         {
             uint mct_size = 10u + (uint)mct_record.data_size;
             _bcio.SetBuffer(ref _specific_param.encoder.header_tile_data, mct_size);
@@ -2886,7 +2887,7 @@ namespace OpenJpeg
         /// Writes the MCC marker (Multiple Component Collection)
         /// </summary>
         /// <remarks>2.5 - opj_j2k_write_mcc_record</remarks>
-        void WriteMCCRecord(SimpleMccDecorrelationData mcc_record)
+        private void WriteMCCRecord(SimpleMccDecorrelationData mcc_record)
         {
             uint mask, nbytes;
             if (mcc_record.n_comps > 255)
@@ -2952,7 +2953,7 @@ namespace OpenJpeg
         /// Writes the MCO marker (Multiple component transformation ordering)
         /// </summary>
         /// <remarks>2.5 - </remarks>
-        void WriteMCO()
+        private void WriteMCO()
         {
             var tcp = _cp.tcps[_current_tile_number];
             uint mco_size = 5 + tcp.n_mcc_records;
@@ -2978,7 +2979,7 @@ namespace OpenJpeg
         /// Writes regions of interests
         /// </summary>
         /// <remarks>2.5 - opj_j2k_write_regions</remarks>
-        void WriteRegion()
+        private void WriteRegion()
         {
             var tcps = _cp.tcps;
             for (uint compno = 0; compno < _private_image.numcomps; compno++)
@@ -2993,7 +2994,7 @@ namespace OpenJpeg
         /// Writes the RGN marker (Region Of Interest)
         /// </summary>
         /// <remarks>2.5 - opj_j2k_write_rgn</remarks>
-        void WriteRGN(int tileno, uint compno, uint ncomps)
+        private void WriteRGN(int tileno, uint compno, uint ncomps)
         {
             var tcp = _cp.tcps[tileno];
             uint comp_room = ncomps <= 256 ? 1u : 2u;
@@ -3011,7 +3012,7 @@ namespace OpenJpeg
         /// Writes the COM marker (comment)
         /// </summary>
         /// <remarks>2.5 - opj_j2k_write_com</remarks>
-        void WriteCOM()
+        private void WriteCOM()
         {
             int com_size = _cp.comment.Length + 6;
             _bcio.SetBuffer(ref _specific_param.encoder.header_tile_data, (uint)com_size);
@@ -3089,7 +3090,7 @@ namespace OpenJpeg
         /// Writes one or more PLT markers
         /// </summary>
         /// <returns></returns>
-        bool WritePLT(TcdMarkerInfo marker_info, byte[] d, out uint data_written)
+        private bool WritePLT(TcdMarkerInfo marker_info, byte[] d, out uint data_written)
         {
             byte Zplt = 0;
             int data = 0; //Pointer to d
@@ -3175,7 +3176,7 @@ namespace OpenJpeg
         /// Writes the TLM marker (Tile Length Marker)
         /// </summary>
         /// <remarks>2.5 - opj_j2k_write_tlm</remarks>
-        bool WriteTLM()
+        private bool WriteTLM()
         {
             if (_specific_param.encoder.total_tile_parts > 10921)
             {
@@ -3214,7 +3215,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_j2k_write_updated_tlm
-        void WriteUpdatedTLM()
+        private void WriteUpdatedTLM()
         {
             uint size_per_tile_part = _specific_param.encoder.Ttlmi_is_byte ? 5u : 6u;
             OPJ_UINT32 tlm_size = size_per_tile_part * _specific_param.encoder.total_tile_parts;
@@ -3228,7 +3229,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_j2k_update_tlm
-        void UpdateTLM(OPJ_UINT32 p_tile_part_size)
+        private void UpdateTLM(OPJ_UINT32 p_tile_part_size)
         {
             if (!_specific_param.encoder.Ttlmi_is_byte)
                 _specific_param.encoder.tlm_sot_offsets_buffer[_specific_param.encoder.tlm_sot_offsets_current++] = (byte)(_current_tile_number >> 8);
@@ -3245,7 +3246,7 @@ namespace OpenJpeg
         /// Writes the POC marker (Progression Order Change)
         /// </summary>
         /// <remarks>2.5 - opj_j2k_write_poc</remarks>
-        void WritePOC()
+        private void WritePOC()
         {
             var tcp = _cp.tcps[_current_tile_number];
 
@@ -3261,7 +3262,7 @@ namespace OpenJpeg
         }
 
         //2.5
-        void WritePOC_InMemory(out uint data_written)
+        private void WritePOC_InMemory(out uint data_written)
         {
             var tcp = _cp.tcps[_current_tile_number];
             var tccp = tcp.tccps[0];
@@ -3295,7 +3296,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_j2k_write_sot
-        bool WriteSOT(out OPJ_UINT32 data_written, uint total_data_size)
+        private bool WriteSOT(out OPJ_UINT32 data_written, uint total_data_size)
         {
             if (total_data_size < 12)
             {
@@ -3326,7 +3327,7 @@ namespace OpenJpeg
         /// 
         /// This marker contains the actual tile data.
         /// </remarks>
-        bool WriteSOD(TileCoder tcd, out OPJ_UINT32 data_written, OPJ_UINT32 total_data_size)
+        private bool WriteSOD(TileCoder tcd, out OPJ_UINT32 data_written, OPJ_UINT32 total_data_size)
         {
             TcdMarkerInfo marker_info = null;
 
@@ -3394,7 +3395,7 @@ namespace OpenJpeg
         #region Decode image
 
         //2.5
-        void AddTlmarker(OPJ_UINT32 tileno, J2K_Marker type, long pos, OPJ_UINT32 len)
+        private void AddTlmarker(OPJ_UINT32 tileno, J2K_Marker type, long pos, OPJ_UINT32 len)
         {
             Debug.Assert(_cstr_index != null);
             Debug.Assert(_cstr_index.tile_index != null);
@@ -3726,7 +3727,7 @@ namespace OpenJpeg
         /// Read and decode one tile.
         /// </summary>
         /// <remarks>2.5.3 - opj_j2k_decode_one_tile</remarks>
-        bool DecodeOneTile()
+        private bool DecodeOneTile()
         {
             bool go_on = true;
             uint current_tile_no;
@@ -3817,7 +3818,7 @@ namespace OpenJpeg
         }
 
         //2.5.3 - opj_j2k_decode_tiles
-        bool DecodeTiles()
+        private bool DecodeTiles()
         {
             bool go_on = true;
             uint current_tile_no;
@@ -3997,7 +3998,7 @@ namespace OpenJpeg
         }
 
         //2.5
-        bool UpdateImageData()
+        private bool UpdateImageData()
         {
             uint width_src, height_src;
             uint width_dest, height_dest;
@@ -4232,7 +4233,7 @@ namespace OpenJpeg
         /// functionality, the way it's implemented now saves you from 
         /// calculating the size of the buffer. 
         /// </remarks>
-        bool DecodeTile(OPJ_UINT32 tile_index, /*byte[] data*/ int[][] data)
+        private bool DecodeTile(OPJ_UINT32 tile_index, /*byte[] data*/ int[][] data)
         {
             if ((_specific_param.decoder.state & J2K_STATUS.DATA) == 0 ||
                 tile_index != _current_tile_number)
@@ -4394,7 +4395,7 @@ namespace OpenJpeg
         }
 
         //2.5.3 - opj_j2k_read_tile_header
-        bool ReadTileHeader(out uint tile_index, ref uint? data_size, out int tile_x0, out int tile_y0,
+        private bool ReadTileHeader(out uint tile_index, ref uint? data_size, out int tile_x0, out int tile_y0,
             out int tile_x1, out int tile_y1, out uint n_comps, out bool go_on)
         {
             J2K_Marker current_marker = J2K_Marker.SOT;
@@ -4719,12 +4720,12 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_j2k_decoding_validation
-        bool DecodingValidation()
+        private bool DecodingValidation()
         {
             return _specific_param.decoder.state == J2K_STATUS.NONE; 
         }
 
-        void BuildTPIndexFromTLM()
+        private void BuildTPIndexFromTLM()
         {
             var tlm = _specific_param.decoder.tlm;
             if (tlm == null)
@@ -4825,7 +4826,7 @@ namespace OpenJpeg
         }
 
         //2.5
-        bool CopyDefaultTCPandCreateTcd()
+        private bool CopyDefaultTCPandCreateTcd()
         {
             int n_tiles = (int) (_cp.th * _cp.tw);
             TileCodingParams[] tcps = _cp.tcps;
@@ -4905,7 +4906,7 @@ namespace OpenJpeg
         }
 
         //2.5.3 - opj_j2k_read_header_procedure
-        bool ReadHeaderProcedure()
+        private bool ReadHeaderProcedure()
         {
             _specific_param.decoder.state = J2K_STATUS.MHSOC;
 
@@ -6122,7 +6123,7 @@ namespace OpenJpeg
         }
 
         //2.5
-        void CopyTileComponentParameters()
+        private void CopyTileComponentParameters()
         {
             var tcp = _specific_param.decoder.state == J2K_STATUS.TPH ? _cp.tcps[_current_tile_number] : _specific_param.decoder.default_tcp;
 
@@ -6312,7 +6313,7 @@ namespace OpenJpeg
         /// Gets the maximum size taken by a coc
         /// </summary>
         /// <returns>2.5 - opj_j2k_get_max_coc_size</returns>
-        uint GetMaxCocSize()
+        private uint GetMaxCocSize()
         {
             uint max = 0;
 
@@ -6500,7 +6501,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_j2k_add_mct
-        bool AddMCT(TileCodingParams tcp, JPXImage image, OPJ_UINT32 index)
+        private bool AddMCT(TileCodingParams tcp, JPXImage image, OPJ_UINT32 index)
         {
             OPJ_UINT32 i;
             SimpleMccDecorrelationData mcc_record;
@@ -6993,7 +6994,7 @@ namespace OpenJpeg
         }
 
         //2.5
-        void CopyTileQuantizationParameters()
+        private void CopyTileQuantizationParameters()
         {
             var tcp = _specific_param.decoder.state == J2K_STATUS.TPH ? 
                 _cp.tcps[_current_tile_number] : _specific_param.decoder.default_tcp;
@@ -7015,7 +7016,7 @@ namespace OpenJpeg
         /// Gets the maximum size taken by a qcc
         /// </summary>
         /// <remarks>2.5 - opj_j2k_get_max_qcc_size</remarks>
-        uint GetMaxQccSize()
+        private uint GetMaxQccSize()
         {
             return GetMaxCocSize();
         }
@@ -7072,7 +7073,7 @@ namespace OpenJpeg
         /// Gets the maximum size taken by the writing of a POC
         /// </summary>
         /// <remarks>2.5 - opj_j2k_get_max_poc_size</remarks>
-        uint GetMaxPocSize()
+        private uint GetMaxPocSize()
         {
             uint max_poc = 0;
 
@@ -7094,7 +7095,7 @@ namespace OpenJpeg
         /// Gets the maximum size taken by the toc headers of all the tile parts of any given tile
         /// </summary>
         /// <returns>2.5 - opj_j2k_get_max_toc_size</returns>
-        uint GetMaxTocSize()
+        private uint GetMaxTocSize()
         {
             uint n_tiles;
             uint max = 0;
@@ -7115,7 +7116,7 @@ namespace OpenJpeg
         /// Gets the maximum size taken by the headers of the SOT
         /// </summary>
         /// <remarks>2.5 - opj_j2k_get_specific_header_sizes</remarks>
-        uint GetSpecificHeaderSizes()
+        private uint GetSpecificHeaderSizes()
         {
             uint n_bytes = 0;
             uint n_comps;
@@ -7157,7 +7158,7 @@ namespace OpenJpeg
         /// Return the number of packets in the tile
         /// </summary>
         /// <remarks>2.5 - opj_get_encoding_packet_count</remarks>
-        uint opj_get_encoding_packet_count(JPXImage image, CodingParameters cp, uint tile_no)
+        private uint opj_get_encoding_packet_count(JPXImage image, CodingParameters cp, uint tile_no)
         {
             OPJ_UINT32 max_res;
             OPJ_UINT32 max_prec;
@@ -7218,7 +7219,7 @@ namespace OpenJpeg
         /// Gets the size taken by writing a SPCod or SPCoc for the given tile and component
         /// </summary>
         /// <remarks>2.5 - opj_j2k_get_SPCod_SPCoc_size</remarks>
-        uint GetSPCodSPCocSize(uint tile_no, uint comp_no)
+        private uint GetSPCodSPCocSize(uint tile_no, uint comp_no)
         {
             var tcp = _cp.tcps[tile_no];
             var tccp = tcp.tccps[comp_no];
@@ -7456,7 +7457,7 @@ namespace OpenJpeg
         /// Updates the rates of the tcp
         /// </summary>
         /// <remarks>2.5 - opj_j2k_update_rates</remarks>
-        void UpdateRates()
+        private void UpdateRates()
         {
             CodingParameters cp;
             JPXImage image;
@@ -7602,22 +7603,22 @@ namespace OpenJpeg
             }
         }
 
-        delegate float StrideFunc(TileCodingParams tcp);
+        private delegate float StrideFunc(TileCodingParams tcp);
 
         //2.5 - opj_j2k_get_tp_stride
-        float GetTpStride(TileCodingParams tcp)
+        private float GetTpStride(TileCodingParams tcp)
         {
             return (float)((tcp.n_tile_parts - 1) * 14);
         }
 
         //2.5 - opj_j2k_get_default_stride
-        float GetDefaultStride(TileCodingParams tcp)
+        private float GetDefaultStride(TileCodingParams tcp)
         {
             return 0;
         }
 
         //2.5 - opj_j2k_calculate_tp
-        bool CalculateTP(out uint n_tiles)
+        private bool CalculateTP(out uint n_tiles)
         {
             int cn_tiles = (int) (_cp.tw * _cp.th);
             n_tiles = 0;
@@ -7644,7 +7645,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_j2k_get_num_tp
-        uint GetNumTP(uint pino, uint tileno)
+        private uint GetNumTP(uint pino, uint tileno)
         {
             Debug.Assert(pino < _cp.tcps[tileno].numpocs + 1);
 
@@ -7711,7 +7712,7 @@ namespace OpenJpeg
 #region Spesific params
 
         //[System.Runtime.InteropServices.StructLayoutAttribute(System.Runtime.InteropServices.LayoutKind.Explicit)]
-        struct J2KEncOrDec
+        private struct J2KEncOrDec
         {
             //[System.Runtime.InteropServices.FieldOffsetAttribute(0)]
             public DecParams decoder;
@@ -7721,7 +7722,7 @@ namespace OpenJpeg
         }
 
         //opj_encoding_param 
-        struct EncParams
+        private struct EncParams
         {
             /// <summary>
             /// Total num of tile parts in whole image = num tiles* num tileparts in each tile
@@ -7825,7 +7826,7 @@ namespace OpenJpeg
         /// <remarks>
         /// 2.5.3 - opj_j2k_tlm_tile_part_info
         /// </remarks>
-        struct TlmTilePartInfo
+        private struct TlmTilePartInfo
         {
             /// <summary>
             /// Tile index of the tile part. Ttlmi field
@@ -7845,7 +7846,7 @@ namespace OpenJpeg
         /// <remarks>
         /// 2.5.3 - opj_j2k_tlm_info 
         /// </remarks>
-        class TlmInfo
+        private class TlmInfo
         {
             /// <summary>
             /// Number of entries in m_tile_part_infos.
@@ -7861,7 +7862,7 @@ namespace OpenJpeg
         }
 
         //2.5.3 - opj_j2k_dec 
-        struct DecParams
+        private struct DecParams
         {
             /// <summary>
             /// Locate in which part of the codestream the decoder is (main header, tile header, end)
@@ -7935,7 +7936,7 @@ namespace OpenJpeg
             /// </summary>
             internal long[] intersecting_tile_parts_offset;
 
-            uint bitvector1;
+            private uint bitvector1;
 
             /// <summary>
             /// To tell that a tile can be decoded.

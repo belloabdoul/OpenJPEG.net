@@ -273,7 +273,7 @@ namespace OpenJpeg
         ERR = 0x8000
     }
 
-    enum JP2_STATE
+    internal enum JP2_STATE
     {
       NONE            = 0x0,
       SIGNATURE       = 0x1,
@@ -284,7 +284,7 @@ namespace OpenJpeg
       UNKNOWN         = 0x7fffffff /* ISO C restricts enumerator values to range of 'int' */
     }
 
-    enum JP2_IMG_STATE
+    internal enum JP2_IMG_STATE
     {
         NONE        = 0x0,
         UNKNOWN     = 0x7fffffff
@@ -293,7 +293,7 @@ namespace OpenJpeg
     /// <summary>
     /// Markers for JP2 container
     /// </summary>
-    enum JP2_Marker : uint
+    internal enum JP2_Marker : uint
     {
         /// <summary>
         /// JPEG 2000 signature box
@@ -593,7 +593,7 @@ namespace OpenJpeg
     }
 
     [Flags()]
-    enum CCP_CBLKSTY
+    internal enum CCP_CBLKSTY
     {
         NONE = 0x00,
 
@@ -631,14 +631,14 @@ namespace OpenJpeg
         HTMIXED = 0x80
     }
 
-    enum CCP_QNTSTY
+    internal enum CCP_QNTSTY
     {
         NOQNT = 0,
         SIQNT = 1,
         SEQNT = 2
     }
 
-    enum T2_MODE
+    internal enum T2_MODE
     {
         /// <summary>
         /// Function called in Rate allocation process
@@ -655,7 +655,7 @@ namespace OpenJpeg
     /// Flags used by the T1 coding. (various defines in t1.h)
     /// </summary>
     [Flags()]
-    enum T1 : uint
+    internal enum T1 : uint
     {
         /// <summary>
         /// Context orientation : North-East direction
@@ -772,7 +772,7 @@ namespace OpenJpeg
         CHI_S = CHI_2
     }
 
-    enum T1_TYPE : sbyte
+    internal enum T1_TYPE : sbyte
     {
         /// <summary>
         /// Normal coding using entropy coder
@@ -786,7 +786,7 @@ namespace OpenJpeg
         RAW = 1
     }
 
-    enum T1_NUMCTXS
+    internal enum T1_NUMCTXS
     {
         ZC = 9,
         SC = 5,
@@ -795,7 +795,7 @@ namespace OpenJpeg
         UNI = 1
     }
 
-    enum T1_CTXNO : byte
+    internal enum T1_CTXNO : byte
     {
         ZC = 0,
         SC = ZC + T1_NUMCTXS.ZC,

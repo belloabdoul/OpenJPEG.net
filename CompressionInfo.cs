@@ -51,27 +51,27 @@ namespace OpenJpeg
         /// Whenever this object is a decompressor or
         /// a compressor
         /// </summary>
-        readonly bool _is_decompressor;
+        private readonly bool _is_decompressor;
 
         /// <summary>
         /// Type of compression or decompression
         /// </summary>
-        CodecFormat _codec_format;
+        private CodecFormat _codec_format;
 
         /// <summary>
         /// Handles j2k stuff
         /// </summary>
-        J2K _j2k;
+        private readonly J2K _j2k;
 
         /// <summary>
         /// Handles JP2 stuff
         /// </summary>
-        JP2 _jp2;
+        private readonly JP2 _jp2;
 
         /// <summary>
         /// For sending messages back to the client
         /// </summary>
-        EventMgr _mgr;
+        private EventMgr _mgr;
 
         /// <summary>
         /// Get or set event manager
@@ -97,13 +97,13 @@ namespace OpenJpeg
         /// Functions for compressing an image
         /// </summary>
         /// <remarks>Openjpeg 2.1 API</remarks>
-        private Compression CFuncs = new Compression();
+        private readonly Compression CFuncs = new Compression();
 
         /// <summary>
         /// Functions for decompresssing an image
         /// </summary>
         /// <remarks>Openjpeg 2.1 API</remarks>
-        private Decompression DFuncs = new Decompression();
+        private readonly Decompression DFuncs = new Decompression();
 
         /// <summary>
         /// Constructor

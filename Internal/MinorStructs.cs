@@ -311,12 +311,12 @@ namespace OpenJpeg.Internal
         }
     }
 
-    struct JP2Comps
+    internal struct JP2Comps
     {
         internal uint depth, sgnd, bpcc;
     }
 
-    struct JP2Box
+    internal struct JP2Box
     {
         public JP2_Marker type;
         public long init_pos;
@@ -326,7 +326,7 @@ namespace OpenJpeg.Internal
     /// <summary>
     /// Channel description: channel index, type, assocation
     /// </summary>
-    struct JP2cdefInfo
+    internal struct JP2cdefInfo
     {
         internal ushort cn, typ, asoc;
     }
@@ -343,7 +343,7 @@ namespace OpenJpeg.Internal
     /// <summary>
     /// Component mappings: channel index, mapping type, palette index
     /// </summary>
-    struct JP2cmap_comp
+    internal struct JP2cmap_comp
     {
         internal ushort cmp;
         internal byte mtyp, pcol;
@@ -352,7 +352,7 @@ namespace OpenJpeg.Internal
     /// <summary>
     /// Palette data: table entries, palette columns
     /// </summary>
-    class JP2pclr
+    internal class JP2pclr
     {
         internal uint[] entries;
         internal byte[] channel_sign;
@@ -364,7 +364,7 @@ namespace OpenJpeg.Internal
     /// <summary>
     /// Collector for ICC profile, palette, component mapping, channel description 
     /// </summary>
-    sealed class JP2Color
+    internal sealed class JP2Color
     {
         internal byte[] icc_profile_buf;
 
@@ -374,7 +374,7 @@ namespace OpenJpeg.Internal
 
         internal JP2cdefInfo[] channel_definitions;
         internal JP2pclr jp2_pclr;
-        bool jp2_has_colr;
+        private bool jp2_has_colr;
         internal bool ignore_pclr_cmap_cdef;
         internal bool ignore_cmap;
         internal bool HasColor { get { return jp2_has_colr; } set { jp2_has_colr = value; } }

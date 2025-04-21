@@ -39,12 +39,12 @@ namespace OpenJpeg
         /// <summary>
         /// Read buffer
         /// </summary>
-        byte[] _bytes = new byte[4];
+        private readonly byte[] _bytes = new byte[4];
 
         /// <summary>
         /// Source or destination stream
         /// </summary>
-        Stream _s;
+        private readonly Stream _s;
 
 #if DEBUG_STREAM
         MemoryStream _debug_buffer;
@@ -55,13 +55,13 @@ namespace OpenJpeg
         /// <summary>
         /// How this stream was opened
         /// </summary>
-        readonly OpenMode _m;
+        private readonly OpenMode _m;
 
         /**
          * Used for culling the size of the stream.
          * Only used when writing.
          */
-        readonly long _size;
+        private readonly long _size;
 
         /// <summary>
         /// Owner reference
@@ -327,8 +327,8 @@ namespace OpenJpeg
     internal class BufferCIO
     {
         internal byte[] _buffer;
-        int _pos;
-        Stream _cio;
+        private int _pos;
+        private readonly Stream _cio;
 
         /// <summary>
         /// The position in the buffer, not the underlying stream.

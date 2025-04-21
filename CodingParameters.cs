@@ -958,7 +958,7 @@ namespace OpenJpeg
         /// </summary>
         public bool strict;
 
-        uint bitvector1;
+        private uint bitvector1;
 
         public bool ppm
         {

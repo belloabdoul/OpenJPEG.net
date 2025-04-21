@@ -24,12 +24,22 @@ namespace OpenJpeg.Internal
         /// <summary>
         /// The data
         /// </summary>
-        readonly byte[] _data;
+        private readonly byte[] _data;
 
         /// <summary>
         /// Position in the data stream
         /// </summary>
-        int _data_pos, _start_pos, _end_pos;
+        private int _data_pos;
+
+        /// <summary>
+        /// Position in the data stream
+        /// </summary>
+        private readonly int _start_pos;
+
+        /// <summary>
+        /// Position in the data stream
+        /// </summary>
+        private readonly int _end_pos;
 
         /// <summary>
         /// A buffer containing up to 8 bits
@@ -50,7 +60,7 @@ namespace OpenJpeg.Internal
         /// <summary>
         /// Mask for the first bit in the bit buffer
         /// </summary>
-        const byte FIRST_BIST = 0x80;
+        private const byte FIRST_BIST = 0x80;
 
         internal int Position { get { return _data_pos - _start_pos; } }
 
@@ -280,15 +290,20 @@ namespace OpenJpeg.Internal
         //buffer from 256 to 4. An alternative is to simply drop this
         //buffer. 
         internal byte[] _buf = new byte[4];
-        int _buf_pos = 0;
-        byte _unfinished_byte = 0;
-        int _u_pos = 8;
-        BufferCIO _target;
+        private int _buf_pos = 0;
+        private byte _unfinished_byte = 0;
+        private int _u_pos = 8;
+        private readonly BufferCIO _target;
 
         /** 
          * BIO will not write beyond this length
          */
-        int _length, _written;
+        private readonly int _length;
+
+        /** 
+         * BIO will not write beyond this length
+         */
+        private int _written;
 
         internal WBIO(BufferCIO target, int length)
         {

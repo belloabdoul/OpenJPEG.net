@@ -62,10 +62,10 @@ namespace OpenJpeg.Internal
     {
         #region Variables and properties
 
-        uint _numleafsh;
-        uint _numleafsv;
-        uint _numnodes;
-        TagNode[] nodes;
+        private uint _numleafsh;
+        private uint _numleafsv;
+        private uint _numnodes;
+        private TagNode[] nodes;
 
         #endregion
 

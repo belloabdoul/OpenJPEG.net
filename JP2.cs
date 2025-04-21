@@ -55,78 +55,78 @@ namespace OpenJpeg
         /// <summary>
         /// The parent compression info obj.
         /// </summary>
-        readonly CompressionInfo _cinfo;
+        private readonly CompressionInfo _cinfo;
 
         /// <summary>
         /// Code stream codex
         /// </summary>
-        readonly J2K _j2k;
+        private readonly J2K _j2k;
 
         //List<ProcedureDlg> _validation_list;
         //List<ProcedureDlg> _procedure_list;
 
-        JP2_STATE _state;
-        JP2_IMG_STATE _img_state;
+        private JP2_STATE _state;
+        private JP2_IMG_STATE _img_state;
 
         /// <summary>
         /// Width of the image
         /// </summary>
-        uint _w;
+        private uint _w;
 
         /// <summary>
         /// Height of the image
         /// </summary>
-        uint _h;
+        private uint _h;
 
         /// <summary>
         /// Number of componets in the image
         /// </summary>
-        uint _numcomps;
+        private uint _numcomps;
 
         /// <summary>
         /// Bits per component
         /// </summary>
-        uint _bpc;
+        private uint _bpc;
 
         /// <summary>
         /// ColorSpecMethod
         /// </summary>
-        uint _meth;
+        private uint _meth;
 
         /// <summary>
         /// ColorSpace
         /// </summary>
-        uint _enumcs;
+        private uint _enumcs;
 
-        uint _C, _approx, _precedence, _minversion;
-        JP2_Marker _brand;
+        private uint _C, _approx, _precedence, _minversion;
+        private JP2_Marker _brand;
 
         /// <summary>
         /// Unknown color space
         /// </summary>
-        bool _UnkC;
+        private bool _UnkC;
 
         /// <summary>
         /// Intellectual Property
         /// </summary>
-        bool _IPR;
+        private bool _IPR;
 
-        JP2_Marker[] _cl;
+        private JP2_Marker[] _cl;
 
-        long _j2k_codestream_offset;
+        private long _j2k_codestream_offset;
 
-        JP2Comps[] _comps;
+        private JP2Comps[] _comps;
 
-        CIO _cio;
+        private CIO _cio;
 
         /// <summary>
         /// If the image being decoded has a ICC profile, it will be temporarily stored
         /// here. 
         /// </summary>
-        JP2Color _color;
+        private JP2Color _color;
 
-        bool _has_ihdr;
-        bool _has_jp2h { get { return (_state & JP2_STATE.HEADER) != 0; } }
+        private bool _has_ihdr;
+        private bool _has_jp2h { get { return (_state & JP2_STATE.HEADER) != 0; } }
 
         #endregion
 
@@ -372,7 +372,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_jp2_read_header_procedure
-        bool ReadHeaderProcedure()
+        private bool ReadHeaderProcedure()
         {
             JP2Box box; 
             int /* uint */ n_bytes_read;
@@ -457,7 +457,7 @@ namespace OpenJpeg
         /// The original implementation is more complex, but seeing as
         /// there are only 3 possible handlers, we keep this simple.
         /// </remarks>
-        Handeler FindHandler(JP2_Marker type)
+        private Handeler FindHandler(JP2_Marker type)
         {
             switch (type)
             {
@@ -478,7 +478,7 @@ namespace OpenJpeg
         /// The original implementation is more complex, but seeing as
         /// there are only 6 possible handlers, we keep this simple.
         /// </remarks>
-        Handeler ImgFindHandler(JP2_Marker type)
+        private Handeler ImgFindHandler(JP2_Marker type)
         {
             switch (type)
             {
@@ -501,10 +501,10 @@ namespace OpenJpeg
             return _j2k.EndDecompress();
         }
 
-        delegate bool Handeler(JP2Box box);
+        private delegate bool Handeler(JP2Box box);
 
         //2.5.1 - opj_jp2_apply_color_postprocessing
-        bool ApplyColorPostprocessing(JPXImage image)
+        private bool ApplyColorPostprocessing(JPXImage image)
         {
             if (_j2k.NumcompsToDecode != 0)
             {
@@ -583,7 +583,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_jp2_check_color
-        bool CheckColor(JPXImage image)
+        private bool CheckColor(JPXImage image)
         {
             /* testcase 4149.pdf.SIGSEGV.cf7.3501 */
             if (_color.channel_definitions != null)
@@ -853,7 +853,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_jp2_apply_cdef
-        void ApplyCDEF(JPXImage image, JP2Color color)
+        private void ApplyCDEF(JPXImage image, JP2Color color)
         {
 	        ushort i, cn, typ, asoc, acn;
 
@@ -919,7 +919,7 @@ namespace OpenJpeg
         /// <remarks>
         /// 2.5 - opj_jp2_read_jp2h
         /// </remarks>
-        bool ReadJP2H(JP2Box box) 
+        private bool ReadJP2H(JP2Box box) 
         {
             // Make sure the box is well placed
             if ((_state & JP2_STATE.FILE_TYPE) != JP2_STATE.FILE_TYPE)
@@ -985,7 +985,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_jp2_read_cmap
-        bool ReadCMAP(JP2Box box)
+        private bool ReadCMAP(JP2Box box)
         {
 	        JP2cmap_comp[] cmap;
 	        ushort i, nr_channels;
@@ -1027,7 +1027,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_jp2_read_pclr
-        bool ReadPCLR(JP2Box box)
+        private bool ReadPCLR(JP2Box box)
         {
 	        JP2pclr jp2_pclr;
 	        byte[] channel_size, channel_sign;
@@ -1108,7 +1108,7 @@ namespace OpenJpeg
         /// 2.5 - opj_jp2_read_cdef
         /// This box defines what channels are alpha channels and such
         /// </remarks>
-        bool ReadCDEF(JP2Box box)
+        private bool ReadCDEF(JP2Box box)
         {
 	        JP2cdefInfo[] info;
 	        ushort i, n;
@@ -1151,7 +1151,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_jp2_read_colr
-        bool ReadCOLR(JP2Box box) 
+        private bool ReadCOLR(JP2Box box) 
         {
             if (box.data_length < 3)
             {
@@ -1248,7 +1248,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_jp2_read_bpcc
-        bool ReadBPCC(JP2Box box)
+        private bool ReadBPCC(JP2Box box)
         {
             if (_bpc != 255)
                 _cinfo.Warn("A BPCC header box is available although BPC given by the IHDR box ({0}) indicate components bit depth is constant", _bpc);
@@ -1268,7 +1268,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_jp2_read_ihdr
-        bool ReadIHDR(JP2Box box)
+        private bool ReadIHDR(JP2Box box)
         {
             if (_comps!= null)
             {
@@ -1331,7 +1331,7 @@ namespace OpenJpeg
         /// <remarks>
         /// 2.5 - opj_jp2_read_ftyp
         /// </remarks>
-        bool ReadFTYP(JP2Box box)
+        private bool ReadFTYP(JP2Box box)
         {
             if (_state != JP2_STATE.SIGNATURE)
             {
@@ -1377,7 +1377,7 @@ namespace OpenJpeg
         /// <remarks>
         /// 2.5 - opj_jp2_read_jp
         /// </remarks>
-        bool ReadJP(JP2Box box)
+        private bool ReadJP(JP2Box box)
         {
             if (_state != JP2_STATE.NONE)
             {
@@ -1406,7 +1406,7 @@ namespace OpenJpeg
         /// Reads a box header. The box is the way data is packed inside a jpeg2000 file structure.
         /// </summary>
         /// <remarks>2.5 - opj_jp2_read_boxhdr</remarks>
-        bool ReadBoxhdr(out JP2Box box, out int n_bytes_read)
+        private bool ReadBoxhdr(out JP2Box box, out int n_bytes_read)
         {
             box = new JP2Box();
             box.init_pos = _cio.Pos;
@@ -1450,7 +1450,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_jp2_read_boxhdr_char
-        bool ReadBoxhdr_char(out JP2Box box, out int n_bytes_read, int max_size)
+        private bool ReadBoxhdr_char(out JP2Box box, out int n_bytes_read, int max_size)
         {
             box = new JP2Box();
             if (max_size < 8)
@@ -1511,7 +1511,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_jp2_default_validation
-        bool DefaultValidation(Stream cio)
+        private bool DefaultValidation(Stream cio)
         {
             bool l_is_valid = true;
             int i;
@@ -1593,7 +1593,7 @@ namespace OpenJpeg
         }
 
         //2.5 - opj_jp2_setup_header_writing
-        bool WriteHeader(BufferCIO bcio)
+        private bool WriteHeader(BufferCIO bcio)
         {
             WriteJP(bcio);
             WriteFTYP(bcio);
@@ -1609,7 +1609,7 @@ namespace OpenJpeg
         /// store away the position.
         /// </summary>
         /// <remarks>2.5 - opj_jp2_skip_jp2c</remarks>
-        void SkipJP2C(Stream cio)
+        private void SkipJP2C(Stream cio)
         {
             _j2k_codestream_offset = cio.Position;
             cio.Seek(8, SeekOrigin.Current);
@@ -1620,7 +1620,7 @@ namespace OpenJpeg
         /// Writes the Jpeg2000 codestream Header box - JP2C Header box. This function must be called AFTER the coding has been done.
         /// </summary>
         /// <remarks>2.5 - opj_jp2_write_jp2c</remarks>
-        void WriteJP2C(BufferCIO bcio) 
+        private void WriteJP2C(BufferCIO bcio) 
         {
             long j2k_codestream_exit, j2k_codestream_length;
 
@@ -1639,7 +1639,7 @@ namespace OpenJpeg
         /// JP2 header
         /// </summary>
         /// <remarks>2.5 - opj_jp2_write_jp2h</remarks>
-        bool WriteJP2H(BufferCIO bcio)
+        private bool WriteJP2H(BufferCIO bcio)
         {
             uint jp2h_size = 8;
 
@@ -1698,7 +1698,7 @@ namespace OpenJpeg
         ///  Writes the Channel Definition box.
         /// </summary>
         /// <remarks>2.5 - opj_jp2_write_cdef</remarks>
-        void WriteCDEF(BufferCIO bcio, uint cdef_size)
+        private void WriteCDEF(BufferCIO bcio, uint cdef_size)
         {
             var channel_definitions = _color.channel_definitions;
 
@@ -1720,7 +1720,7 @@ namespace OpenJpeg
         /// Writes the Image Header box - Image Header box.
         /// </summary>
         /// <remarks>2.5 - opj_jp2_write_ihdr</remarks>
-        void WriteIHDR(BufferCIO bcio)
+        private void WriteIHDR(BufferCIO bcio)
         {
             bcio.Write(22); // Size of the box
             bcio.Write(JP2_Marker.IHDR);
@@ -1742,7 +1742,7 @@ namespace OpenJpeg
         /// Writes the Bit per Component box
         /// </summary>
         /// <remarks>2.5 - opj_jp2_write_bpcc</remarks>
-        void Write_BPCC(BufferCIO bcio, uint bpcc_size)
+        private void Write_BPCC(BufferCIO bcio, uint bpcc_size)
         {
             bcio.Write(bpcc_size);
             bcio.Write(JP2_Marker.BPCC);
@@ -1755,7 +1755,7 @@ namespace OpenJpeg
         /// Writes the Colour Specification box
         /// </summary>
         /// <remarks>2.5 - opj_jp2_write_colr</remarks>
-        void WriteCOLR(BufferCIO bcio, uint colr_size)
+        private void WriteCOLR(BufferCIO bcio, uint colr_size)
         {
             bcio.Write(colr_size);
             bcio.Write(JP2_Marker.COLR);
@@ -1774,7 +1774,7 @@ namespace OpenJpeg
         /// File type
         /// </summary>
         /// <remarks>2.5 - opj_jp2_write_ftyp</remarks>
-        void WriteFTYP(BufferCIO bcio)
+        private void WriteFTYP(BufferCIO bcio)
         {
             int ftyp_size = 16 + 4 * _cl.Length;
             bcio.SetBuffer((uint)ftyp_size);
@@ -1798,7 +1798,7 @@ namespace OpenJpeg
         /// Signature
         /// </summary>
         /// <remarks>2.5 - opj_jp2_write_jp</remarks>
-        bool WriteJP(BufferCIO bcio)
+        private bool WriteJP(BufferCIO bcio)
         {
             //Writes the length
             bcio.Write(12);

@@ -47,42 +47,42 @@ namespace OpenJpeg.Internal
     {
         #region Variables and properties
 
-        const uint BYPASS_CT_INIT = 0xDEADBEEF;
+        private const uint BYPASS_CT_INIT = 0xDEADBEEF;
 
         /// <summary>
         /// Temporary buffer where bits are coded or decoded
         /// </summary>
-        uint c;
+        private uint c;
 
         /// <summary>
         /// Number of bits already read or free to write
         /// </summary>
-        uint ct;
+        private uint ct;
 
         /// <summary>
         /// Maximum length to decode
         /// </summary>
-        uint _end;
+        private uint _end;
 
         /// <summary>
         /// Source data
         /// </summary>
-        byte[] _data;
+        private byte[] _data;
 
         /// <summary>
         /// Original value of the 2 bytes at end[0] and end[1]
         /// </summary>
-        readonly byte[] _backup = new byte[Constants.COMMON_CBLK_DATA_EXTRA];
+        private readonly byte[] _backup = new byte[Constants.COMMON_CBLK_DATA_EXTRA];
 
         /// <summary>
         /// aaaaaaaaaaa
         /// </summary>
-        uint a;
+        private uint a;
 
         /// <summary>
         /// Read position in the data array
         /// </summary>
-        int _bp, _start;
+        private int _bp, _start;
 
         /// <summary>
         /// Only used by decoder, to count the number of times a terminating 0xFF >0x8F marker is read
@@ -143,7 +143,7 @@ namespace OpenJpeg.Internal
         /// <remarks>
         /// 2.5 - opj_mqc_init_dec_common
         /// </remarks>
-        void CommonInit(byte[] data, uint offset, uint length, uint extra_writable_bytes)
+        private void CommonInit(byte[] data, uint offset, uint length, uint extra_writable_bytes)
         {
             Debug.Assert(extra_writable_bytes >= Constants.COMMON_CBLK_DATA_EXTRA);
             _data = data;
@@ -443,7 +443,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_mqc_codelps_macro
-        void Codelps()
+        private void Codelps()
         {
             a -= curctx.P.qeval;
             if (a < curctx.P.qeval)
@@ -455,7 +455,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_mqc_codemps_macro
-        void Codemps()
+        private void Codemps()
         {
             a -= curctx.P.qeval;
             if ((a & 0x8000) == 0)
@@ -479,7 +479,7 @@ namespace OpenJpeg.Internal
         //    variables will later be "Uploaded" into the mqc struct.
         //    We don't do any uploading, so we'll just manipulate the
         //    actual members.
-        void Renorme()
+        private void Renorme()
         {
             do
             {
@@ -549,7 +549,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_mqc_renormd_macro
-        void Renormd()
+        private void Renormd()
         {
             do
             {
@@ -561,7 +561,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_mqc_mpsexchange_macro
-        bool MpsExchange()
+        private bool MpsExchange()
         {
             bool d;
             if (a < curctx.P.qeval)
@@ -579,7 +579,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_mqc_lpsexchange_macro
-        bool LpsExchange()
+        private bool LpsExchange()
         {
             bool d;
             if (a < curctx.P.qeval)
@@ -637,7 +637,7 @@ namespace OpenJpeg.Internal
         /// After a 0xff byte, the next byte must be smaller than 0x90.
         /// </summary>
         /// <remarks>2.5 - opj_mqc_byteout</remarks>
-        void Byteout()
+        private void Byteout()
         {
             //C# impl. note:
             //The org impl. do not check for _data_pos >= 0,
@@ -691,7 +691,7 @@ namespace OpenJpeg.Internal
         /// <remarks>
         /// 2.5 - opj_mqc_bytein_macro
         /// </remarks>
-        void ByteIn()
+        private void ByteIn()
         {
             // Given opj_mqc_init_dec() we know that at some point we will
             // have a 0xFF 0xFF artificial marker
@@ -789,7 +789,7 @@ namespace OpenJpeg.Internal
         /// <summary>
         /// Information for bulding the MCQState array
         /// </summary>
-        static int[,] mcqints =
+        private static readonly int[,] mcqints =
         {
             {0x5601, 0, 2, 3},
             {0x5601, 1, 3, 2},

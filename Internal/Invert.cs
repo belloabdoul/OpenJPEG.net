@@ -27,7 +27,7 @@ namespace OpenJpeg.Internal
             return true;
         }
 
-        static bool lupDecompose(float[] matrix, int[] permutations, 
+        private static bool lupDecompose(float[] matrix, int[] permutations, 
                                  float[] swap_area, int n_compo) 
         {
 	        int tmpPermutations = 0;
@@ -127,7 +127,7 @@ namespace OpenJpeg.Internal
             return true;
         }
 
-        static void lupSolve(float[] result,
+        private static void lupSolve(float[] result,
                              float[] matrix,
                              float[] vector,
                              int[] permutations,
@@ -191,7 +191,7 @@ namespace OpenJpeg.Internal
             }
         }
 
-        static void lupInvert(float[] SrcMatrix,
+        private static void lupInvert(float[] SrcMatrix,
                               float[] DestMatrix,
                               int n_compo,
                               int[] permutations,

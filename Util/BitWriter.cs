@@ -3,13 +3,13 @@
 namespace OpenJpeg.Util
 {
     //Based on WBIO just without the "skip bit" feature
-    class BitWriter
+    internal class BitWriter
     {
         internal byte[] _buf = new byte[256];
-        int _buf_pos = 0;
-        byte _unfinished_byte = 0;
-        int _u_pos = 8;
-        Stream _target;
+        private int _buf_pos = 0;
+        private byte _unfinished_byte = 0;
+        private int _u_pos = 8;
+        private readonly Stream _target;
 
         internal BitWriter(Stream target)
         {

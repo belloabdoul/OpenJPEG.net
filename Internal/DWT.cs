@@ -54,13 +54,13 @@ namespace OpenJpeg.Internal
 
         #region Consts
 
-        const float K = 1.230174105f;
-        const float invK = (float)(1.0 / 1.230174105);
-        const float c13318 = 1.625732422f; //<-- two_invK
-        const float dwt_alpha = -1.586134342f; //  12994
-        const float dwt_beta = -0.052980118f; //    434
-        const float dwt_gamma = 0.882911075f; //  -7233
-        const float dwt_delta = 0.443506852f; //  -3633
+        private const float K = 1.230174105f;
+        private const float invK = (float)(1.0 / 1.230174105);
+        private const float c13318 = 1.625732422f; //<-- two_invK
+        private const float dwt_alpha = -1.586134342f; //  12994
+        private const float dwt_beta = -0.052980118f; //    434
+        private const float dwt_gamma = 0.882911075f; //  -7233
+        private const float dwt_delta = 0.443506852f; //  -3633
 
         /// <summary>
         /// Number of int32 values in a SSE2 register
@@ -68,14 +68,15 @@ namespace OpenJpeg.Internal
         /// <remarks>
         /// We don't currently support SSE2, but maybe in the future
         /// </remarks>
-        const uint VREG_INT_COUNT = 4;
-        const uint PARALLEL_COLS_53 = 2 * VREG_INT_COUNT;
-        const int NB_ELTS_V8 = 8;
+        private const uint VREG_INT_COUNT = 4;
+
+        private const uint PARALLEL_COLS_53 = 2 * VREG_INT_COUNT;
+        private const int NB_ELTS_V8 = 8;
 
         /// <summary>
         /// This table contains the norms of the 9-7 wavelets for different bands.
         /// </summary>
-        static readonly double[][] dwt_norms_real = {
+        private static readonly double[][] dwt_norms_real = {
 	       new double[] {1.000, 1.965, 4.177, 8.403, 16.90, 33.84, 67.69, 135.3, 270.6, 540.9},
 	       new double[] {2.022, 3.989, 8.355, 17.04, 34.27, 68.63, 137.3, 274.6, 549.0},
 	       new double[] {2.022, 3.989, 8.355, 17.04, 34.27, 68.63, 137.3, 274.6, 549.0},
@@ -85,7 +86,7 @@ namespace OpenJpeg.Internal
         /// <summary>
         /// This table contains the norms of the 5-3 wavelets for different bands.
         /// </summary>
-        static readonly double[][] dwt_norms = {
+        private static readonly double[][] dwt_norms = {
 	        new double[] {1.000, 1.500, 2.750, 5.375, 10.68, 21.34, 42.67, 85.33, 170.7, 341.3},
 	        new double[] {1.038, 1.592, 2.919, 5.703, 11.33, 22.64, 45.25, 90.48, 180.9},
 	        new double[] {1.038, 1.592, 2.919, 5.703, 11.33, 22.64, 45.25, 90.48, 180.9},
@@ -94,9 +95,11 @@ namespace OpenJpeg.Internal
 
         #endregion
 
-        delegate void Encodefunc(int[] a, int dn, int sn, int cas);
-        delegate void EncodeAndDeinterleaveVfunc(int[] a, int a_pt, int[] tmp, uint height, bool even, uint stride_width, uint cols);
-        delegate void EncodeAndDeinterleaveH_OneRowfunc(int[] row, int row_pt, int[] tmp, uint width, bool even);
+        private delegate void Encodefunc(int[] a, int dn, int sn, int cas);
+
+        private delegate void EncodeAndDeinterleaveVfunc(int[] a, int a_pt, int[] tmp, uint height, bool even, uint stride_width, uint cols);
+
+        private delegate void EncodeAndDeinterleaveH_OneRowfunc(int[] row, int row_pt, int[] tmp, uint width, bool even);
 
         /// <summary>
         /// Forward 5-3 wavelet transform in 2-D
@@ -117,7 +120,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_dwt_encode_procedure
-        static bool EncodeProcedure(TcdTilecomp tilec, 
+        private static bool EncodeProcedure(TcdTilecomp tilec, 
             EncodeAndDeinterleaveVfunc encode_and_deinterleave_v, 
             EncodeAndDeinterleaveH_OneRowfunc encode_and_deinterleave_h_one_row, 
             bool disable_multi_threading)
@@ -306,7 +309,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_dwt_encode_h_func
-        static void encode_h_func(encode_h_job job)
+        private static void encode_h_func(encode_h_job job)
         {
             for (uint j = job.min_j; j < job.max_j; j++)
             {
@@ -315,7 +318,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_dwt_encode_v_func
-        static void encode_v_func(encode_v_job job)
+        private static void encode_v_func(encode_v_job job)
         {
             uint j;
             for (j = job.min_j; j + NB_ELTS_V8 - 1 < job.max_j; j += NB_ELTS_V8)
@@ -334,7 +337,7 @@ namespace OpenJpeg.Internal
         /// <param name="r">Resolutions</param>
         /// <param name="i">Number of resolutions that will be decoded</param>
         /// <remarks>2.5 - opj_dwt_max_resolution</remarks>
-        static uint MaxResolution(TcdResolution[] rs, int numres)
+        private static uint MaxResolution(TcdResolution[] rs, int numres)
         {
             uint mr = 0;
             uint w;
@@ -375,7 +378,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_dwt_getnorm_real
-        static double GetNormReal(uint level, uint orient)
+        private static double GetNormReal(uint level, uint orient)
         {
             //This is just a band-aid to avoid a buffer overflow
             if (orient == 0 && level >= 10)
@@ -386,7 +389,7 @@ namespace OpenJpeg.Internal
         }
 
         /// <remarks>2.5 - opj_dwt_encode_stepsize</remarks>
-        static void EncodeStepsize(int stepsize, int numbps, out StepSize bandno_stepsize)
+        private static void EncodeStepsize(int stepsize, int numbps, out StepSize bandno_stepsize)
         {
             int p, n;
             p = MyMath.int_floorlog2(stepsize) - 13;
@@ -406,7 +409,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_dwt_decode_partial_97
-        static bool decode_partial_97(TcdTilecomp tilec, uint numres)
+        private static bool decode_partial_97(TcdTilecomp tilec, uint numres)
         {
             SparseArrayInt32 sa;
             v4dwt_local h = new v4dwt_local();
@@ -1146,7 +1149,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5
-        static void EncodeStep1Combined(int[] f, int fw, uint iters_c1, uint iters_c2, float c1, float c2)
+        private static void EncodeStep1Combined(int[] f, int fw, uint iters_c1, uint iters_c2, float c1, float c2)
         {
             IntOrFloat fw1 = new IntOrFloat();
             uint i = 0;
@@ -1215,7 +1218,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5
-        static void EncodeStep2(int[] f, int fl, int fw, uint end, uint m, float c)
+        private static void EncodeStep2(int[] f, int fl, int fw, uint end, uint m, float c)
         {
             IntOrFloat fw1 = new IntOrFloat(), fw2 = new IntOrFloat();
             uint imax = Math.Min(end, m);
@@ -1488,7 +1491,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5
-        static bool DecodePartialTile(TcdTilecomp tilec, uint numres)
+        private static bool DecodePartialTile(TcdTilecomp tilec, uint numres)
         {
             SparseArrayInt32 sa;
             dwt_local h = new dwt_local();
@@ -2050,7 +2053,7 @@ namespace OpenJpeg.Internal
             }
         }
 
-        static void v8dwt_interleave_h(v4dwt_local dwt, int[] a_ar, int a, int width, uint remaining_height)
+        private static void v8dwt_interleave_h(v4dwt_local dwt, int[] a_ar, int a, int width, uint remaining_height)
         {
             float[] bi_ar = dwt.wavelet;
             int bi = dwt.cas * NB_ELTS_V8; //C# NB_ELTS_V8 is because we're indexing into dwt.wavelet
@@ -2138,7 +2141,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5
-        static void v8dwt_interleave_v(v4dwt_local dwt, int[] a_ar, int a, int width, int n_elts_read)
+        private static void v8dwt_interleave_v(v4dwt_local dwt, int[] a_ar, int a, int width, int n_elts_read)
         {
             //C# Impl. Note that bi_ar is not a float[], but a wavelet array where each entery has 8 floating points.
             //         This while the a array is a plain float[]. I.e how they are to be indexed differers
@@ -2154,7 +2157,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5
-        static void v8dwt_interleave_partial_h(v4dwt_local dwt, SparseArrayInt32 sa, uint sa_line, uint remaining_height)
+        private static void v8dwt_interleave_partial_h(v4dwt_local dwt, SparseArrayInt32 sa, uint sa_line, uint remaining_height)
         {
             for (uint i = 0; i < remaining_height; i++)
             {
@@ -2175,7 +2178,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5
-        static void v8dwt_interleave_partial_v(v4dwt_local dwt, SparseArrayInt32 sa, uint sa_col, uint nb_elts_read)
+        private static void v8dwt_interleave_partial_v(v4dwt_local dwt, SparseArrayInt32 sa, uint sa_col, uint nb_elts_read)
         {
             bool ret;
             ret = sa.read(sa_col, dwt.win_l_x0,
@@ -2196,7 +2199,7 @@ namespace OpenJpeg.Internal
         /// Forward lazy transform (horizontal).
         /// </summary>
         /// <remarks>2.5 - opj_dwt_deinterleave_h</remarks>
-        static void Deinterleave_h(int[] a, int[] b, int b_pt, int dn, int sn, int cas)
+        private static void Deinterleave_h(int[] a, int[] b, int b_pt, int dn, int sn, int cas)
         {
             int dest = b_pt;
             int src = 0 + cas;
@@ -2237,7 +2240,7 @@ namespace OpenJpeg.Internal
         /// Forward 9-7 wavelet transform in 1-D.
         /// </summary>
         /// <remarks>2.5 - opj_dwt_encode_1_real</remarks>
-        static void Encode_1_real(int[] w, int dn, int sn, int cas)
+        private static void Encode_1_real(int[] w, int dn, int sn, int cas)
         {
             int a, b;
             if (cas == 0)
@@ -2266,7 +2269,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_dwt_encode_and_deinterleave_v_real
-        static void EncodeAndDeinterleaveV_Real(int[] arr, int a_pt, int[] tmp, uint height, bool even, uint stride_width, uint cols)
+        private static void EncodeAndDeinterleaveV_Real(int[] arr, int a_pt, int[] tmp, uint height, bool even, uint stride_width, uint cols)
         {
             if (height == 1)
                 return;
@@ -2309,7 +2312,7 @@ namespace OpenJpeg.Internal
         /// where cols <= NB_ELTS_V8
         /// </summary>
         /// <remarks>2.5 - opj_dwt_encode_and_deinterleave_v</remarks>
-        static void EncodeAndDeinterleaveV(int[] a, int a_pt, int[] tmp, uint height, bool even, uint stride_width, uint cols)
+        private static void EncodeAndDeinterleaveV(int[] a, int a_pt, int[] tmp, uint height, bool even, uint stride_width, uint cols)
         {
             uint sn = (height + (even ? 1u : 0u)) >> 1;
             uint dn = height - sn;
@@ -2424,7 +2427,7 @@ namespace OpenJpeg.Internal
         /// columns
         /// </summary>
         /// <remarks>2.5 - opj_dwt_deinterleave_v_cols</remarks>
-        static void DeinterleaveV_Cols(int[] src, int[] dst, int dst_pt, int dn, int sn, int stride_width, int cas, uint cols)
+        private static void DeinterleaveV_Cols(int[] src, int[] dst, int dst_pt, int dn, int sn, int stride_width, int cas, uint cols)
         {
             int org_dest = dst_pt;
             int src_pt = cas * NB_ELTS_V8;
@@ -2485,7 +2488,7 @@ namespace OpenJpeg.Internal
         /// Process one line for the horizontal pass of the 9x7 forward transform
         /// </summary>
         /// <remarks>2.5 - opj_dwt_encode_and_deinterleave_h_one_row_real</remarks>
-        static void EncodeAndDeinterleaveH_OneRowReal(int[] row, int row_pt, int[] tmp, uint width, bool even)
+        private static void EncodeAndDeinterleaveH_OneRowReal(int[] row, int row_pt, int[] tmp, uint width, bool even)
         {
             if (width == 1)
                 return;
@@ -2500,7 +2503,7 @@ namespace OpenJpeg.Internal
         /// Process one line for the horizontal pass of the 5x3 forward transform
         /// </summary>
         /// <remarks>2.5 - opj_dwt_encode_and_deinterleave_h_one_row</remarks>
-        static void EncodeAndDeinterleaveH_OneRow(int[] row, int row_pt, int[] tmp, uint width, bool even)
+        private static void EncodeAndDeinterleaveH_OneRow(int[] row, int row_pt, int[] tmp, uint width, bool even)
         {
             int sn = (int)((width + (even ? 1 : 0)) >> 1);
             int dn = (int)(width - (uint)sn);
@@ -2565,7 +2568,7 @@ namespace OpenJpeg.Internal
         /** Fetch up to cols <= NB_ELTS_V8 for each line, and put them in tmpOut */
         /* that has a NB_ELTS_V8 interleave factor. */
         //2.5
-        static void FetchColsVerticalPass(int[] a, int array, int[] tmp, uint height, int stride_width, uint cols)
+        private static void FetchColsVerticalPass(int[] a, int array, int[] tmp, uint height, int stride_width, uint cols)
         {
             if (cols == NB_ELTS_V8) {
                 for (int k = 0; k < height; ++k) {
@@ -3256,9 +3259,9 @@ namespace OpenJpeg.Internal
             end = Math.Min(end, max_size);
         }
 
-        delegate void DWG_action(dwt_local dwt);
+        private delegate void DWG_action(dwt_local dwt);
 
-        class dwt_local
+        private class dwt_local
         {
             internal int[] mem;
 
@@ -3283,7 +3286,7 @@ namespace OpenJpeg.Internal
             }
         }
 
-        class v4dwt_local
+        private class v4dwt_local
         {
             /// <summary>
             /// Each wavelet is 4 floating points.

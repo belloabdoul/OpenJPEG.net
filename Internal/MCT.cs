@@ -8,8 +8,8 @@ namespace OpenJpeg.Internal
     /// </summary>
     internal static class MCT
     {
-        static double[] mct_norms = { 1.732, .8292, .8292 };
-        static double[] mct_norms_real = { 1.732, 1.805, 1.573 };
+        private static readonly double[] mct_norms = { 1.732, .8292, .8292 };
+        private static readonly double[] mct_norms_real = { 1.732, 1.805, 1.573 };
         internal static uint[] ELEMENT_SIZE = { 2, 4, 4, 8 };
 
         internal static void CalculateNorms(double[] pNorms,

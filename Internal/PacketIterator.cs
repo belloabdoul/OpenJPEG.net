@@ -52,38 +52,38 @@ namespace OpenJpeg.Internal
         /// The parent compression info obj.
         /// </summary>
         /// <remarks>Not needed for encode</remarks>
-        readonly CompressionInfo _cinfo;
+        private readonly CompressionInfo _cinfo;
 
         /// <summary>
         /// Enabling Tile part generation
         /// </summary>
-        bool tp_on;
+        private bool tp_on;
 
         /// <summary>
         /// Precise if the packet has been already used 
         /// (usefull for progression order change)
         /// </summary>
-        bool[] include;
+        private bool[] include;
 
         /// <summary>
         /// Layer step used to localize the packet in the include vector
         /// </summary>
-        uint step_l;
+        private uint step_l;
 
         /// <summary>
         /// Resolution step used to localize the packet in the include vector
         /// </summary>
-        uint step_r;
+        private uint step_r;
 
         /// <summary>
         /// Component step used to localize the packet in the include vector
         /// </summary>
-        uint step_c;
+        private uint step_c;
 
         /// <summary>
         /// Precinct step used to localize the packet in the include vector
         /// </summary>
-        uint step_p;
+        private uint step_p;
 
         /// <summary>
         /// component that identify the packet
@@ -108,7 +108,7 @@ namespace OpenJpeg.Internal
         /// <summary>
         /// false if the first packet
         /// </summary>
-        bool first;
+        private bool first;
 
         /// <summary>
         /// Progression order change information
@@ -119,15 +119,15 @@ namespace OpenJpeg.Internal
         /// Number of components in the image
         /// </summary>
         /// <remarks>This variable can probably be dropped for comps.Length</remarks>
-        uint numcomps;
+        private uint numcomps;
 
         /// <summary>
         /// Components
         /// </summary>
-        PIComp[] comps;
+        private PIComp[] comps;
 
-        uint tx0, ty0, tx1, ty1;
-        uint x, y, dx, dy;
+        private uint tx0, ty0, tx1, ty1;
+        private uint x, y, dx, dy;
 
         #endregion
 
@@ -168,7 +168,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_pi_update_encode_not_poc
-        static void UpdateEncodeNotPOC(CodingParameters cp,
+        private static void UpdateEncodeNotPOC(CodingParameters cp,
                                        uint p_num_comps,
                                        uint p_tileno,
                                        uint p_tx0,
@@ -215,7 +215,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_pi_update_encode_poc_and_final
-        static void UpdateEncodePOCandFinal(CodingParameters cp,
+        private static void UpdateEncodePOCandFinal(CodingParameters cp,
                                             uint p_tileno,
                                             uint p_tx0,
                                             uint p_tx1,
@@ -302,7 +302,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5.1 - opj_get_encoding_parameters
-        static void GetEncodingParameters(JPXImage image,
+        private static void GetEncodingParameters(JPXImage image,
                                           CodingParameters cp,
                                           uint tileno,
                                           out uint p_tx0,
@@ -863,7 +863,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.1
-        static bool CheckNextLevel(int pos, CodingParameters cp, uint tileno, uint pino, string prog)
+        private static bool CheckNextLevel(int pos, CodingParameters cp, uint tileno, uint pino, string prog)
         {
             Debug.Assert(false, "Unconverted code");
 	        var tcps = cp.tcps[tileno];
@@ -1063,7 +1063,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_pi_update_encode_poc_and_final
-        static void UpdateEncodePocAndFinal(CodingParameters cp,
+        private static void UpdateEncodePocAndFinal(CodingParameters cp,
                                             OPJ_UINT32 tileno,
                                             OPJ_UINT32 tx0,
                                             OPJ_UINT32 tx1,
@@ -1144,7 +1144,7 @@ namespace OpenJpeg.Internal
         /// <param name="dx_min">The minimum dx of all the components of all the resolutions for the tile</param>
         /// <param name="dy_min">The minimum dy of all the components of all the resolutions for the tile</param>
         /// <remarks>2.5 - opj_pi_update_encode_not_poc</remarks>
-        static void UpdateEncodeNotPoc(CodingParameters cp,
+        private static void UpdateEncodeNotPoc(CodingParameters cp,
                                        OPJ_UINT32 num_comps,
                                        OPJ_UINT32 tileno,
                                        uint tx0,
@@ -1196,7 +1196,7 @@ namespace OpenJpeg.Internal
         /// An alternative solution would be to use uint?, as that could achive the
         /// same result as the org impl.
         /// </remarks>
-        static void GetAllEncodingParameters(JPXImage image,
+        private static void GetAllEncodingParameters(JPXImage image,
                                              CodingParameters cp,
                                              OPJ_UINT32 tileno,
                                              out uint tx0,
@@ -1519,7 +1519,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5
-        static void UpdateDecodeNotPoc(PacketIterator[] pi_ar, TileCodingParams tcp, OPJ_UINT32 max_precision, OPJ_UINT32 max_res)
+        private static void UpdateDecodeNotPoc(PacketIterator[] pi_ar, TileCodingParams tcp, OPJ_UINT32 max_precision, OPJ_UINT32 max_res)
         {
             //C# instead of l_bound we use pi_ar.Length
             Debug.Assert(pi_ar.Length == tcp.numpocs + 1);
@@ -1543,7 +1543,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_pi_update_decode_poc
-        static void UpdateDecodePoc(PacketIterator[] pi_ar, TileCodingParams tcp, OPJ_UINT32 max_precision, OPJ_UINT32 p_max_res)
+        private static void UpdateDecodePoc(PacketIterator[] pi_ar, TileCodingParams tcp, OPJ_UINT32 max_precision, OPJ_UINT32 p_max_res)
         {
             //C# instead of l_bound we use pi_ar.Length
             Debug.Assert(pi_ar.Length == tcp.numpocs + 1);
@@ -1600,7 +1600,7 @@ namespace OpenJpeg.Internal
         /// 
         /// Workaround is to rewrite this method as a generator.
         /// </remarks>
-        IEnumerable<bool> Next_lrcp()
+        private IEnumerable<bool> Next_lrcp()
         {
             //bool skip;
             PIComp comp;
@@ -1657,7 +1657,7 @@ namespace OpenJpeg.Internal
         /// <remarks>
         /// 2.5
         /// </remarks>
-        IEnumerable<bool> Next_rlcp()
+        private IEnumerable<bool> Next_rlcp()
         {
             PIComp comp;
             PIResolution res;
@@ -1708,7 +1708,7 @@ namespace OpenJpeg.Internal
         /// <remarks>
         /// 2.5.1
         /// </remarks>
-        IEnumerable<bool> Next_rpcl()
+        private IEnumerable<bool> Next_rpcl()
         {
             PIComp comp;
             PIResolution res;
@@ -1839,7 +1839,7 @@ namespace OpenJpeg.Internal
         /// Next ProgOrder(y then x), Component, Resolution, Layer
         /// </summary>
         /// <remarks>2.5.1 - opj_pi_next_pcrl</remarks>
-        IEnumerable<bool> Next_pcrl()
+        private IEnumerable<bool> Next_pcrl()
         {
             PIComp comp;
             PIResolution res;
@@ -1976,7 +1976,7 @@ namespace OpenJpeg.Internal
         /// 
         /// Workaround is to rewrite this method as a generator.
         /// </remarks>
-        IEnumerable<bool> Next_cprl()
+        private IEnumerable<bool> Next_cprl()
         {
             PIComp comp;
             PIResolution res;

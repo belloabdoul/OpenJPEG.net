@@ -95,47 +95,47 @@ namespace OpenJpeg.Internal
         /// <summary>
         /// Position of the tilepart flag in Progression order
         /// </summary>
-        int _tp_pos;
+        private int _tp_pos;
 
         /// <summary>
         /// Tile part number
         /// </summary>
-        uint _tp_num;
+        private uint _tp_num;
 
         /// <summary>
         /// Current tile part number
         /// </summary>
-        uint _cur_tp_num;
+        private uint _cur_tp_num;
 
         /// <summary>
         /// Total number of tileparts of the current tile
         /// </summary>
-        uint _cur_totnum_tp;
+        private uint _cur_totnum_tp;
 
         /// <summary>
         /// Current Packet iterator number
         /// </summary>
-        uint _cur_pino;
+        private uint _cur_pino;
 
         /// <summary>
         /// Codec context
         /// </summary>
-        readonly CompressionInfo _cinfo;
+        private readonly CompressionInfo _cinfo;
 
         /// <summary>
         /// Info on each image tile
         /// </summary>
-        TcdImage _tcd_image;
+        private readonly TcdImage _tcd_image;
 
         /// <summary>
         /// Image
         /// </summary>
-        JPXImage _image;
+        private JPXImage _image;
 
         /// <summary>
         /// Coding parameters
         /// </summary>
-        CodingParameters _cp;
+        private CodingParameters _cp;
 
         /// <summary>
         /// Pointer to the current encoded/decoded tile
@@ -145,17 +145,17 @@ namespace OpenJpeg.Internal
         /// <summary>
         /// Coding/decoding parameters common to all tiles
         /// </summary>
-        TileCodingParams _tcp;
+        private TileCodingParams _tcp;
 
         /// <summary>
         /// Current encoded/decoded tile
         /// </summary>
-        uint _tcd_tileno;
+        private uint _tcd_tileno;
 
         /// <summary>
         /// Time taken to encode a tile
         /// </summary>
-        double _encoding_time;
+        private double _encoding_time;
 
         #endregion
 
@@ -176,7 +176,7 @@ namespace OpenJpeg.Internal
         /// Initialize the tile coder and may reuse some memory
         /// </summary>
         /// <remarks>2.5 - opj_tcd_init</remarks>
-        void Init(JPXImage image, CodingParameters cp)
+        private void Init(JPXImage image, CodingParameters cp)
         {
             _cp = cp;
             _image = image;
@@ -244,7 +244,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_tcd_dc_level_shift_encode
-        void DcLevelShiftEncode()
+        private void DcLevelShiftEncode()
         {
             var tile = _tcd_image.tiles[0];
             TcdTilecomp[] tile_comps = tile.comps;
@@ -281,7 +281,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_tcd_mct_encode
-        bool MctEncode()
+        private bool MctEncode()
         {
             if (_tcp.mct == 0)
                 return true;
@@ -318,7 +318,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_tcd_dwt_encode
-        void DwtEncode()
+        private void DwtEncode()
         {
             var tile = _tcd_image.tiles[0];
 
@@ -333,7 +333,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_tcd_t1_encode
-        void T1Encode()
+        private void T1Encode()
         {
             double[] mct_norms;
             uint mct_numcomps;
@@ -384,7 +384,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_tcd_t2_encode
-        bool T2Encode(BufferCIO dest, out uint data_written, OPJ_UINT32 max_dest_size, TcdMarkerInfo marker_info)
+        private bool T2Encode(BufferCIO dest, out uint data_written, OPJ_UINT32 max_dest_size, TcdMarkerInfo marker_info)
         {
             var t2 = new Tier2Coding(_cinfo, _image, _cp);
 
@@ -402,7 +402,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_tcd_rate_allocate_encode
-        void RateAllocateEncode(BufferCIO dest, int max_dest_size)
+        private void RateAllocateEncode(BufferCIO dest, int max_dest_size)
         {
             if (_cp.specific_param.enc.quality_layer_alloc_strategy == J2K_QUALITY_LAYER_ALLOCATION_STRATEGY.RATE_DISTORTION_RATIO || 
                 _cp.specific_param.enc.quality_layer_alloc_strategy == J2K_QUALITY_LAYER_ALLOCATION_STRATEGY.FIXED_DISTORTION_RATIO)
@@ -418,7 +418,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5.1 - opj_tcd_rateallocate_fixed
-        void RateallocateFixed()
+        private void RateallocateFixed()
         {
             for (int layno = 0; layno < _tcp.numlayers; layno++)
                 MakeLayerFixed(layno, true);
@@ -430,7 +430,7 @@ namespace OpenJpeg.Internal
         ///  - allocation by fixed quality  (quality_layer_alloc_strategy == FIXED_DISTORTION_RATIO)
         /// </summary>
         /// <remarks>2.5 - opj_tcd_rateallocate</remarks>
-        bool Rateallocate(BufferCIO dest, ref uint data_written, int len)
+        private bool Rateallocate(BufferCIO dest, ref uint data_written, int len)
         {
             double[] cumdisto = new double[100];
             const double K = 1;
@@ -641,7 +641,7 @@ namespace OpenJpeg.Internal
         /// 
         /// This code seems to be working, but has not been tested against the original impl.
         /// </remarks>
-        void MakeLayerFixed(int layno, bool final)
+        private void MakeLayerFixed(int layno, bool final)
         {
             Debug.Assert(false, "Untested code");
             var tcd_tile = _tcd_image.tiles[0];
@@ -755,7 +755,7 @@ namespace OpenJpeg.Internal
         /// <param name="final">If this is the final layer</param>
         /// <returns>True if the layer allocation is unchanged</returns>
         /// <remarks>2.5.1 - opj_tcd_makelayer</remarks>
-        bool MakeLayer(uint layno, double thresh, bool final)
+        private bool MakeLayer(uint layno, double thresh, bool final)
         {
             var tcd_tile = _tcd_image.tiles[0];
             bool layer_allocation_is_same = true;
@@ -1361,7 +1361,7 @@ namespace OpenJpeg.Internal
         /// </summary>
         /// <param name="code_block">Coding block to allocate memory to</param>
         /// <remarks>2.5 - opj_tcd_code_block_enc_allocate</remarks>
-        void CodeBlockEncAllocate (TcdCblkEnc code_block)
+        private void CodeBlockEncAllocate (TcdCblkEnc code_block)
         {
             if (code_block.layers == null)
             {
@@ -1424,7 +1424,7 @@ namespace OpenJpeg.Internal
         /// <remarks>
         /// 2.5 - opj_tcd_code_block_dec_allocate
         /// </remarks>
-        void CodeBlockDecAllocate(TcdCblkDec code_block)
+        private void CodeBlockDecAllocate(TcdCblkDec code_block)
         {
             if (code_block.segs == null)
             {
@@ -1460,7 +1460,7 @@ namespace OpenJpeg.Internal
         #endregion
 
         //2.5
-        bool T2Decode(byte[] src, int src_len, CodestreamIndex cstr_index)
+        private bool T2Decode(byte[] src, int src_len, CodestreamIndex cstr_index)
         {
             Tier2Coding t2 = new Tier2Coding(_cinfo, _image, _cp);
 
@@ -1474,7 +1474,7 @@ namespace OpenJpeg.Internal
         /// basically all new, with the "real" T1Decode beeing made into a
         /// generator. See comment of that function for why.
         /// </remarks>
-        bool T1Decode()
+        private bool T1Decode()
         {
             return RunThreads((mt, set_ret) =>
             {
@@ -1683,7 +1683,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_tcd_dwt_decode
-        bool DWTDecode()
+        private bool DWTDecode()
         {
             TcdTile tile = _tcd_image.tiles[0];
             var tccps = _tcp.tccps;
@@ -1714,7 +1714,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_tcd_mct_decode
-        bool MCTDecode()
+        private bool MCTDecode()
         {
             TcdTile tile = _tcd_image.tiles[0];
             TcdTilecomp[] tile_comps = tile.comps;
@@ -1833,7 +1833,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5.1 - opj_tcd_dc_level_shift_decode
-        void DcLevelShiftDecode()
+        private void DcLevelShiftDecode()
         {
             TcdTile tile = _tcd_image.tiles[0];
             var tccps = _tcp.tccps;
@@ -2165,7 +2165,7 @@ namespace OpenJpeg.Internal
         }
 
 #if DEBUG
-        void DumpTilcomp(string txt, bool data_win = false)
+        private void DumpTilcomp(string txt, bool data_win = false)
         {
             TcdTile tile = _tcd_image.tiles[0];
             using (var file = new System.IO.StreamWriter("c:/temp/j2k_dump.txt", append: false))
@@ -2182,7 +2182,7 @@ namespace OpenJpeg.Internal
             }
         }
 
-        void DumpCblks(string txt)
+        private void DumpCblks(string txt)
         {
             using (var file = new System.IO.StreamWriter("c:/temp/j2k_dump.txt"))
             {
@@ -2205,7 +2205,7 @@ namespace OpenJpeg.Internal
             }
         }
 
-        void DumpCblk(int nr, TcdCblkEnc cb)
+        private void DumpCblk(int nr, TcdCblkEnc cb)
         {
             using (var file = new System.IO.StreamWriter("c:/temp/j2k_dump.txt", append: nr != 0))
             {
@@ -2220,7 +2220,7 @@ namespace OpenJpeg.Internal
             }
         }
 
-        void DumpEncCblks(string txt)
+        private void DumpEncCblks(string txt)
         {
             using (var file = new System.IO.StreamWriter("c:/temp/j2k_dump.txt"))
             {
@@ -2246,7 +2246,7 @@ namespace OpenJpeg.Internal
             }
         }
 
-        void DumpAreaCblks(string txt)
+        private void DumpAreaCblks(string txt)
         {
             if (WholeTileDecoding)
                 throw new NotSupportedException("This function can only be used with area decoding.");
@@ -2388,7 +2388,7 @@ namespace OpenJpeg.Internal
         }
 
         //2.5 - opj_get_tile_dimensions
-        void GetTileDimensions(JPXImage image,
+        private void GetTileDimensions(JPXImage image,
                                TcdTilecomp tilec,
                                ImageComp img_comp,
                                out uint size_comp,

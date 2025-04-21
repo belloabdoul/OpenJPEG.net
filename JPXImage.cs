@@ -1571,7 +1571,7 @@ namespace OpenJpeg
             }
         }
 
-        class BWrite : IDisposable
+        private class BWrite : IDisposable
         {
             public readonly BinaryWriter s;
 

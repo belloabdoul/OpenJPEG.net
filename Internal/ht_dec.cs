@@ -299,47 +299,47 @@ namespace OpenJpeg.Internal
             /// <summary>
             /// The source data array
             /// </summary>
-            byte[] src;
+            private readonly byte[] src;
 
             /// <summary>
             /// Position in the src array
             /// </summary>
-            int data;
+            private int data;
 
             /// <summary>
             /// Temporary buffer for read data
             /// </summary>
-            ulong tmp;
+            private ulong tmp;
 
             /// <summary>
             /// Number of bits stored in tmp
             /// </summary>
-            int bits;
+            private int bits;
 
             /// <summary>
             /// Number of bytes in MEL code
             /// </summary>
-            int size;
+            private int size;
 
             /// <summary>
             /// True if the next bit needs to be unstuffed
             /// </summary>
-            bool unstuff;
+            private bool unstuff;
 
             /// <summary>
             /// State of MEL decoder
             /// </summary>
-            int k;
+            private int k;
 
             /// <summary>
             /// Number of decoded runs left in runs (maximum 8)
             /// </summary>
-            int num_runs;
+            private int num_runs;
 
             /// <summary>
             /// Queue of decoded MEL codewords (7 bits/run)
             /// </summary>
-            ulong runs;
+            private ulong runs;
 
             /// <summary>
             /// Initiates for MEL decoding and reads some bytes in order
@@ -417,7 +417,7 @@ namespace OpenJpeg.Internal
                 return t; // return run
             }
 
-            void decode()
+            private void decode()
             {
                 if (bits < 6)
                 { // if there are less than 6 bits in tmp
@@ -467,7 +467,7 @@ namespace OpenJpeg.Internal
             /// value is 0xFF; this prevents sequences larger than 0xFF7F in value
             /// from appearing in the bitstream.
             /// </remarks>
-            void read()
+            private void read()
             {
                 uint val;
                 int bits;
@@ -551,27 +551,27 @@ namespace OpenJpeg.Internal
             /// <summary>
             /// The source data array
             /// </summary>
-            byte[] src;
+            private readonly byte[] src;
 
             /// <summary>
             /// Position in the src array
             /// </summary>
-            int data;
+            private int data;
 
             /// <summary>
             /// Temporary buffer for read data
             /// </summary>
-            ulong tmp;
+            private ulong tmp;
 
             /// <summary>
             /// Number of bits stored in tmp
             /// </summary>
-            int bits;
+            private int bits;
 
             /// <summary>
             /// Size of data
             /// </summary>
-            int size;
+            private int size;
 
             /// <summary>
             /// True if the next bit needs to be unstuffed
@@ -579,7 +579,7 @@ namespace OpenJpeg.Internal
             /// <remarks>
             /// then the current byte is unstuffed if it is 0x7F
             /// </remarks>
-            bool unstuff;
+            private bool unstuff;
 
             /// <summary>
             /// Initiates the rev_struct_t structure and reads a few bytes to
@@ -880,22 +880,22 @@ namespace OpenJpeg.Internal
             /// <summary>
             /// The source data array
             /// </summary>
-            byte[] src;
+            private readonly byte[] src;
 
             /// <summary>
             /// Position in the src array
             /// </summary>
-            int data;
+            private int data;
 
             /// <summary>
             /// Temporary buffer for read data
             /// </summary>
-            ulong tmp;
+            private ulong tmp;
 
             /// <summary>
             /// Number of bits stored in tmp
             /// </summary>
-            int bits;
+            private int bits;
 
             /// <summary>
             /// True if the next bit needs to be unstuffed
@@ -903,17 +903,17 @@ namespace OpenJpeg.Internal
             /// <remarks>
             /// then the current byte is unstuffed if it is 0x7F
             /// </remarks>
-            bool unstuff;
+            private bool unstuff;
 
             /// <summary>
             /// Size of data
             /// </summary>
-            int size;
+            private int size;
 
             /// <summary>
             /// 0 or 0xFF, X's are inserted at end of bitstream
             /// </summary>
-            uint X;
+            private readonly uint X;
 
             /// <summary>
             /// Initializes the struct
