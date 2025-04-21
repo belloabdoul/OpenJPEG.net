@@ -125,14 +125,12 @@ internal static class ht_dec
         }
         else if (mode <= 2)
         { // u_off are either 01 or 10
-            uint d;
-            uint suffix_len;
 
-            d = dec[vlc & 0x7];   //look at the least significant 3 bits
+            uint d = dec[vlc & 0x7]; //look at the least significant 3 bits
             vlc >>= (int)(d & 0x3);                 //prefix length
             consumed_bits += d & 0x3;
 
-            suffix_len = (d >> 2) & 0x7;
+            var suffix_len = (d >> 2) & 0x7;
             consumed_bits += suffix_len;
 
             d = (d >> 5) + (vlc & ((1U << (int)suffix_len) - 1)); // u value
@@ -147,28 +145,23 @@ internal static class ht_dec
 
             if ((d1 & 0x3) > 2)
             {
-                uint suffix_len;
-
                 //u_{q_2} prefix
                 u[1] = (vlc & 1) + 1 + 1; //Kappa is 1 for initial line
                 ++consumed_bits;
                 vlc >>= 1;
 
-                suffix_len = (d1 >> 2) & 0x7;
+                var suffix_len = (d1 >> 2) & 0x7;
                 consumed_bits += suffix_len;
                 d1 = (d1 >> 5) + (vlc & ((1U << (int)suffix_len) - 1)); // u value
                 u[0] = d1 + 1; //Kappa is 1 for initial line
             }
             else
             {
-                uint d2;
-                uint suffix_len;
-
-                d2 = dec[vlc & 0x7];  // LSBs of VLC are prefix codeword
+                uint d2 = dec[vlc & 0x7]; // LSBs of VLC are prefix codeword
                 vlc >>= (int)(d2 & 0x3);                // Consume bits
                 consumed_bits += d2 & 0x3;
 
-                suffix_len = (d1 >> 2) & 0x7;
+                var suffix_len = (d1 >> 2) & 0x7;
                 consumed_bits += suffix_len;
 
                 d1 = (d1 >> 5) + (vlc & ((1U << (int)suffix_len) - 1)); // u value
@@ -184,19 +177,16 @@ internal static class ht_dec
         }
         else if (mode == 4)
         { // both u_off are 1, and MEL event is 1
-            uint d1;
-            uint d2;
-            uint suffix_len;
 
-            d1 = dec[vlc & 0x7];  // LSBs of VLC are prefix codeword
+            uint d1 = dec[vlc & 0x7]; // LSBs of VLC are prefix codeword
             vlc >>= (int)(d1 & 0x3);                // Consume bits
             consumed_bits += d1 & 0x3;
 
-            d2 = dec[vlc & 0x7];  // LSBs of VLC are prefix codeword
+            uint d2 = dec[vlc & 0x7]; // LSBs of VLC are prefix codeword
             vlc >>= (int)(d2 & 0x3);                // Consume bits
             consumed_bits += d2 & 0x3;
 
-            suffix_len = (d1 >> 2) & 0x7;
+            var suffix_len = (d1 >> 2) & 0x7;
             consumed_bits += suffix_len;
 
             d1 = (d1 >> 5) + (vlc & ((1U << (int)suffix_len) - 1)); // u value
@@ -235,14 +225,12 @@ internal static class ht_dec
         }
         else if (mode <= 2)
         { //u_off are either 01 or 10
-            uint d;
-            uint suffix_len;
 
-            d = dec[vlc & 0x7];  //look at the least significant 3 bits
+            uint d = dec[vlc & 0x7]; //look at the least significant 3 bits
             vlc >>= (int)d & 0x3;                //prefix length
             consumed_bits += d & 0x3;
 
-            suffix_len = (d >> 2) & 0x7;
+            var suffix_len = (d >> 2) & 0x7;
             consumed_bits += suffix_len;
 
             d = (d >> 5) + (vlc & ((1U << (int)suffix_len) - 1)); // u value
@@ -251,19 +239,16 @@ internal static class ht_dec
         }
         else if (mode == 3)
         { // both u_off are 1
-            uint d1;
-            uint d2;
-            uint suffix_len;
 
-            d1 = dec[vlc & 0x7];  // LSBs of VLC are prefix codeword
+            uint d1 = dec[vlc & 0x7]; // LSBs of VLC are prefix codeword
             vlc >>= (int)d1 & 0x3;                // Consume bits
             consumed_bits += d1 & 0x3;
 
-            d2 = dec[vlc & 0x7];  // LSBs of VLC are prefix codeword
+            uint d2 = dec[vlc & 0x7]; // LSBs of VLC are prefix codeword
             vlc >>= (int)d2 & 0x3;                // Consume bits
             consumed_bits += d2 & 0x3;
 
-            suffix_len = (d1 >> 2) & 0x7;
+            var suffix_len = (d1 >> 2) & 0x7;
             consumed_bits += suffix_len;
 
             d1 = (d1 >> 5) + (vlc & ((1U << (int)suffix_len) - 1)); // u value
@@ -365,11 +350,9 @@ internal static class ht_dec
             //This code is borrowed; original is for a different architecture
             //These few lines take care of the case where data is not at a multiple
             // of 4 boundary.  It reads 1,2,3 up to 4 bytes from the MEL segment
-            int num = 4 - (data & 0x3);
-            for (int i = 0; i < num; ++i)
+            var num = 4 - (data & 0x3);
+            for (var i = 0; i < num; ++i)
             { // this code is similar to mel_read
-                ulong d;
-                int d_bits;
 
                 //Debug.Assert(unstuff == false || src[data] <= 0x8F);
                 if (unstuff && src[data] > 0x8F)
@@ -377,7 +360,7 @@ internal static class ht_dec
                     fail = true;
                     return;
                 }
-                d = size > 0 ? src[data] : 0xFFu; // if buffer is consumed
+                ulong d = size > 0 ? src[data] : 0xFFu; // if buffer is consumed
                 // set data to 0xFF
                 if (size == 1)
                 {
@@ -385,7 +368,7 @@ internal static class ht_dec
                 }
                 // see the standard
                 data += size-- > 0 ? 1 : 0; //increment if the end is not reached
-                d_bits = 8 - (unstuff ? 1 : 0); //if unstuffing is needed, reduce by 1
+                var d_bits = 8 - (unstuff ? 1 : 0); //if unstuffing is needed, reduce by 1
                 tmp = (tmp << d_bits) | d; //store bits in tmp
                 bits += d_bits;  //increment tmp by number of bits
                 unstuff = (d & 0xFF) == 0xFF; //true of next byte needs
@@ -405,13 +388,12 @@ internal static class ht_dec
         /// </remarks>
         internal int get_run()
         {
-            int t;
             if (num_runs == 0)
             { //if no runs, decode more bit from MEL segment
                 decode();
             }
 
-            t = (int) (runs & 0x7F); //retrieve one run
+            var t = (int) (runs & 0x7F); //retrieve one run
             runs >>= 7;  // remove the retrieved run
             num_runs--;
             return t; // return run
@@ -429,8 +411,8 @@ internal static class ht_dec
             // and the runs store is not full (num_runs < 8)
             while (bits >= 6 && num_runs < 8)
             {
-                int eval = exp[k]; // number of bits associated with state
-                int run = 0;
+                var eval = exp[k]; // number of bits associated with state
+                var run = 0;
                 if ((tmp & (1ul << 63)) != 0) { //The next bit to decode (stored in MSB)
                     //one is found
                     run = 1 << eval;
@@ -469,17 +451,12 @@ internal static class ht_dec
         /// </remarks>
         private void read()
         {
-            uint val;
-            int bits;
-            uint t;
-            int unstuff;
-
             if (this.bits > 32)
             { //there are enough bits in the tmp variable
                 return;    // return without reading new data
             }
 
-            val = 0xFFFFFFFF;      // feed in 0xFF if buffer is exhausted
+            var val = 0xFFFFFFFF; // feed in 0xFF if buffer is exhausted
             if (size > 4)
             {  // if there is more than 4 bytes the MEL segment
                 val = ReadUIntLE(data, src);  // read 32 bits from MEL data
@@ -489,7 +466,7 @@ internal static class ht_dec
             else if (size > 0)
             { // 4 or less
                 uint m, v;
-                int i = 0;
+                var i = 0;
                 while (size > 1)
                 {
                     v = src[data++]; // read one byte at a time
@@ -507,14 +484,14 @@ internal static class ht_dec
             }
 
             // next we unstuff them before adding them to the buffer
-            bits = 32 - (this.unstuff ? 1 : 0); // number of bits in val, subtract 1 if
+            var bits = 32 - (this.unstuff ? 1 : 0); // number of bits in val, subtract 1 if
+
             // the previously read byte requires
             // unstuffing
-
             // data is unstuffed and accumulated in t
             // bits has the number of bits in t
-            t = val & 0xFF;
-            unstuff = (val & 0xFF) == 0xFF ? 1 : 0; // true if the byte needs unstuffing
+            var t = val & 0xFF;
+            var unstuff = (val & 0xFF) == 0xFF ? 1 : 0; // true if the byte needs unstuffing
             bits -= unstuff;                          // there is one less bit in t if unstuffing is needed
             t = t << (8 - unstuff);                   // move up to make room for the next byte
 
@@ -617,14 +594,13 @@ internal static class ht_dec
             //These few lines take care of the case where data is not at a multiple
             // of 4 boundary. It reads 1,2,3 up to 4 bytes from the VLC bitstream.
             // To read 32 bits, read from (vlcp->data - 3)
-            int num = 1 + (data & 0x3);
-            int tnum = num < size ? num : size;
-            for (int i = 0; i < tnum; ++i)
+            var num = 1 + (data & 0x3);
+            var tnum = num < size ? num : size;
+            for (var i = 0; i < tnum; ++i)
             {
-                uint d_bits;
                 ulong d = src[data--];  // read one byte and move read pointer
                 //check if the last byte was >0x8F (unstuff == true) and this is 0x7F
-                d_bits = 8u - (unstuff && (d & 0x7F) == 0x7F ? 1u : 0u);
+                var d_bits = 8u - (unstuff && (d & 0x7F) == 0x7F ? 1u : 0u);
                 tmp |= d << bits; // move data to vlcp->tmp
                 bits += (int)d_bits;
                 unstuff = d > 0x8F; // for next byte
@@ -661,13 +637,13 @@ internal static class ht_dec
             // align to the read size (address multiple of 4 if read size is 4)
             //These few lines take care of the case where data is not at a multiple
             // of 4 boundary.  It reads 1,2,3 up to 4 bytes from the MRP stream
-            int num = 1 + (data & 0x3);
-            for (int i = 0; i < num; ++i)
+            var num = 1 + (data & 0x3);
+            for (var i = 0; i < num; ++i)
             {
                 //read a byte, 0 if no more data
                 ulong d = size-- > 0 ? src[data--] : 0u;
                 //check if unstuffing is needed
-                int d_bits = (int)(8u - (unstuff && (d & 0x7F) == 0x7F ? 1u : 0u));
+                var d_bits = (int)(8u - (unstuff && (d & 0x7F) == 0x7F ? 1u : 0u));
                 tmp |= d << bits; // move data to vlcp->tmp
                 bits += d_bits;
                 unstuff = d > 0x8F; // for next byte
@@ -712,7 +688,7 @@ internal static class ht_dec
             }
             else if (size > 0)
             { // 4 or less
-                int i = 24;
+                var i = 24;
                 while (size > 0)
                 {
                     uint v = src[data--]; // read one byte at a time
@@ -723,11 +699,11 @@ internal static class ht_dec
             }
 
             //accumulate in tmp, number of bits in tmp are stored in bits
-            uint tmp = val >> 24;  //start with the MSB byte
+            var tmp = val >> 24;  //start with the MSB byte
 
             // test unstuff (previous byte is >0x8F), and this byte is 0x7F
-            int bits = (int) (8u - (this.unstuff && ((val >> 24) & 0x7F) == 0x7F ? 1u : 0u));
-            bool unstuff = val >> 24 > 0x8F; //this is for the next byte
+            var bits = (int) (8u - (this.unstuff && ((val >> 24) & 0x7F) == 0x7F ? 1u : 0u));
+            var unstuff = val >> 24 > 0x8F; //this is for the next byte
 
             tmp |= ((val >> 16) & 0xFF) << bits; //process the next byte
             bits += (int)(8u - (unstuff && ((val >> 16) & 0x7F) == 0x7F ? 1u : 0u));
@@ -749,17 +725,12 @@ internal static class ht_dec
 
         private void read_mrp()
         {
-            uint val;
-            uint tmp;
-            int bits;
-            bool unstuff;
-
             //process 4 bytes at a time
             if (this.bits > 32)
             {
                 return;
             }
-            val = 0;
+            uint val = 0;
             if (size > 3)
             { // If there are 3 byte or more
                 // (mrp->data - 3) move pointer back to read 32 bits at once
@@ -769,7 +740,7 @@ internal static class ht_dec
             }
             else if (size > 0)
             {
-                int i = 24;
+                var i = 24;
                 while (size > 0)
                 {
                     uint v = src[data--]; // read one byte at a time
@@ -780,11 +751,11 @@ internal static class ht_dec
             }
 
             //accumulate in tmp, and keep count in bits
-            tmp = val >> 24;
+            var tmp = val >> 24;
 
             //test if the last byte > 0x8F (unstuff must be true) and this is 0x7F
-            bits = (int)(8u - (this.unstuff && ((val >> 24) & 0x7F) == 0x7F ? 1u : 0u));
-            unstuff = val >> 24 > 0x8F;
+            var bits = (int)(8u - (this.unstuff && ((val >> 24) & 0x7F) == 0x7F ? 1u : 0u));
+            var unstuff = val >> 24 > 0x8F;
 
             //process the next byte
             tmp |= ((val >> 16) & 0xFF) << bits;
@@ -937,8 +908,8 @@ internal static class ht_dec
             // align to the read size (address multiple of 4 if read size is 4)
             //These few lines take care of the case where data is not at a multiple
             // of 4 boundary.  It reads 1,2,3 up to 4 bytes from the bitstream
-            int num = 4 - (data & 0x3);
-            for (int i = 0; i < num; ++i)
+            var num = 4 - (data & 0x3);
+            for (var i = 0; i < num; ++i)
             {
                 //read a byte if the buffer is not exhausted, otherwise set it to X
                 ulong d = this.size-- > 0 ? buffer[data++] : this.X;
@@ -952,9 +923,6 @@ internal static class ht_dec
         private void read()
         {
             uint val;
-            int bits;
-            uint t;
-            bool unstuff;
 
             Debug.Assert(this.bits <= 32); // assert that there is a space for 32 bits
 
@@ -966,12 +934,12 @@ internal static class ht_dec
             }
             else if (size > 0)
             {
-                int i = 0;
+                var i = 0;
                 val = X != 0 ? 0xFFFFFFFFu : 0;
                 while (size > 0)
                 {
                     uint v = src[data++];  // read one byte at a time
-                    uint m = ~(0xFFu << i); // mask of location
+                    var m = ~(0xFFu << i); // mask of location
                     val = (val & m) | (v << i);   // put one byte in its correct location
                     --size;
                     i += 8;
@@ -983,9 +951,9 @@ internal static class ht_dec
             }
 
             // we accumulate in t and keep a count of the number of bits in bits
-            bits = (int)(8u - (this.unstuff ? 1u : 0u));
-            t = val & 0xFF;
-            unstuff = (val & 0xFF) == 0xFF;  // Do we need unstuffing next?
+            var bits = (int)(8u - (this.unstuff ? 1u : 0u));
+            var t = val & 0xFF;
+            var unstuff = (val & 0xFF) == 0xFF; // Do we need unstuffing next?
 
             t |= ((val >> 8) & 0xFF) << bits;
             bits += (int)(8u - (unstuff ? 1u : 0u));

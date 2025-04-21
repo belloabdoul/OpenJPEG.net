@@ -124,9 +124,9 @@ internal sealed class J2K
     /// <summary>
     /// Stream being decoded/encoded
     /// </summary>
-    private CIO _cio;
+    private Cio _cio;
 
-    private BufferCIO _bcio;
+    private BufferCio _bcio;
 
     /// <summary>
     /// Current tile coder/decoder
@@ -176,8 +176,8 @@ internal sealed class J2K
             // per component is allowed
             j2k._cp.AllowDifferentBitDepthSign = true;
 
-            j2k._specific_param.decoder.header_data = new byte[Constants.J2K_DEFAULT_HEADER_SIZE];
-            j2k._specific_param.decoder.header_data_size = Constants.J2K_DEFAULT_HEADER_SIZE;
+            j2k._specific_param.decoder.header_data = new byte[Constants.J2KDefaultHeaderSize];
+            j2k._specific_param.decoder.header_data_size = Constants.J2KDefaultHeaderSize;
             j2k._specific_param.decoder.tile_ind_to_dec = -1;
             j2k._specific_param.decoder.last_sot_read_pos = 0;
 
@@ -189,8 +189,8 @@ internal sealed class J2K
             //     We still use the OpenJpeg 1.4 API, so a few things
             //     have to be placed a little differently.
             j2k._specific_param.encoder.header_tile_data =
-                new byte[Constants.J2K_DEFAULT_HEADER_SIZE];
-            j2k._specific_param.encoder.header_tile_data_size = Constants.J2K_DEFAULT_HEADER_SIZE;
+                new byte[Constants.J2KDefaultHeaderSize];
+            j2k._specific_param.encoder.header_tile_data_size = Constants.J2KDefaultHeaderSize;
         }
 
         return j2k;
@@ -201,7 +201,7 @@ internal sealed class J2K
     #region Setup
 
     //2.5.3 - opj_j2k_setup_decoder
-    internal void SetupDecode(CIO cio, DecompressionParameters parameters)
+    internal void SetupDecode(Cio cio, DecompressionParameters parameters)
     {
         _cio = cio;
         if (parameters != null)
@@ -248,10 +248,10 @@ internal sealed class J2K
             return false;
         }        
 
-        if (parameters.numresolution <= 0 || parameters.numresolution > Constants.J2K_MAXRLVLS)
+        if (parameters.numresolution <= 0 || parameters.numresolution > Constants.J2KMaxrlvls)
         {
             _cinfo.Error("Invalid number of resolutions : {0} not in range [1,{1}]",
-                parameters.numresolution, Constants.J2K_MAXRLVLS);
+                parameters.numresolution, Constants.J2KMaxrlvls);
             return false;
         }
 
@@ -274,8 +274,8 @@ internal sealed class J2K
             _cinfo.Error("Invalid value for cblockw_init * cblockh_init: should be <= 4096");
             return false;
         }
-        uint cblkw = (uint)MyMath.int_floorlog2(parameters.cblockw_init);
-        uint cblkh = (uint)MyMath.int_floorlog2(parameters.cblockh_init);
+        var cblkw = (uint)MyMath.int_floorlog2(parameters.cblockw_init);
+        var cblkh = (uint)MyMath.int_floorlog2(parameters.cblockh_init);
         if (parameters.cblockw_init != 1 << (int)cblkw)
         {
             _cinfo.Error("Invalid value for cblockw_init: {0} not a power of 2 in range [4,1024]",
@@ -297,16 +297,16 @@ internal sealed class J2K
                 return false;
             }
 
-            if (parameters.tcp_numlayers > Constants.J2K_TCD_MATRIX_MAX_LAYER_COUNT)
+            if (parameters.tcp_numlayers > Constants.J2KTcdMatrixMaxLayerCount)
             {
                 _cinfo.Error("tcp_numlayers when cp_fixed_alloc set should not exceed {0}\n",
-                    Constants.J2K_TCD_MATRIX_MAX_LAYER_COUNT);
+                    Constants.J2KTcdMatrixMaxLayerCount);
                 return false;
             }
-            if (parameters.numresolution > Constants.J2K_TCD_MATRIX_MAX_RESOLUTION_COUNT)
+            if (parameters.numresolution > Constants.J2KTcdMatrixMaxResolutionCount)
             {
                 _cinfo.Error("numresolution when cp_fixed_alloc set should not exceed {0}\n",
-                    Constants.J2K_TCD_MATRIX_MAX_RESOLUTION_COUNT);
+                    Constants.J2KTcdMatrixMaxResolutionCount);
                 return false;
             }
         }
@@ -318,7 +318,7 @@ internal sealed class J2K
         // Find a better way
         if (image.comps != null)
         {
-            for(int it_comp = 0; it_comp < image.numcomps; it_comp++)
+            for(var it_comp = 0; it_comp < image.numcomps; it_comp++)
             {
                 _private_image.comps[it_comp].data = image.comps[it_comp].data;
                 image.comps[it_comp].data = null;
@@ -337,25 +337,25 @@ internal sealed class J2K
         // to be removed once deprecated cp_cinema and cp_rsiz have been removed
         if (parameters.rsiz == J2K_PROFILE.NONE)
         {
-            bool deprecated_used = false;
+            var deprecated_used = false;
             switch (parameters.cp_cinema)
             {
                 case CINEMA_MODE.CINEMA2K_24:
                     parameters.rsiz = J2K_PROFILE.CINEMA_2K;
-                    parameters.max_cs_size = Constants.CINEMA_24_CS;
-                    parameters.max_comp_size = Constants.CINEMA_24_COMP;
+                    parameters.max_cs_size = Constants.Cinema24Cs;
+                    parameters.max_comp_size = Constants.Cinema24Comp;
                     deprecated_used = true;
                     break;
                 case CINEMA_MODE.CINEMA2K_48:
                     parameters.rsiz = J2K_PROFILE.CINEMA_2K;
-                    parameters.max_cs_size = Constants.CINEMA_48_CS;
-                    parameters.max_comp_size = Constants.CINEMA_48_COMP;
+                    parameters.max_cs_size = Constants.Cinema48Cs;
+                    parameters.max_comp_size = Constants.Cinema48Comp;
                     deprecated_used = true;
                     break;
                 case CINEMA_MODE.CINEMA4K_24:
                     parameters.rsiz = J2K_PROFILE.CINEMA_4K;
-                    parameters.max_cs_size = Constants.CINEMA_24_CS;
-                    parameters.max_comp_size = Constants.CINEMA_24_COMP;
+                    parameters.max_cs_size = Constants.Cinema24Cs;
+                    parameters.max_comp_size = Constants.Cinema24Comp;
                     deprecated_used = true;
                     break;
             }
@@ -393,8 +393,8 @@ internal sealed class J2K
             /* Emit warnings if tcp_rates are not decreasing */
             for (uint i = 1; i < (OPJ_UINT32)parameters.tcp_numlayers; i++)
             {
-                float rate_i_corr = parameters.tcp_rates[i];
-                float rate_i_m_1_corr = parameters.tcp_rates[i - 1];
+                var rate_i_corr = parameters.tcp_rates[i];
+                var rate_i_m_1_corr = parameters.tcp_rates[i - 1];
                 if (rate_i_corr <= 1f)
                     rate_i_corr = 1f;
                 if (rate_i_m_1_corr <= 1f)
@@ -455,8 +455,8 @@ internal sealed class J2K
         {
             if (parameters.tcp_rates[parameters.tcp_numlayers - 1] > 0)
             {
-                float temp_size = image.numcomps * image.comps[0].w * image.comps[0].h * image.comps[0].prec /
-                                  (parameters.tcp_rates[parameters.tcp_numlayers - 1] * 8 * image.comps[0].dx * image.comps[0].dy);
+                var temp_size = image.numcomps * image.comps[0].w * image.comps[0].h * image.comps[0].prec /
+                                (parameters.tcp_rates[parameters.tcp_numlayers - 1] * 8 * image.comps[0].dx * image.comps[0].dy);
                 if (temp_size > int.MaxValue)
                     parameters.max_cs_size = int.MaxValue;
                 else
@@ -467,7 +467,7 @@ internal sealed class J2K
         }
         else
         {
-            bool cap = false;
+            var cap = false;
 
             if (parameters.IsIMF && parameters.max_cs_size > 0 &&
                 parameters.tcp_numlayers == 1 && parameters.tcp_rates[0] == 0)
@@ -480,7 +480,7 @@ internal sealed class J2K
 
             float temp_rate = image.numcomps * image.comps[0].w * image.comps[0].h * image.comps[0].prec /
                               (parameters.max_cs_size * 8 * image.comps[0].dx * image.comps[0].dy);
-            for (int i = 0; i < parameters.tcp_numlayers; i++)
+            for (var i = 0; i < parameters.tcp_numlayers; i++)
             {
                 if (parameters.tcp_rates[i] < temp_rate)
                 {
@@ -566,7 +566,7 @@ internal sealed class J2K
         if (parameters.cp_fixed_alloc)
         {
             //Int64 in org. Impl, but C# don't support arrays > 2GB
-            int array_size = parameters.tcp_numlayers * parameters.numresolution * 3;
+            var array_size = parameters.tcp_numlayers * parameters.numresolution * 3;
             _cp.specific_param.enc.matrice = new int[array_size];
             Array.Copy(parameters.matrice, _cp.specific_param.enc.matrice, parameters.matrice.Length);
         }
@@ -637,9 +637,9 @@ internal sealed class J2K
         _cp.tcps = new TileCodingParams[_cp.tw * _cp.th];
         for (uint tileno = 0; tileno < _cp.tcps.Length; tileno++)
         {
-            TileCodingParams tcp = new TileCodingParams();
+            var tcp = new TileCodingParams();
             _cp.tcps[tileno] = tcp;
-            bool fixed_distoratio = CP.specific_param.enc.quality_layer_alloc_strategy == J2K_QUALITY_LAYER_ALLOCATION_STRATEGY.FIXED_DISTORTION_RATIO;
+            var fixed_distoratio = CP.specific_param.enc.quality_layer_alloc_strategy == J2K_QUALITY_LAYER_ALLOCATION_STRATEGY.FIXED_DISTORTION_RATIO;
             tcp.numlayers = (uint) parameters.tcp_numlayers;
 
             //C# impl note: Using Array.Copy instead of for loop
@@ -658,7 +658,7 @@ internal sealed class J2K
             }
             if (!fixed_distoratio)
             {
-                for(int j=0; j<tcp.numlayers; j++)
+                for(var j=0; j<tcp.numlayers; j++)
                 {
                     if (tcp.rates[j] <= 1f)
                         tcp.rates[j] = 0; //Force lossless
@@ -675,11 +675,11 @@ internal sealed class J2K
             if (parameters.numpocs > 0)
             {
                 // initialisation of POC
-                for (int i = 0; i < parameters.numpocs; i++)
+                for (var i = 0; i < parameters.numpocs; i++)
                 {
                     if (tileno + 1 == parameters.POC[i].tile)
                     {
-                        ProgOrdChang tcp_poc = new ProgOrdChang();
+                        var tcp_poc = new ProgOrdChang();
                         tcp.pocs[numpocs_tile] = tcp_poc;
                         tcp_poc.resno0  = parameters.POC[numpocs_tile].resno0;
                         tcp_poc.compno0 = parameters.POC[numpocs_tile].compno0;
@@ -710,15 +710,15 @@ internal sealed class J2K
             tcp.tccps = TileCompParams.Create(image.numcomps);
             if (parameters.mct_data != null)
             {
-                uint lMctSize = image.numcomps * image.numcomps;
-                float[] lTmpBuf = new float[lMctSize];
-                IntOrFloat[] mct_data = parameters.mct_data;
+                var lMctSize = image.numcomps * image.numcomps;
+                var lTmpBuf = new float[lMctSize];
+                var mct_data = parameters.mct_data;
 
                 tcp.mct = 2;
                 tcp.mct_coding_matrix = new float[lMctSize];
 
                 //C#: This is the two memcopy statements
-                for (int c = 0; c < lTmpBuf.Length; c++)
+                for (var c = 0; c < lTmpBuf.Length; c++)
                     lTmpBuf[c] = tcp.mct_coding_matrix[c] = mct_data[c].F;
 
                 tcp.mct_decoding_matrix = new float[lMctSize];
@@ -732,9 +732,9 @@ internal sealed class J2K
                 tcp.mct_norms = new double[image.numcomps];
                 MCT.CalculateNorms(tcp.mct_norms, image.numcomps, tcp.mct_decoding_matrix);
 
-                for (int i = 0; i < image.numcomps; i++)
+                for (var i = 0; i < image.numcomps; i++)
                 {
-                    TileCompParams tccp = tcp.tccps[i];
+                    var tccp = tcp.tccps[i];
                     tccp.dc_level_shift = mct_data[lMctSize + i].I;
                 }
 
@@ -758,17 +758,17 @@ internal sealed class J2K
                     }
                 }
 
-                for (int i = 0; i < image.numcomps; i++)
+                for (var i = 0; i < image.numcomps; i++)
                 {
-                    ImageComp comp = image.comps[i];
+                    var comp = image.comps[i];
                     if (!comp.sgnd)
                         tcp.tccps[i].dc_level_shift = 1 << ((int)comp.prec - 1);
                 }
             }
 
-            for (int i = 0; i < image.numcomps; i++)
+            for (var i = 0; i < image.numcomps; i++)
             {
-                TileCompParams tccp = tcp.tccps[i];
+                var tccp = tcp.tccps[i];
 
                 tccp.csty = parameters.csty 
                             & CP_CSTY.PRT;	// 0 => one precinct || 1 => custom precinct
@@ -798,9 +798,9 @@ internal sealed class J2K
 
                 if ((parameters.csty & CP_CSTY.PRT) != 0)
                 {
-                    int p = 0;
+                    var p = 0;
                     Debug.Assert(tccp.numresolutions > 0);
-                    for (int it_res = (int)tccp.numresolutions - 1; it_res >= 0; it_res--)
+                    for (var it_res = (int)tccp.numresolutions - 1; it_res >= 0; it_res--)
                     {
                         if (p < parameters.res_spec)
                         {
@@ -816,11 +816,11 @@ internal sealed class J2K
                         }
                         else
                         {
-                            int res_spec = parameters.res_spec;
+                            var res_spec = parameters.res_spec;
 
                             Debug.Assert(res_spec > 0);
-                            int size_prcw = parameters.prcw_init[res_spec - 1] >> (p - (res_spec - 1));
-                            int size_prch = parameters.prch_init[res_spec - 1] >> (p - (res_spec - 1));
+                            var size_prcw = parameters.prcw_init[res_spec - 1] >> (p - (res_spec - 1));
+                            var size_prch = parameters.prch_init[res_spec - 1] >> (p - (res_spec - 1));
 
                             if (size_prcw < 1)
                                 tccp.prcw[it_res] = 1;
@@ -837,7 +837,7 @@ internal sealed class J2K
                 }
                 else
                 {
-                    for (int j = 0; j < tccp.numresolutions; j++)
+                    for (var j = 0; j < tccp.numresolutions; j++)
                     {
                         tccp.prcw[j] = 15;
                         tccp.prch[j] = 15;
@@ -845,7 +845,7 @@ internal sealed class J2K
                 }
 
 
-                DWT.CalcExplicitStepsizes(tccp, image.comps[i].prec);
+                Dwt.CalcExplicitStepsizes(tccp, image.comps[i].prec);
             }
         }
 
@@ -858,21 +858,19 @@ internal sealed class J2K
     //2.5 - opj_j2k_check_poc_val
     private bool CheckPOCval(ProgOrdChang[] pocs, uint tileno, uint n_pocs, uint n_resolutions, uint num_comps, uint num_layers)
     {
-        uint[] packet_array;
         uint index , resno, compno, layno;
-        uint i;
         uint step_c = 1;
-        uint step_r = num_comps * step_c;
-        uint step_l = n_resolutions * step_r;
-        bool loss = false;
+        var step_r = num_comps * step_c;
+        var step_l = n_resolutions * step_r;
+        var loss = false;
 
         Debug.Assert(n_pocs > 0);
 
-        packet_array = new uint[step_l * num_layers];
+        var packet_array = new uint[step_l * num_layers];
 
-        for (i = 0; i < n_pocs; i++)
+        for (uint i = 0; i < n_pocs; i++)
         {
-            ProgOrdChang poc = pocs[i];
+            var poc = pocs[i];
             if (tileno + 1 == poc.tile)
             {
                 index = step_r * poc.resno0;
@@ -880,14 +878,14 @@ internal sealed class J2K
                 /* take each resolution for each poc */
                 for (resno = poc.resno0; resno < Math.Min(poc.resno1, n_resolutions); ++resno)
                 {
-                    uint res_index = index + poc.compno0 * step_c;
+                    var res_index = index + poc.compno0 * step_c;
 
                     /* take each comp of each resolution for each poc */
                     for (compno = poc.compno0; compno < Math.Min(poc.compno1, num_comps); ++compno)
                     {
                         // The layer index always starts at zero for every progression
                         const uint layno0 = 0;
-                        uint comp_index = res_index + layno0 * step_l;
+                        var comp_index = res_index + layno0 * step_l;
 
                         /* and finally take each layer of each res of ... */
                         for (layno = layno0; layno < Math.Min(poc.layno1, num_layers); ++layno)
@@ -924,15 +922,9 @@ internal sealed class J2K
     //2.5 - opj_j2k_setup_mct_encoding
     private bool SetupMCTencoding(TileCodingParams tcp, JPXImage image)
     {
-        uint i;
         uint indix = 1;
-        ArPtr<MctData> mct_deco_data_ptr = null, mct_offset_data_ptr;
-        SimpleMccDecorrelationData mcc_data;
+        ArPtr<MctData> mct_deco_data_ptr = null;
         int mct_size,n_elem; // keeping as int, as these referes to an array's size
-        float[] data;
-        int current_data; //<-- pointer into data
-        TileCompParams[] tccps;
-        int tccp; //<-- pointer into tccps
 
         /* preconditions */
         Debug.Assert(tcp != null);
@@ -945,12 +937,12 @@ internal sealed class J2K
         {
             if (tcp.n_mct_records == tcp.n_max_mct_records) 
             {
-                tcp.n_max_mct_records += Constants.MCT_DEFAULT_NB_RECORDS;
+                tcp.n_max_mct_records += Constants.MctDefaultNbRecords;
                 Array.Resize<MctData>(ref tcp.mct_records, (int) tcp.n_max_mct_records);
 
                 //Mesets to 0 (using length instead of tcp.n_max_mct_records - tcp.n_mct_records)
                 //it is ultimatly the same anyway (as memcopy starts from n_mct_records).
-                for (uint c = tcp.n_mct_records; c < tcp.mcc_records.Length; c++)
+                for (var c = tcp.n_mct_records; c < tcp.mcc_records.Length; c++)
                     tcp.mct_records[c] = new MctData();
             }
             mct_deco_data_ptr = new ArPtr<MctData>(tcp.mct_records, (int) tcp.n_mct_records);
@@ -973,17 +965,17 @@ internal sealed class J2K
         }
 
         if (tcp.n_mct_records == tcp.n_max_mct_records) {
-            tcp.n_max_mct_records += Constants.MCT_DEFAULT_NB_RECORDS;
+            tcp.n_max_mct_records += Constants.MctDefaultNbRecords;
             Array.Resize<MctData>(ref tcp.mct_records, (int) tcp.n_max_mct_records);
 
-            for (uint c = tcp.n_mct_records; c < tcp.mct_records.Length; c++)
+            for (var c = tcp.n_mct_records; c < tcp.mct_records.Length; c++)
                 tcp.mct_records[c] = new MctData();
 
             if (mct_deco_data_ptr != null)
                 mct_deco_data_ptr.Pos = (int) (tcp.n_mct_records - 1);
         }
 
-        mct_offset_data_ptr = new ArPtr<MctData>(tcp.mct_records, (int) tcp.n_mct_records);
+        var mct_offset_data_ptr = new ArPtr<MctData>(tcp.mct_records, (int) tcp.n_mct_records);
         var mct_offset_data = mct_offset_data_ptr.Deref;
 
         if (mct_offset_data.data.Type != ELEMENT_TYPE.NULL)
@@ -997,13 +989,13 @@ internal sealed class J2K
         mct_offset_data.data = new ShortOrIntOrFloatOrDoubleAr(mct_offset_data.element_type, n_elem);
 
 
-        data = new float[n_elem];
+        var data = new float[n_elem];
             
-        tccps = tcp.tccps;
-        tccp = 0;
-        current_data = 0;
+        var tccps = tcp.tccps;
+        var tccp = 0; //<-- pointer into tccps
+        var current_data = 0; //<-- pointer into data
 
-        for (i = 0; i < n_elem; ++i)
+        for (uint i = 0; i < n_elem; ++i)
         {
             data[current_data++] = tccps[tccp].dc_level_shift;
             ++tccp;
@@ -1018,16 +1010,16 @@ internal sealed class J2K
 
         if (tcp.n_mcc_records == tcp.n_max_mcc_records)
         {
-            tcp.n_max_mcc_records += Constants.MCT_DEFAULT_NB_RECORDS;
+            tcp.n_max_mcc_records += Constants.MctDefaultNbRecords;
             Array.Resize(ref tcp.mcc_records, (int)tcp.n_max_mcc_records);
 
             //C# impl note. We "meset" tcp.mcc_records.Length, instead of
             //  (p_tcp->m_nb_max_mcc_records - p_tcp->m_nb_mcc_records)
-            for (uint c = tcp.n_mcc_records; c < tcp.mcc_records.Length; c++)
+            for (var c = tcp.n_mcc_records; c < tcp.mcc_records.Length; c++)
                 tcp.mcc_records[c] = new SimpleMccDecorrelationData();
         }
             
-        mcc_data = tcp.mcc_records[tcp.n_mcc_records];
+        var mcc_data = tcp.mcc_records[tcp.n_mcc_records];
         mcc_data.decorrelation_array = mct_deco_data_ptr;
         mcc_data.is_irreversible = true;
         mcc_data.n_comps = image.numcomps;
@@ -1046,8 +1038,8 @@ internal sealed class J2K
         var profile = parameters.GetIMF_Profile();
 
         // Override defaults set by opj_set_default_encoder_parameters
-        if (parameters.cblockw_init == Constants.PARAM_DEFAULT_CBLOCKW &&
-            parameters.cblockh_init == Constants.PARAM_DEFAULT_CBLOCKH)
+        if (parameters.cblockw_init == Constants.ParamDefaultCblockw &&
+            parameters.cblockh_init == Constants.ParamDefaultCblockh)
         {
             parameters.cblockw_init = 32;
             parameters.cblockh_init = 32;
@@ -1057,7 +1049,7 @@ internal sealed class J2K
         parameters.tp_flag = 'C';
         parameters.tp_on = true;
 
-        if (parameters.prog_order == Constants.PARAM_DEFAULT_PROG_ORDER)
+        if (parameters.prog_order == Constants.ParamDefaultProgOrder)
         {
             parameters.prog_order = PROG_ORDER.CPRL;
         }
@@ -1071,11 +1063,11 @@ internal sealed class J2K
         }
 
         /* Adjust the number of resolutions if set to its defaults */
-        if (parameters.numresolution == Constants.PARAM_DEFAULT_NUMRESOLUTION &&
+        if (parameters.numresolution == Constants.ParamDefaultNumresolution &&
             image.x0 == 0 &&
             image.y0 == 0)
         {
-            int max_NL = GetIMF_MaxNL(parameters, image);
+            var max_NL = GetIMF_MaxNL(parameters, image);
             if (max_NL >= 0 && parameters.numresolution > max_NL)
             {
                 parameters.numresolution = max_NL + 1;
@@ -1113,9 +1105,8 @@ internal sealed class J2K
             }
             else
             {
-                int i;
                 parameters.res_spec = parameters.numresolution - 1;
-                for (i = 0; i < parameters.res_spec; i++)
+                for (var i = 0; i < parameters.res_spec; i++)
                 {
                     parameters.prcw_init[i] = 256;
                     parameters.prch_init[i] = 256;
@@ -1129,7 +1120,7 @@ internal sealed class J2K
     {
         /* Decomposition levels */
         var profile = parameters.GetIMF_Profile();
-        OPJ_UINT32 XTsiz = parameters.tile_size_on ? (OPJ_UINT32)
+        var XTsiz = parameters.tile_size_on ? (OPJ_UINT32)
             parameters.tdx : image.x1;
         switch (profile)
         {
@@ -1197,7 +1188,6 @@ internal sealed class J2K
     private void SetCinemaParameters(CompressionParameters parameters, JPXImage image)
     {
         /* Configure cinema parameters */
-        int i;
 
         /* No tiling */
         parameters.tile_size_on = false;
@@ -1284,7 +1274,7 @@ internal sealed class J2K
         else
         {
             parameters.res_spec = parameters.numresolution - 1;
-            for (i = 0; i < parameters.res_spec; i++)
+            for (var i = 0; i < parameters.res_spec; i++)
             {
                 parameters.prcw_init[i] = 256;
                 parameters.prch_init[i] = 256;
@@ -1307,30 +1297,30 @@ internal sealed class J2K
         parameters.cp_disto_alloc = true;
         if (parameters.max_cs_size <= 0) {
             /* No rate has been introduced, 24 fps is assumed */
-            parameters.max_cs_size = Constants.CINEMA_24_CS;
+            parameters.max_cs_size = Constants.Cinema24Cs;
             _cinfo.Warn("JPEG 2000 Profile-3 and 4 (2k/4k dc profile) requires:\n"+
                         "Maximum 1302083 compressed bytes @ 24fps\n"+
                         "As no rate has been given, this limit will be used.\n");
-        } else if (parameters.max_cs_size > Constants.CINEMA_24_CS) {
+        } else if (parameters.max_cs_size > Constants.Cinema24Cs) {
             _cinfo.Warn("JPEG 2000 Profile-3 and 4 (2k/4k dc profile) requires:\n"+
                         "Maximum 1302083 compressed bytes @ 24fps\n"+
                         "-> Specified rate exceeds this limit. Rate will be forced to 1302083 bytes.");
-            parameters.max_cs_size = Constants.CINEMA_24_CS;
+            parameters.max_cs_size = Constants.Cinema24Cs;
         }
 
         if (parameters.max_comp_size <= 0) {
             /* No rate has been introduced, 24 fps is assumed */
-            parameters.max_comp_size = Constants.CINEMA_24_COMP;
+            parameters.max_comp_size = Constants.Cinema24Comp;
             _cinfo.Warn("JPEG 2000 Profile-3 and 4 (2k/4k dc profile) requires:\n"+
                         "Maximum 1041666 compressed bytes @ 24fps\n"+
                         "As no rate has been given, this limit will be used.");
         }
-        else if (parameters.max_comp_size > Constants.CINEMA_24_COMP)
+        else if (parameters.max_comp_size > Constants.Cinema24Comp)
         {
             _cinfo.Warn("JPEG 2000 Profile-3 and 4 (2k/4k dc profile) requires:\n"+
                         "Maximum 1041666 compressed bytes @ 24fps\n"+
                         ". Specified rate exceeds this limit. Rate will be forced to 1041666 bytes.");
-            parameters.max_comp_size = Constants.CINEMA_24_COMP;
+            parameters.max_comp_size = Constants.Cinema24Comp;
         }
 
         parameters.tcp_rates[0] = image.numcomps * image.comps[0].w * image.comps[0].h * image.comps[0].prec/
@@ -1341,22 +1331,26 @@ internal sealed class J2K
     //2.5 - opj_j2k_initialise_4K_poc
     private int Initialise4K_poc(ProgOrdChang[] POC, int numres)
     {
-        POC[0] = new ProgOrdChang();
-        POC[0].tile = 1;
-        POC[0].resno0 = 0;
-        POC[0].compno0 = 0;
-        POC[0].layno1 = 1;
-        POC[0].resno1 = (uint)(numres - 1);
-        POC[0].compno1 = 3;
-        POC[0].prg1 = PROG_ORDER.CPRL;
-        POC[1] = new ProgOrdChang();
-        POC[1].tile = 1;
-        POC[1].resno0 = (uint)(numres - 1);
-        POC[1].compno0 = 0;
-        POC[1].layno1 = 1;
-        POC[1].resno1 = (uint)numres;
-        POC[1].compno1 = 3;
-        POC[1].prg1 = PROG_ORDER.CPRL;
+        POC[0] = new ProgOrdChang
+        {
+            tile = 1,
+            resno0 = 0,
+            compno0 = 0,
+            layno1 = 1,
+            resno1 = (uint)(numres - 1),
+            compno1 = 3,
+            prg1 = PROG_ORDER.CPRL
+        };
+        POC[1] = new ProgOrdChang
+        {
+            tile = 1,
+            resno0 = (uint)(numres - 1),
+            compno0 = 0,
+            layno1 = 1,
+            resno1 = (uint)numres,
+            compno1 = 3,
+            prg1 = PROG_ORDER.CPRL
+        };
         return 2;
     }
 
@@ -1367,13 +1361,13 @@ internal sealed class J2K
         var profile = parameters.GetIMF_Profile();
         var mainlevel = parameters.GetIMF_Mainlevel();
         var sublevel = parameters.GetIMF_Sublevel();
-        int NL = parameters.numresolution - 1;
-        OPJ_UINT32 XTsiz = parameters.tile_size_on ? (OPJ_UINT32)
+        var NL = parameters.numresolution - 1;
+        var XTsiz = parameters.tile_size_on ? (OPJ_UINT32)
             parameters.tdx : image.x1;
-        bool ret = true;
+        var ret = true;
 
         /* Validate mainlevel */
-        if (mainlevel > Constants.IMF_MAINLEVEL_MAX)
+        if (mainlevel > Constants.ImfMainlevelMax)
         {
             _cinfo.Warn("IMF profile require mainlevel <= 11.\n"+
                         "-> {0} is thus not compliant\n"+
@@ -1662,7 +1656,7 @@ internal sealed class J2K
         switch (profile)
         {
             case J2K_PROFILE.IMF_2K:
-                if (!(NL >= 1 && NL <= 5))
+                if (!(NL is >= 1 and <= 5))
                 {
                     _cinfo.Warn("IMF 2K profile requires 1 <= NL <= 5:\n"+
                                 "-> Number of decomposition levels is {0}.\n"+
@@ -1672,7 +1666,7 @@ internal sealed class J2K
                 }
                 break;
             case J2K_PROFILE.IMF_4K:
-                if (!(NL >= 1 && NL <= 6))
+                if (!(NL is >= 1 and <= 6))
                 {
                     _cinfo.Warn("IMF 4K profile requires 1 <= NL <= 6:\n"+
                                 "-> Number of decomposition levels is {0}.\n"+
@@ -1682,7 +1676,7 @@ internal sealed class J2K
                 }
                 break;
             case J2K_PROFILE.IMF_8K:
-                if (!(NL >= 1 && NL <= 7))
+                if (!(NL is >= 1 and <= 7))
                 {
                     _cinfo.Warn("IMF 8K profile requires 1 <= NL <= 7:\n"+
                                 "-> Number of decomposition levels is {0}.\n"+
@@ -1695,7 +1689,7 @@ internal sealed class J2K
             {
                 if (XTsiz >= 2048)
                 {
-                    if (!(NL >= 1 && NL <= 5))
+                    if (!(NL is >= 1 and <= 5))
                     {
                         _cinfo.Warn("IMF 2K_R profile requires 1 <= NL <= 5 for XTsiz >= 2048:\n"+
                                     "-> Number of decomposition levels is {0}.\n"+
@@ -1706,7 +1700,7 @@ internal sealed class J2K
                 }
                 else if (XTsiz >= 1024)
                 {
-                    if (!(NL >= 1 && NL <= 4))
+                    if (!(NL is >= 1 and <= 4))
                     {
                         _cinfo.Warn("IMF 2K_R profile requires 1 <= NL <= 4 for XTsiz in [1024,2048[:\n"+
                                     "-> Number of decomposition levels is {0}.\n"+
@@ -1721,7 +1715,7 @@ internal sealed class J2K
             {
                 if (XTsiz >= 4096)
                 {
-                    if (!(NL >= 1 && NL <= 6))
+                    if (!(NL is >= 1 and <= 6))
                     {
                         _cinfo.Warn("IMF 4K_R profile requires 1 <= NL <= 6 for XTsiz >= 4096:\n"+
                                     "-> Number of decomposition levels is {0}.\n"+
@@ -1732,7 +1726,7 @@ internal sealed class J2K
                 }
                 else if (XTsiz >= 2048)
                 {
-                    if (!(NL >= 1 && NL <= 5))
+                    if (!(NL is >= 1 and <= 5))
                     {
                         _cinfo.Warn("IMF 4K_R profile requires 1 <= NL <= 5 for XTsiz in [2048,4096[:\n"+
                                     "-> Number of decomposition levels is {0}.\n"+
@@ -1743,7 +1737,7 @@ internal sealed class J2K
                 }
                 else if (XTsiz >= 1024)
                 {
-                    if (!(NL >= 1 && NL <= 4))
+                    if (!(NL is >= 1 and <= 4))
                     {
                         _cinfo.Warn("IMF 4K_R profile requires 1 <= NL <= 4 for XTsiz in [1024,2048[:\n"+
                                     "-> Number of decomposition levels is {0}.\n"+
@@ -1758,7 +1752,7 @@ internal sealed class J2K
             {
                 if (XTsiz >= 8192)
                 {
-                    if (!(NL >= 1 && NL <= 7))
+                    if (!(NL is >= 1 and <= 7))
                     {
                         _cinfo.Warn("IMF 4K_R profile requires 1 <= NL <= 7 for XTsiz >= 8192:\n"+
                                     "-> Number of decomposition levels is {0}.\n"+
@@ -1769,7 +1763,7 @@ internal sealed class J2K
                 }
                 else if (XTsiz >= 4096)
                 {
-                    if (!(NL >= 1 && NL <= 6))
+                    if (!(NL is >= 1 and <= 6))
                     {
                         _cinfo.Warn("IMF 4K_R profile requires 1 <= NL <= 6 for XTsiz in [4096,8192[:\n"+
                                     "-> Number of decomposition levels is {0}.\n"+
@@ -1780,7 +1774,7 @@ internal sealed class J2K
                 }
                 else if (XTsiz >= 2048)
                 {
-                    if (!(NL >= 1 && NL <= 5))
+                    if (!(NL is >= 1 and <= 5))
                     {
                         _cinfo.Warn("IMF 4K_R profile requires 1 <= NL <= 5 for XTsiz in [2048,4096[:\n"+
                                     "-> Number of decomposition levels is {0}.\n"+
@@ -1791,7 +1785,7 @@ internal sealed class J2K
                 }
                 else if (XTsiz >= 1024)
                 {
-                    if (!(NL >= 1 && NL <= 4))
+                    if (!(NL is >= 1 and <= 4))
                     {
                         _cinfo.Warn("IMF 4K_R profile requires 1 <= NL <= 4 for XTsiz in [1024,2048[:\n"+
                                     "-> Number of decomposition levels is {0}.\n"+
@@ -1850,7 +1844,7 @@ internal sealed class J2K
         }
 
         /* Bitdepth */
-        for (int i = 0; i < image.numcomps; i++) {
+        for (var i = 0; i < image.numcomps; i++) {
             if ((image.comps[i].bpp != 12) | image.comps[i].sgnd){
                 _cinfo.Warn("JPEG 2000 Profile-3 (2k dc profile) requires:\n"+
                             "Precision of each component shall be 12 bits unsigned"+
@@ -1898,7 +1892,7 @@ internal sealed class J2K
     //2.5 - opj_j2k_encoding_validation
     private bool EncodingValidation()
     {
-        bool l_is_valid = true;
+        var l_is_valid = true;
 
         /* STATE checking */
         /* make sure the state is at 0 */
@@ -1931,23 +1925,22 @@ internal sealed class J2K
     //2.5 - opj_j2k_mct_validation
     private bool MctValidation()
     {
-        bool l_is_valid = true;
-        int i, j;
+        var l_is_valid = true;
 
         if (((int) _cp.rsiz & 0x8200) == 0x8200)
         {
-            TileCodingParams[] l_tcp = _cp.tcps;
+            var l_tcp = _cp.tcps;
             Debug.Assert((int)(_cp.th * _cp.tw) == l_tcp.Length);
 
-            for (i = 0; i < l_tcp.Length; ++i)
+            for (var i = 0; i < l_tcp.Length; ++i)
             {
                 var tcp = l_tcp[i];
                 if (tcp.mct == 2)
                 {
-                    TileCompParams[] l_tccp = tcp.tccps;
+                    var l_tccp = tcp.tccps;
                     l_is_valid &= tcp.mct_coding_matrix != null;
 
-                    for (j = 0; j < _private_image.numcomps; ++j)
+                    for (var j = 0; j < _private_image.numcomps; ++j)
                     {
                         l_is_valid &= (l_tccp[j].qmfbid & 1) != 1;
                     }
@@ -1967,12 +1960,11 @@ internal sealed class J2K
     /// <remarks>2.5 - opj_j2k_encode</remarks>
     internal bool Encode()
     {
-        bool reuse_data = false;
+        var reuse_data = false;
         uint max_tile_size = 0;
-        uint current_tile_size;
         byte[] current_data = null;
 
-        uint n_tiles = _cp.tw * _cp.th;
+        var n_tiles = _cp.tw * _cp.th;
         if (n_tiles == 1)
         {
             reuse_data = true;
@@ -1990,10 +1982,10 @@ internal sealed class J2K
             // otherwise, allocate the data
             for (uint j = 0; j < _tcd.Image.numcomps; ++j)
             {
-                TcdTilecomp l_tilec = _tcd.TcdImage.tiles[0].comps[j];
+                var l_tilec = _tcd.TcdImage.tiles[0].comps[j];
                 if (reuse_data)
                 {
-                    ImageComp img_comp = _tcd.Image.comps[j];
+                    var img_comp = _tcd.Image.comps[j];
                     l_tilec.data = img_comp.data;
                         
                     //Not relevant for C# as we don't call free.
@@ -2005,7 +1997,7 @@ internal sealed class J2K
                 }
             }
 
-            current_tile_size = _tcd.GetEncoderInputBufferSize();
+            var current_tile_size = _tcd.GetEncoderInputBufferSize();
             if (!reuse_data)
             {
                 if (current_tile_size > max_tile_size)
@@ -2033,13 +2025,13 @@ internal sealed class J2K
     }
 
     //This is a C# only function
-    internal bool StartCompress(CIO cio)
+    internal bool StartCompress(Cio cio)
     {
-        return StartCompress(new BufferCIO(cio));
+        return StartCompress(new BufferCio(cio));
     }
 
     //2.5 - opj_j2k_start_compress
-    internal bool StartCompress(BufferCIO bcio)
+    internal bool StartCompress(BufferCio bcio)
     {
         _bcio = bcio;
 
@@ -2106,7 +2098,7 @@ internal sealed class J2K
 
         return true;
     }
-    internal BufferCIO EndGetBCIO()
+    internal BufferCio EndGetBCIO()
     {
         var bcio = _bcio;
         EndCompress();
@@ -2181,8 +2173,8 @@ internal sealed class J2K
         //C# impl note.
         //This is the buffer we will be writing into. Org. impl passes
         //this buffer around as a paremeter, we set it on the _bcio object.
-        byte[] current_data = _specific_param.encoder.encoded_tile_data;
-        uint available_data = (uint)current_data.Length;
+        var current_data = _specific_param.encoder.encoded_tile_data;
+        var available_data = (uint)current_data.Length;
         _bcio.SetBuffer(ref current_data, 0);
 
         if (!WriteFirstTilePart(out n_bytes_written, available_data))
@@ -2207,7 +2199,6 @@ internal sealed class J2K
     {
         //Debug.Assert(avalible_data == _cio.BufferBytesLeft);
         OPJ_UINT32 current_n_bytes_written;
-        uint n_bytes_written;
 
         _tcd.CurPino = 0;
 
@@ -2222,7 +2213,7 @@ internal sealed class J2K
         }
 
         total_data_size -= current_n_bytes_written;
-        n_bytes_written = current_n_bytes_written;
+        var n_bytes_written = current_n_bytes_written;
 
         if (!_cp.IsCinema)
         {
@@ -2260,7 +2251,7 @@ internal sealed class J2K
     private bool WriteAllTileParts(out uint data_written, OPJ_UINT32 total_data_size)
     {
         // Gets the number of tile parts
-        OPJ_UINT32 tot_num_tp = GetNumTP(0, _current_tile_number);
+        var tot_num_tp = GetNumTP(0, _current_tile_number);
         OPJ_UINT32 current_n_bytes_written;
         data_written = 0;
 
@@ -2365,7 +2356,7 @@ internal sealed class J2K
     private void WriteSIZ()
     {
         //Calculates how much data this marker needs.
-        uint size_len = 40 + 3 * _private_image.numcomps;
+        var size_len = 40 + 3 * _private_image.numcomps;
         _bcio.SetBuffer(ref _specific_param.encoder.header_tile_data, size_len);
 
         _bcio.Write(J2K_Marker.SIZ);
@@ -2380,7 +2371,7 @@ internal sealed class J2K
         _bcio.Write(_cp.tx0);
         _bcio.Write(_cp.ty0);
         _bcio.WriteUShort(_private_image.numcomps);
-        for (int i = 0; i < _private_image.numcomps; i++)
+        for (var i = 0; i < _private_image.numcomps; i++)
         {
             _bcio.WriteByte(_private_image.comps[i].prec - 1U + ((_private_image.comps[i].sgnd ? 1U : 0U) << 7));
             _bcio.WriteByte(_private_image.comps[i].dx);
@@ -2397,7 +2388,7 @@ internal sealed class J2K
     private bool WriteCOD()
     {
         //Calculates how much data this marker needs.
-        uint code_size = 9u + GetSPCodSPCocSize(_current_tile_number, 0);
+        var code_size = 9u + GetSPCodSPCocSize(_current_tile_number, 0);
         var remaining_size = code_size;
         _bcio.SetBuffer(ref _specific_param.encoder.header_tile_data, code_size);
 
@@ -2456,7 +2447,7 @@ internal sealed class J2K
                 return false;
             }
 
-            for (int i = 0; i < tccp.numresolutions; i++)
+            for (var i = 0; i < tccp.numresolutions; i++)
                 _bcio.WriteByte(tccp.prcw[i] + (tccp.prch[i] << 4));
 
             header_size -= tccp.numresolutions;
@@ -2518,14 +2509,14 @@ internal sealed class J2K
                 return false;
         }
 
-        for(int band_no = 0; band_no < num_bands; band_no++)
+        for(var band_no = 0; band_no < num_bands; band_no++)
         {
             if (tccp0.stepsizes[band_no].expn != tccp1.stepsizes[band_no].expn)
                 return false;
         }
         if (tccp0.qntsty == CCP_QNTSTY.SIQNT)
         {
-            for (int band_no = 0; band_no < num_bands; band_no++)
+            for (var band_no = 0; band_no < num_bands; band_no++)
             {
                 if (tccp0.stepsizes[band_no].mant != tccp1.stepsizes[band_no].mant)
                     return false;
@@ -2602,9 +2593,9 @@ internal sealed class J2K
     /// <remarks>2.5 - opj_j2k_write_coc</remarks>
     private void WriteCOC(uint compno)
     {
-        uint comp_room = _private_image.numcomps <= 256 ? 1u : 2u;
+        var comp_room = _private_image.numcomps <= 256 ? 1u : 2u;
 
-        uint coc_size = 5 + comp_room + GetSPCodSPCocSize(_current_tile_number, compno);
+        var coc_size = 5 + comp_room + GetSPCodSPCocSize(_current_tile_number, compno);
         _bcio.SetBuffer(ref _specific_param.encoder.header_tile_data, coc_size);
 
         WriteCOC_InMemory(compno);
@@ -2618,9 +2609,9 @@ internal sealed class J2K
     private uint WriteCOC_InMemory(uint comp_no)
     {
         var tcp = _cp.tcps[_current_tile_number];
-        uint comp_room = _private_image.numcomps <= 256 ? 1u : 2u;
-        uint coc_size = 5 + comp_room + GetSPCodSPCocSize(_current_tile_number, comp_no);
-        uint remaining_size = coc_size;
+        var comp_room = _private_image.numcomps <= 256 ? 1u : 2u;
+        var coc_size = 5 + comp_room + GetSPCodSPCocSize(_current_tile_number, comp_no);
+        var remaining_size = coc_size;
 
         _bcio.Write(J2K_Marker.COC);
         _bcio.WriteUShort(coc_size - 2);
@@ -2679,8 +2670,8 @@ internal sealed class J2K
     /// <remarks>2.5 - opj_j2k_write_qcd</remarks>
     private bool WriteQCD()
     {
-        uint qcd_size = 4 + GetSQcdSQccSize(_current_tile_number, 0);
-        uint remaining_size = qcd_size;
+        var qcd_size = 4 + GetSQcdSQccSize(_current_tile_number, 0);
+        var remaining_size = qcd_size;
         _bcio.SetBuffer(ref _specific_param.encoder.header_tile_data, qcd_size);
 
         _bcio.Write(J2K_Marker.QCD);
@@ -2702,7 +2693,7 @@ internal sealed class J2K
         var tcp = _cp.tcps[tileno];
         var tccp = tcp.tccps[compno];
 
-        uint num_bands = tccp.qntsty == CCP_QNTSTY.SIQNT ? 1 :
+        var num_bands = tccp.qntsty == CCP_QNTSTY.SIQNT ? 1 :
             tccp.numresolutions * 3 - 2;
 
         if (tccp.qntsty == CCP_QNTSTY.NOQNT)
@@ -2721,7 +2712,7 @@ internal sealed class J2K
         var tccp = tcp.tccps[compno];
         uint l_header_size;
 
-        uint numbands = tccp.qntsty == CCP_QNTSTY.SIQNT ? 1 : tccp.numresolutions * 3 - 2;
+        var numbands = tccp.qntsty == CCP_QNTSTY.SIQNT ? 1 : tccp.numresolutions * 3 - 2;
         if (tccp.qntsty == CCP_QNTSTY.NOQNT)
         {
             l_header_size = 1 + numbands;
@@ -2734,9 +2725,9 @@ internal sealed class J2K
 
             _bcio.WriteByte((int)tccp.qntsty + ((int)tccp.numgbits << 5));
 
-            for (int bandno = 0; bandno < numbands; bandno++)
+            for (var bandno = 0; bandno < numbands; bandno++)
             {
-                int expn = tccp.stepsizes[bandno].expn;
+                var expn = tccp.stepsizes[bandno].expn;
                 _bcio.WriteByte(expn << 3);
             }
         }
@@ -2752,10 +2743,10 @@ internal sealed class J2K
 
             _bcio.WriteByte((int)tccp.qntsty + ((int)tccp.numgbits << 5));
 
-            for (int bandno = 0; bandno < numbands; bandno++)
+            for (var bandno = 0; bandno < numbands; bandno++)
             {
-                int expn = tccp.stepsizes[bandno].expn;
-                int mant = tccp.stepsizes[bandno].mant;
+                var expn = tccp.stepsizes[bandno].expn;
+                var mant = tccp.stepsizes[bandno].mant;
                 _bcio.WriteUShort((expn << 11) + mant);
             }
         }
@@ -2770,9 +2761,9 @@ internal sealed class J2K
     /// <remarks>2.5 - opj_j2k_write_qcc</remarks>
     private void WriteQCC(uint compno)
     {
-        uint qcc_size = 5 + GetSQcdSQccSize(_current_tile_number, compno);
+        var qcc_size = 5 + GetSQcdSQccSize(_current_tile_number, compno);
         qcc_size += _private_image.numcomps <= 256 ? 0u : 1u;
-        uint remaining_size = qcc_size;
+        var remaining_size = qcc_size;
         _bcio.SetBuffer(ref _specific_param.encoder.header_tile_data, qcc_size);
 
         WriteQCC_InMemory(compno, ref remaining_size);
@@ -2781,8 +2772,8 @@ internal sealed class J2K
 
     private void WriteQCC_InMemory(uint compno, ref uint header_size)
     {
-        uint qcc_size = 6 + GetSQcdSQccSize(_current_tile_number, compno);
-        uint remaining_size = qcc_size;
+        var qcc_size = 6 + GetSQcdSQccSize(_current_tile_number, compno);
+        var remaining_size = qcc_size;
 
         _bcio.Write(J2K_Marker.QCC);
         if (_private_image.numcomps <= 256)
@@ -2814,7 +2805,7 @@ internal sealed class J2K
     /// <remarks>2.5 - opj_j2k_write_cbd</remarks>
     private void WriteCBD()
     {
-        uint cbd_size = 6 + _private_image.numcomps;
+        var cbd_size = 6 + _private_image.numcomps;
         _bcio.SetBuffer(ref _specific_param.encoder.header_tile_data, cbd_size);
 
         _bcio.Write(J2K_Marker.CBD);
@@ -2824,7 +2815,7 @@ internal sealed class J2K
         _bcio.WriteUShort(_private_image.numcomps);
 
         var comps = _private_image.comps;
-        for(int i=0; i < _private_image.numcomps; i++)
+        for(var i=0; i < _private_image.numcomps; i++)
         {
             var comp = comps[i];
 
@@ -2846,12 +2837,12 @@ internal sealed class J2K
         var tcp = _cp.tcps[_current_tile_number];
         var mct_records = tcp.mct_records;
 
-        for (int i = 0; i < tcp.n_mct_records; i++)
+        for (var i = 0; i < tcp.n_mct_records; i++)
             WriteMCTRecord(mct_records[i]);
 
         var mcc_records = tcp.mcc_records;
 
-        for (int i = 0; i < tcp.n_mct_records; i++)
+        for (var i = 0; i < tcp.n_mct_records; i++)
             WriteMCCRecord(mcc_records[i]);
 
         WriteMCO();
@@ -2863,7 +2854,7 @@ internal sealed class J2K
     /// <remarks>2.5 - opj_j2k_write_mct_record</remarks>
     private void WriteMCTRecord(MctData mct_record)
     {
-        uint mct_size = 10u + (uint)mct_record.data_size;
+        var mct_size = 10u + (uint)mct_record.data_size;
         _bcio.SetBuffer(ref _specific_param.encoder.header_tile_data, mct_size);
 
         _bcio.Write(J2K_Marker.MCT);
@@ -2900,7 +2891,7 @@ internal sealed class J2K
             mask = 0;
             nbytes = 1;
         }
-        uint mcc_size = mcc_record.n_comps * 2u * nbytes + 19u;
+        var mcc_size = mcc_record.n_comps * 2u * nbytes + 19u;
         _bcio.SetBuffer(ref _specific_param.encoder.header_tile_data, mcc_size);
 
         _bcio.Write(J2K_Marker.MCC);
@@ -2925,17 +2916,17 @@ internal sealed class J2K
         _bcio.WriteUShort(mcc_record.n_comps | mask);
 
         //Cmccij Component offset
-        for (int i = 0; i < mcc_record.n_comps; i++)
+        for (var i = 0; i < mcc_record.n_comps; i++)
             _bcio.Write(i, (int)nbytes);
 
         //Mmcci number of input components involved and size for each component offset = 8 bits
         _bcio.WriteUShort(mcc_record.n_comps | mask);
 
         //Wmccij Component offset
-        for (int i = 0; i < mcc_record.n_comps; i++)
+        for (var i = 0; i < mcc_record.n_comps; i++)
             _bcio.Write(i, (int)nbytes);
 
-        uint tmcc = (mcc_record.is_irreversible ? 0u : 1u) << 16;
+        var tmcc = (mcc_record.is_irreversible ? 0u : 1u) << 16;
 
         if (mcc_record.decorrelation_array != null)
             tmcc |= (uint)mcc_record.decorrelation_array.Deref.index;
@@ -2956,7 +2947,7 @@ internal sealed class J2K
     private void WriteMCO()
     {
         var tcp = _cp.tcps[_current_tile_number];
-        uint mco_size = 5 + tcp.n_mcc_records;
+        var mco_size = 5 + tcp.n_mcc_records;
         _bcio.SetBuffer(ref _specific_param.encoder.header_tile_data, mco_size);
 
         _bcio.Write(J2K_Marker.MCO);
@@ -2966,7 +2957,7 @@ internal sealed class J2K
         _bcio.WriteByte(tcp.n_mcc_records);
 
         var mcc_records = tcp.mcc_records;
-        for (int i = 0; i < tcp.n_mcc_records; i++)
+        for (var i = 0; i < tcp.n_mcc_records; i++)
         {
             var mcc_record = mcc_records[i];
             _bcio.WriteByte(mcc_record.index);
@@ -2997,9 +2988,9 @@ internal sealed class J2K
     private void WriteRGN(int tileno, uint compno, uint ncomps)
     {
         var tcp = _cp.tcps[tileno];
-        uint comp_room = ncomps <= 256 ? 1u : 2u;
+        var comp_room = ncomps <= 256 ? 1u : 2u;
 
-        uint rng_size = 6 + comp_room;
+        var rng_size = 6 + comp_room;
         _bcio.Write(J2K_Marker.RGN);
         _bcio.WriteUShort(rng_size - 2);
         _bcio.Write(compno, (int) comp_room);
@@ -3014,7 +3005,7 @@ internal sealed class J2K
     /// <remarks>2.5 - opj_j2k_write_com</remarks>
     private void WriteCOM()
     {
-        int com_size = _cp.comment.Length + 6;
+        var com_size = _cp.comment.Length + 6;
         _bcio.SetBuffer(ref _specific_param.encoder.header_tile_data, (uint)com_size);
 
         _bcio.Write(J2K_Marker.COM);
@@ -3037,7 +3028,7 @@ internal sealed class J2K
     /// </remarks>
     private bool MergePPT(TileCodingParams tcp)
     {
-        OPJ_UINT32 i, ppt_data_size;
+        OPJ_UINT32 i;
 
         // preconditions
         Debug.Assert(tcp != null);
@@ -3053,7 +3044,7 @@ internal sealed class J2K
             return true;
         }
 
-        ppt_data_size = 0;
+        OPJ_UINT32 ppt_data_size = 0;
         for (i = 0U; i < tcp.ppt_markers_count; ++i)
         {
             ppt_data_size +=
@@ -3093,10 +3084,10 @@ internal sealed class J2K
     private bool WritePLT(TcdMarkerInfo marker_info, byte[] d, out uint data_written)
     {
         byte Zplt = 0;
-        int data = 0; //Pointer to d
-        int data_Lplt = data + 2; //Pointer to d
+        var data = 0; //Pointer to d
+        var data_Lplt = data + 2; //Pointer to d
 
-        BufferCIO.Write(d, data, J2K_Marker.PLT);
+        BufferCio.Write(d, data, J2K_Marker.PLT);
         data += 2;
 
         // Reserve space for Lplt
@@ -3107,12 +3098,12 @@ internal sealed class J2K
 
         ushort Lplt = 3;
 
-        byte[] var_bytes = new byte[5];
+        var var_bytes = new byte[5];
 
-        for (int i =0; i < marker_info.packet_count; i++)
+        for (var i =0; i < marker_info.packet_count; i++)
         {
             byte var_bytes_size = 0;
-            uint packet_size = marker_info.p_packet_size[i];
+            var packet_size = marker_info.p_packet_size[i];
 
             // Packet size written in variable-length way, starting with LSB
             var_bytes[var_bytes_size] = (byte)(packet_size & 0x7f);
@@ -3137,10 +3128,10 @@ internal sealed class J2K
                 }
 
                 // Patch Lplt
-                BufferCIO.WriteUShort(d, data_Lplt, Lplt);
+                BufferCio.WriteUShort(d, data_Lplt, Lplt);
 
                 // Start new segment
-                BufferCIO.Write(d, data, J2K_Marker.PLT);
+                BufferCio.Write(d, data, J2K_Marker.PLT);
                 data += 2;
 
                 // Reserve space for Lplt
@@ -3167,7 +3158,7 @@ internal sealed class J2K
         data_written = (uint)data;
 
         // Patch Lplt
-        BufferCIO.WriteUShort(d, data_Lplt, Lplt);
+        BufferCio.WriteUShort(d, data_Lplt, Lplt);
 
         return true;
     }
@@ -3196,7 +3187,7 @@ internal sealed class J2K
             _specific_param.encoder.Ttlmi_is_byte = false;
         }
 
-        uint tlm_size = 2 + 4 + size_per_tile_part * 
+        var tlm_size = 2 + 4 + size_per_tile_part * 
             _specific_param.encoder.total_tile_parts;
         Array.Clear(_specific_param.encoder.header_tile_data, 0, 
             Math.Min((int)tlm_size, _specific_param.encoder.header_tile_data.Length));
@@ -3217,10 +3208,10 @@ internal sealed class J2K
     //2.5 - opj_j2k_write_updated_tlm
     private void WriteUpdatedTLM()
     {
-        uint size_per_tile_part = _specific_param.encoder.Ttlmi_is_byte ? 5u : 6u;
-        OPJ_UINT32 tlm_size = size_per_tile_part * _specific_param.encoder.total_tile_parts;
-        long tlm_position = 6 + _specific_param.encoder.tlm_start;
-        long current_position = _bcio.Pos;
+        var size_per_tile_part = _specific_param.encoder.Ttlmi_is_byte ? 5u : 6u;
+        var tlm_size = size_per_tile_part * _specific_param.encoder.total_tile_parts;
+        var tlm_position = 6 + _specific_param.encoder.tlm_start;
+        var current_position = _bcio.Pos;
 
         _bcio.Pos = tlm_position;
         _bcio.Write(_specific_param.encoder.tlm_sot_offsets_buffer, 0, (int)tlm_size);
@@ -3251,9 +3242,9 @@ internal sealed class J2K
         var tcp = _cp.tcps[_current_tile_number];
 
         var nb_comp = _private_image.numcomps;
-        uint nb_poc = 1 + tcp.numpocs;
-        uint poc_room = nb_comp <= 256 ? 1u : 2u;
-        uint poc_size = 4u + (5u + 2u * poc_room) * nb_poc;
+        var nb_poc = 1 + tcp.numpocs;
+        var poc_room = nb_comp <= 256 ? 1u : 2u;
+        var poc_size = 4u + (5u + 2u * poc_room) * nb_poc;
 
         _bcio.SetBuffer(ref _specific_param.encoder.header_tile_data, poc_size);
 
@@ -3268,14 +3259,14 @@ internal sealed class J2K
         var tccp = tcp.tccps[0];
 
         var nb_comp = _private_image.numcomps;
-        uint nb_poc = 1 + tcp.numpocs;
-        uint poc_room = nb_comp <= 256 ? 1u : 2u;
-        uint poc_size = 4u + (5u + 2u * poc_room) * nb_poc;
+        var nb_poc = 1 + tcp.numpocs;
+        var poc_room = nb_comp <= 256 ? 1u : 2u;
+        var poc_size = 4u + (5u + 2u * poc_room) * nb_poc;
 
         _bcio.Write(J2K_Marker.POC);
         _bcio.WriteUShort(poc_size - 2);
 
-        for (int i = 0; i < nb_poc; i++)
+        for (var i = 0; i < nb_poc; i++)
         {
             var poc = tcp.pocs[i];
             _bcio.WriteByte(poc.resno0);
@@ -3341,7 +3332,7 @@ internal sealed class J2K
         _bcio.Write(J2K_Marker.SOD);
 
         // Make room for EOF marker (2 bytes, and 2 bytes for SOD)
-        uint remaining_data = total_data_size - 4;
+        var remaining_data = total_data_size - 4;
 
         // Updates tile coder
         tcd.TpNum = _specific_param.encoder.current_poc_tile_part_number;
@@ -3378,7 +3369,7 @@ internal sealed class J2K
         if (_specific_param.encoder.PLT)
         {
             uint data_written_PLT;
-            byte[] p_PLT_buffer = new byte[_specific_param.encoder.reserved_bytes_for_PLT];
+            var p_PLT_buffer = new byte[_specific_param.encoder.reserved_bytes_for_PLT];
 
             WritePLT(marker_info, p_PLT_buffer, out data_written_PLT);
 
@@ -3421,7 +3412,7 @@ internal sealed class J2K
 
         if (type == J2K_Marker.SOT)
         {
-            OPJ_UINT32 current_tile_part = _cstr_index.tile_index[tileno].current_tpsno;
+            var current_tile_part = _cstr_index.tile_index[tileno].current_tpsno;
 
             if (_cstr_index.tile_index[tileno].tp_index != null &&
                 current_tile_part < _cstr_index.tile_index[tileno].n_tps)
@@ -3454,8 +3445,7 @@ internal sealed class J2K
         // We could potentially always execute it, if we don't allow people to do
         // opj_read_header(), modify x0,y0,x1,y1 of returned image an call opj_decode_image()
         if (_cp.specific_param.dec.reduce > 0 &&
-            _private_image != null &&
-            _private_image.numcomps > 0 &&
+            _private_image is { numcomps: > 0 } &&
             _private_image.comps[0].factor == _cp.specific_param.dec.reduce &&
             image.numcomps > 0 &&
             image.comps[0].factor == 0 &&
@@ -3526,8 +3516,8 @@ internal sealed class J2K
         }
 
         /* Compute the dimension of the desired tile*/
-        uint tile_x = tile_index % _cp.tw;
-        uint tile_y = tile_index / _cp.tw;
+        var tile_x = tile_index % _cp.tw;
+        var tile_y = tile_index / _cp.tw;
 
         image.x0 = tile_x * _cp.tdx + _cp.tx0;
         if (image.x0 < _private_image.x0)
@@ -3553,15 +3543,14 @@ internal sealed class J2K
             
         for (uint compno = 0; compno < _private_image.numcomps; ++compno)
         {
-            int comp_x1, comp_y1;
             var img_comp = image.comps[compno];
 
             img_comp.factor = _private_image.comps[compno].factor;
 
             img_comp.x0 = MyMath.uint_ceildiv(image.x0, img_comp.dx);
             img_comp.y0 = MyMath.uint_ceildiv(image.y0, img_comp.dy);
-            comp_x1 = MyMath.int_ceildiv((int)image.x1, (int)img_comp.dx);
-            comp_y1 = MyMath.int_ceildiv((int)image.y1, (int)img_comp.dy);
+            var comp_x1 = MyMath.int_ceildiv((int)image.x1, (int)img_comp.dx);
+            var comp_y1 = MyMath.int_ceildiv((int)image.y1, (int)img_comp.dy);
 
             img_comp.w = (OPJ_UINT32)(MyMath.int_ceildivpow2(comp_x1,
                 (int)img_comp.factor) - MyMath.int_ceildivpow2((int)img_comp.x0,
@@ -3576,7 +3565,7 @@ internal sealed class J2K
             /* Can happen when calling repeatdly opj_get_decoded_tile() on an
              * image with a color palette, where color palette expansion is done
              * later in jp2.c */
-            for (uint compno = _private_image.numcomps; compno < image.numcomps;
+            for (var compno = _private_image.numcomps; compno < image.numcomps;
                  ++compno)
             {
                 image.comps[compno].data = null;
@@ -3608,7 +3597,7 @@ internal sealed class J2K
         // Move data and copy one information from codec to output image
         if (_specific_param.decoder.numcomps_to_decode > 0)
         {
-            ImageComp[] newcomps = new ImageComp[_specific_param.decoder.numcomps_to_decode];
+            var newcomps = new ImageComp[_specific_param.decoder.numcomps_to_decode];
                 
             for (compno = 0; compno < p_image.numcomps; compno++)
             {
@@ -3616,7 +3605,7 @@ internal sealed class J2K
             }
             for (compno = 0; compno < _specific_param.decoder.numcomps_to_decode; compno++)
             {
-                int src_compno = _specific_param.decoder.comps_indices_to_decode[compno];
+                var src_compno = _specific_param.decoder.comps_indices_to_decode[compno];
                 newcomps[compno] = (ImageComp) _output_image.comps[src_compno].Clone();
                 newcomps[compno].resno_decoded =
                     _output_image.comps[src_compno].resno_decoded;
@@ -3663,7 +3652,7 @@ internal sealed class J2K
     private bool AreAllUsedComponentsDecoded()
     {
         OPJ_UINT32 compno;
-        bool decoded_all_used_components = true;
+        var decoded_all_used_components = true;
 
         if (_specific_param.decoder.numcomps_to_decode != 0)
         {
@@ -3707,17 +3696,15 @@ internal sealed class J2K
     /// </summary>
     private void BubbleSort(long[] arr)
     {
-        int n = arr.Length;
-        for (int i = 0; i < n - 1; i++)
+        var n = arr.Length;
+        for (var i = 0; i < n - 1; i++)
         {
-            for (int j = 0; j < n - i - 1; j++)
+            for (var j = 0; j < n - i - 1; j++)
             {
                 if (arr[j] > arr[j + 1])
                 {
                     // Swap arr[j] and arr[j + 1]
-                    long temp = arr[j];
-                    arr[j] = arr[j + 1];
-                    arr[j + 1] = temp;
+                    (arr[j], arr[j + 1]) = (arr[j + 1], arr[j]);
                 }
             }
         }
@@ -3729,7 +3716,7 @@ internal sealed class J2K
     /// <remarks>2.5.3 - opj_j2k_decode_one_tile</remarks>
     private bool DecodeOneTile()
     {
-        bool go_on = true;
+        var go_on = true;
         uint current_tile_no;
         uint? data_size = null; //Datasize has been removed from 2.5
         int tile_x0, tile_y0, tile_x1, tile_y1;
@@ -3770,7 +3757,7 @@ internal sealed class J2K
         // Not completely sure this is always correct but required for
         // ./build/bin/j2k_random_tile_access ./build/tests/tte1.j2k
         var nb_tiles = _cp.tw * _cp.th;
-        for (int i = 0; i < nb_tiles; ++i)
+        for (var i = 0; i < nb_tiles; ++i)
         {
             _cp.tcps[i].current_tile_part_number = -1;
         }
@@ -3820,7 +3807,7 @@ internal sealed class J2K
     //2.5.3 - opj_j2k_decode_tiles
     private bool DecodeTiles()
     {
-        bool go_on = true;
+        var go_on = true;
         uint current_tile_no;
         uint? data_size = null; //Datasize has been removed from 2.5 (but C# needs something for the "ref")
         int tile_x0, tile_y0, tile_x1, tile_y1;
@@ -3837,7 +3824,6 @@ internal sealed class J2K
             _output_image.x1 == _cp.tdx &&
             _output_image.y1 == _cp.tdy)
         {
-            OPJ_UINT32 i;
             if (!ReadTileHeader(out current_tile_no,
                     ref data_size, 
                     out tile_x0, out tile_y0,
@@ -3855,7 +3841,7 @@ internal sealed class J2K
             }
 
             /* Transfer TCD data to output image data */
-            for (i = 0; i < _output_image.numcomps; i++)
+            for (OPJ_UINT32 i = 0; i < _output_image.numcomps; i++)
             {
                 _output_image.comps[i].data =
                     _tcd.TcdImage.tiles[0].comps[i].data;
@@ -3874,8 +3860,7 @@ internal sealed class J2K
         // If the area to decode only intersects a subset of tiles, and we have
         // valid TLM information, then use it to plan the tilepart offsets to
         // seek to.
-        if (!(_specific_param.decoder.start_tile_x == 0 &&
-              _specific_param.decoder.start_tile_y == 0 &&
+        if (!(_specific_param.decoder is { start_tile_x: 0, start_tile_y: 0 } &&
               _specific_param.decoder.end_tile_x == _cp.tw &&
               _specific_param.decoder.end_tile_y == _cp.th) &&
             !_specific_param.decoder.tlm.is_invalid &&
@@ -3895,10 +3880,9 @@ internal sealed class J2K
 
             for (j = _specific_param.decoder.start_tile_y; j < _specific_param.decoder.end_tile_y; ++j)
             {
-                OPJ_UINT32 i;
-                for (i = _specific_param.decoder.start_tile_x; i < _specific_param.decoder.end_tile_x; ++i)
+                for (var i = _specific_param.decoder.start_tile_x; i < _specific_param.decoder.end_tile_x; ++i)
                 {
-                    OPJ_UINT32 tile_number = j * _cp.tw + i;
+                    var tile_number = j * _cp.tw + i;
                     m_num_intersecting_tile_parts += _cstr_index.tile_index[tile_number].n_tps;
                 }
             }
@@ -3909,12 +3893,10 @@ internal sealed class J2K
                 OPJ_UINT32 idx = 0;
                 for (j = _specific_param.decoder.start_tile_y; j < _specific_param.decoder.end_tile_y; ++j)
                 {
-                    OPJ_UINT32 i;
-                    for (i = _specific_param.decoder.start_tile_x; i < _specific_param.decoder.end_tile_x; ++i)
+                    for (var i = _specific_param.decoder.start_tile_x; i < _specific_param.decoder.end_tile_x; ++i)
                     {
-                        OPJ_UINT32 tile_number = j * _cp.tw + i;
-                        OPJ_UINT32 k;
-                        for (k = 0; k < _cstr_index.tile_index[tile_number].n_tps; ++k)
+                        var tile_number = j * _cp.tw + i;
+                        for (OPJ_UINT32 k = 0; k < _cstr_index.tile_index[tile_number].n_tps; ++k)
                         {
                             var next_tp_sot_pos = _cstr_index.tile_index[tile_number].tp_index[k].start_pos;
                             _specific_param.decoder.intersecting_tile_parts_offset[idx] = next_tp_sot_pos;
@@ -4000,19 +3982,15 @@ internal sealed class J2K
     //2.5
     private bool UpdateImageData()
     {
-        uint width_src, height_src;
         uint width_dest, height_dest;
         int offset_x0_src, offset_y0_src, offset_x1_src, offset_y1_src;
-        long start_offset_src;
         uint start_x_dest, start_y_dest;
-        uint x0_dest, y0_dest, x1_dest, y1_dest;
-        long start_offset_dest;
 
         //C# impl note.
         //tilec is set insde the for loop, because in the org. impl it's a
         //incrementing pointer.
         //Same story with img_comp_src and img_comp_dest
-        for (int i = 0; i < _tcd.Image.numcomps; i++)
+        for (var i = 0; i < _tcd.Image.numcomps; i++)
         {
             int res_x0, res_x1, res_y0, res_y1;
             uint src_data_stride;
@@ -4056,14 +4034,14 @@ internal sealed class J2K
 
 
             //Current tile component size
-            width_src = (uint)(res_x1 - res_x0);
-            height_src = (uint)(res_y1 - res_y0);
+            var width_src = (uint)(res_x1 - res_x0);
+            var height_src = (uint)(res_y1 - res_y0);
 
             //Border of the current output component
-            x0_dest = MyMath.uint_ceildivpow2(img_comp_dest.x0, (int)img_comp_dest.factor);
-            y0_dest = MyMath.uint_ceildivpow2(img_comp_dest.y0, (int)img_comp_dest.factor);
-            x1_dest = x0_dest + img_comp_dest.w; // can't overflow given that image.x1 is uint32
-            y1_dest = y0_dest + img_comp_dest.h;
+            var x0_dest = MyMath.uint_ceildivpow2(img_comp_dest.x0, (int)img_comp_dest.factor);
+            var y0_dest = MyMath.uint_ceildivpow2(img_comp_dest.y0, (int)img_comp_dest.factor);
+            var x1_dest = x0_dest + img_comp_dest.w; // can't overflow given that image.x1 is uint32
+            var y1_dest = y0_dest + img_comp_dest.h;
 
             /* Compute the area (offset_x0_src, offset_y0_src, offset_x1_src, offset_y1_src)
              * of the input buffer (decoded tile component) which will be move
@@ -4148,10 +4126,10 @@ internal sealed class J2K
             }
 
             //Compute the input buffer offset
-            start_offset_src = offset_x0_src + offset_y0_src * src_data_stride;
+            var start_offset_src = offset_x0_src + offset_y0_src * src_data_stride;
 
             //Compute the output buffer offset
-            start_offset_dest = start_x_dest + start_y_dest * img_comp_dest.w;
+            long start_offset_dest = start_x_dest + start_y_dest * img_comp_dest.w;
 
             //Allocate output component buffer if necessary
             if (img_comp_dest.data == null &&
@@ -4179,8 +4157,8 @@ internal sealed class J2K
                 var width = img_comp_dest.w;
                 var height = img_comp_dest.h;
 
-                if (height == 0 || width > Constants.SIZE_MAX / height ||
-                    width * height > Constants.SIZE_MAX / 4)
+                if (height == 0 || width > Constants.SizeMax / height ||
+                    width * height > Constants.SizeMax / 4)
                 {
                     // will overflow
                     return false;
@@ -4202,9 +4180,9 @@ internal sealed class J2K
             var dest_data = img_comp_dest.data;
 
             {
-                int src_ptr = (int)start_offset_src;
+                var src_ptr = (int)start_offset_src;
 
-                for (int j = 0; j < height_dest; j++)
+                for (var j = 0; j < height_dest; j++)
                 {
                     Buffer.BlockCopy(src_data, src_ptr * 4, dest_data, (int)(dest_ptr * 4), (int)(width_dest * 4));
                     dest_ptr += img_comp_dest.w;
@@ -4301,9 +4279,6 @@ internal sealed class J2K
     //2.5
     private bool NeedNTilePartsCorrection(OPJ_UINT32 tile_no, out bool p_correction_needed)
     {
-        long l_stream_pos_backup;
-        J2K_Marker l_current_marker;
-        OPJ_UINT32 l_marker_size;
         OPJ_UINT32 l_tile_no, l_tot_len, l_current_part, l_num_parts;
 
         // initialize to no correction needed
@@ -4315,7 +4290,7 @@ internal sealed class J2K
             return true;
         }
 
-        l_stream_pos_backup = _cio.Pos;
+        var l_stream_pos_backup = _cio.Pos;
             
         for (; ; )
         {
@@ -4326,7 +4301,7 @@ internal sealed class J2K
                 return true;
             }
 
-            l_current_marker = (J2K_Marker) _cio.ReadUShort();
+            var l_current_marker = (J2K_Marker) _cio.ReadUShort();
 
             if (l_current_marker != J2K_Marker.SOT)
             {
@@ -4341,7 +4316,7 @@ internal sealed class J2K
                 _cinfo.Error("Stream too short");
                 return false;
             }
-            l_marker_size = _cio.ReadUShort();
+            OPJ_UINT32 l_marker_size = _cio.ReadUShort();
 
             /* Check marker size for SOT Marker */
             if (l_marker_size != 10)
@@ -4398,7 +4373,7 @@ internal sealed class J2K
     private bool ReadTileHeader(out uint tile_index, ref uint? data_size, out int tile_x0, out int tile_y0,
         out int tile_x1, out int tile_y1, out uint n_comps, out bool go_on)
     {
-        J2K_Marker current_marker = J2K_Marker.SOT;
+        var current_marker = J2K_Marker.SOT;
         tile_index = n_comps = 0;
         tile_x0 = tile_x1 = tile_y0 = tile_y1 = 0;
         go_on = false;
@@ -4535,8 +4510,7 @@ internal sealed class J2K
                 }
 
                 // Check if we can use the TLM index to access the next tile-part
-                if (!_specific_param.decoder.can_decode &&
-                    _specific_param.decoder.tile_ind_to_dec >= 0 &&
+                if (_specific_param.decoder is { can_decode: false, tile_ind_to_dec: >= 0 } &&
                     _current_tile_number == (OPJ_UINT32) _specific_param.decoder.tile_ind_to_dec &&
                     !_specific_param.decoder.tlm.is_invalid &&
                     _cio.CanSeek)
@@ -4546,7 +4520,7 @@ internal sealed class J2K
                         _cstr_index.tile_index[_current_tile_number].n_tps &&
                         (OPJ_UINT32)tcp.current_tile_part_number + 1 < tcp.n_tile_parts)
                     {
-                        long next_tp_sot_pos = _cstr_index.tile_index[_current_tile_number]
+                        var next_tp_sot_pos = _cstr_index.tile_index[_current_tile_number]
                             .tp_index[tcp.current_tile_part_number + 1].start_pos;
 
                         if (next_tp_sot_pos != _cio.Pos)
@@ -4566,11 +4540,10 @@ internal sealed class J2K
                     }
                 }
 
-                if (_specific_param.decoder.can_decode &&
-                    !_specific_param.decoder.n_tile_parts_correction_checked)
+                if (_specific_param.decoder is { can_decode: true, n_tile_parts_correction_checked: false })
                 {
                     // Issue 254
-                    bool correction_needed = false;
+                    var correction_needed = false;
 
                     _specific_param.decoder.n_tile_parts_correction_checked = true;
                     if (_cp.tcps[_current_tile_number].n_tile_parts == 1)
@@ -4593,13 +4566,12 @@ internal sealed class J2K
 
                     if (correction_needed)
                     {
-                        OPJ_UINT32 tile_no;
-                        OPJ_UINT32 n_tiles = _cp.tw * _cp.th;
+                        var n_tiles = _cp.tw * _cp.th;
 
                         _specific_param.decoder.can_decode = false;
                         _specific_param.decoder.n_tile_parts_correction = true;
                         // correct tiles
-                        for (tile_no = 0; tile_no < n_tiles; ++tile_no)
+                        for (OPJ_UINT32 tile_no = 0; tile_no < n_tiles; ++tile_no)
                         {
                             if (_cp.tcps[tile_no].n_tile_parts != 0)
                             {
@@ -4626,7 +4598,7 @@ internal sealed class J2K
                     // Deal with likely non conformant SPOT6 files, where the last
                     // row of tiles have TPsot == 0 and TNsot == 0, and missing EOC,
                     // but no other tile-parts were found.
-                    OPJ_UINT32 n_tiles = _cp.tw * _cp.th;
+                    var n_tiles = _cp.tw * _cp.th;
                     if (_current_tile_number + 1 == n_tiles)
                     {
                         OPJ_UINT32 l_tile_no;
@@ -4671,7 +4643,7 @@ internal sealed class J2K
         if (!_specific_param.decoder.can_decode)
         {
             var tcps = _cp.tcps;
-            int n_tiles = (int)(_cp.th * _cp.tw);
+            var n_tiles = (int)(_cp.th * _cp.tw);
 
             while (_current_tile_number < n_tiles && tcps[_current_tile_number].data == null)
                 _current_tile_number++;
@@ -4741,7 +4713,7 @@ internal sealed class J2K
         }
 
         // Initial pass to count the number of tile-parts per tile
-        for (int i = 0; i < tlm.entries_count; ++i)
+        for (var i = 0; i < tlm.entries_count; ++i)
         {
             OPJ_UINT32 l_tile_index_no = tlm.tile_part_infos[i].tile_index;
             Debug.Assert(l_tile_index_no < _cstr_index.n_of_tiles);
@@ -4750,7 +4722,7 @@ internal sealed class J2K
         }
 
         // Now check that all tiles have at least one tile-part
-        for (int i = 0; i < _cstr_index.n_of_tiles; ++i)
+        for (var i = 0; i < _cstr_index.n_of_tiles; ++i)
         {
             if (_cstr_index.tile_index[i].current_n_tps == 0)
             {
@@ -4762,7 +4734,7 @@ internal sealed class J2K
 
         // Final pass to fill p_j2k->cstr_index
         var cur_offset = _cstr_index.main_head_end;
-        for (int i = 0; i < tlm.entries_count; ++i)
+        for (var i = 0; i < tlm.entries_count; ++i)
         {
             OPJ_UINT32 tile_index_no = tlm.tile_part_infos[i].tile_index;
             var tile_index = _cstr_index.tile_index;
@@ -4787,7 +4759,7 @@ internal sealed class J2K
 
         error:
         tlm.is_invalid = true;
-        for (int i = 0; i < tlm.entries_count; ++i)
+        for (var i = 0; i < tlm.entries_count; ++i)
         {
             OPJ_UINT32 tile_index = tlm.tile_part_infos[i].tile_index;
             _cstr_index.tile_index[tile_index].current_n_tps = 0;
@@ -4828,17 +4800,17 @@ internal sealed class J2K
     //2.5
     private bool CopyDefaultTCPandCreateTcd()
     {
-        int n_tiles = (int) (_cp.th * _cp.tw);
-        TileCodingParams[] tcps = _cp.tcps;
+        var n_tiles = (int) (_cp.th * _cp.tw);
+        var tcps = _cp.tcps;
         var default_tcp = _specific_param.decoder.default_tcp;
 
         // For each tile
-        for (int i = 0; i < n_tiles; i++)
+        for (var i = 0; i < n_tiles; i++)
         {
             var tcp = tcps[i];
 
             //Keeps the the tile-compo coding parameters
-            TileCompParams[] tccps = tcp.tccps;
+            var tccps = tcp.tccps;
 
             //Copies default coding parameters into the current tile coding parameters
             tcp = (TileCodingParams) default_tcp.Clone();
@@ -4873,7 +4845,7 @@ internal sealed class J2K
 
             //Copy the mct record data from dflt_tile_cp to the current tile
             // Notice, c < tcp.mct_records.Length, not c < n_mct_records
-            for (int c = 0; c < tcp.mct_records.Length; c++)
+            for (var c = 0; c < tcp.mct_records.Length; c++)
             {
                 var mct = default_tcp.mct_records[c];
                 mct = mct == null ? new MctData() : (MctData)mct.Clone();
@@ -4887,7 +4859,7 @@ internal sealed class J2K
             //Snip memcopy. Again, we do the work in the following loop instead.
 
             //Copy the mcc record data from dflt_tile_cp to the current tile
-            for (int c = 0; c < tcp.mcc_records.Length; c++)
+            for (var c = 0; c < tcp.mcc_records.Length; c++)
             {
                 var mcc = tcp.mcc_records[c];
                 mcc = mcc == null ? new SimpleMccDecorrelationData() : (SimpleMccDecorrelationData)mcc.Clone();
@@ -4895,7 +4867,7 @@ internal sealed class J2K
             }
 
             //Copy all the dflt_tile_compo_cp to the current tile cp
-            for (int c = 0; c < _private_image.numcomps; c++)
+            for (var c = 0; c < _private_image.numcomps; c++)
                 tccps[c] = (TileCompParams) default_tcp.tccps[c].Clone();
         }
 
@@ -4916,10 +4888,10 @@ internal sealed class J2K
             return false;
         }
 
-        J2K_Marker current_marker = (J2K_Marker) _cio.ReadUShort();
-        bool has_siz = false;
-        bool has_cod = false;
-        bool has_qcd = false;
+        var current_marker = (J2K_Marker) _cio.ReadUShort();
+        var has_siz = false;
+        var has_cod = false;
+        var has_qcd = false;
 
         while (current_marker != J2K_Marker.SOT)
         {
@@ -4930,7 +4902,7 @@ internal sealed class J2K
                 return false;
             }
 
-            J2kMarker e = _dec_tab[current_marker];
+            var e = _dec_tab[current_marker];
 
             // Manage unknown marker
             if (e.Mark == J2K_Marker.NONE)
@@ -5089,8 +5061,8 @@ internal sealed class J2K
         }
 
         var tcp = _cp.tcps[_current_tile_number];
-        uint tile_x = _current_tile_number % _cp.tw;
-        uint tile_y = _current_tile_number / _cp.tw;
+        var tile_x = _current_tile_number % _cp.tw;
+        var tile_y = _current_tile_number / _cp.tw;
 
 
         if (_specific_param.decoder.tile_ind_to_dec < 0 ||
@@ -5218,7 +5190,7 @@ internal sealed class J2K
             _specific_param.decoder.skip_data = _current_tile_number != _specific_param.decoder.tile_ind_to_dec;
         }
 
-        Debug.Assert(_cstr_index != null && _cstr_index.tile_index != null);
+        Debug.Assert(_cstr_index is { tile_index: not null });
         {
             _cstr_index.tile_index[_current_tile_number].tileno = _current_tile_number;
             _cstr_index.tile_index[_current_tile_number].current_tpsno = current_part;
@@ -5273,8 +5245,8 @@ internal sealed class J2K
     //2.5.3 - opj_j2k_read_sod
     internal bool ReadSOD()
     {
-        TileCodingParams tcp = _cp.tcps[_current_tile_number];
-        bool sot_length_pb_detected = false;
+        var tcp = _cp.tcps[_current_tile_number];
+        var sot_length_pb_detected = false;
 
         if (_specific_param.decoder.last_tile_part)
         {
@@ -5291,8 +5263,8 @@ internal sealed class J2K
         }
 
         int current_read_size;
-        byte[] current_data = tcp.data;
-        int tile_len = tcp.data_size;
+        var current_data = tcp.data;
+        var tile_len = tcp.data_size;
             
         if (_specific_param.decoder.sot_length != 0)
         {
@@ -5311,7 +5283,7 @@ internal sealed class J2K
             }
 
             if (_specific_param.decoder.sot_length > 
-                int.MaxValue - Constants.COMMON_CBLK_DATA_EXTRA)
+                int.MaxValue - Constants.CommonCblkDataExtra)
             {
                 _cinfo.Error("j2k._specific_param.decoder.sot_length > " +
                              "INT_MAX - COMMON_CBLK_DATA_EXTRA");
@@ -5320,12 +5292,12 @@ internal sealed class J2K
 
             if (current_data == null)
             {
-                current_data = new byte[_specific_param.decoder.sot_length + Constants.COMMON_CBLK_DATA_EXTRA];
+                current_data = new byte[_specific_param.decoder.sot_length + Constants.CommonCblkDataExtra];
                 tcp.data = current_data;
             }
             else
             {
-                if (tile_len > int.MaxValue - Constants.COMMON_CBLK_DATA_EXTRA -
+                if (tile_len > int.MaxValue - Constants.CommonCblkDataExtra -
                     _specific_param.decoder.sot_length)
                 {
                     _cinfo.Error("tile_len > INT_MAX - COMMON_CBLK_DATA_EXTRA -" +
@@ -5334,7 +5306,7 @@ internal sealed class J2K
                 }
 
                 Array.Resize<byte>(ref current_data, (int)(tile_len + _specific_param.decoder.sot_length + 
-                                                           Constants.COMMON_CBLK_DATA_EXTRA));
+                                                           Constants.CommonCblkDataExtra));
                 tcp.data = current_data;
             }
         }
@@ -5346,9 +5318,9 @@ internal sealed class J2K
         // Index
         Debug.Assert(_cstr_index != null);
         {
-            long current_pos = _cio.Pos - 2;
+            var current_pos = _cio.Pos - 2;
 
-            OPJ_UINT32 current_tile_part =
+            var current_tile_part =
                 _cstr_index.tile_index[_current_tile_number].current_tpsno;
             _cstr_index.tile_index[_current_tile_number].tp_index[current_tile_part].end_header
                 =
@@ -5393,7 +5365,7 @@ internal sealed class J2K
     /// </remarks>
     internal bool ReadTLM(uint header_size)
     {
-        TlmInfo tlm = _specific_param.decoder.tlm;
+        var tlm = _specific_param.decoder.tlm;
         if (tlm == null)
         {
             tlm = new TlmInfo();
@@ -5416,7 +5388,7 @@ internal sealed class J2K
         uint Stlm = _cio.ReadByte();
         header_size -= 2;
 
-        uint ST = (Stlm >> 4) & 0x03;
+        var ST = (Stlm >> 4) & 0x03;
         if (ST == 3)
         {
             tlm.is_invalid = true;
@@ -5424,10 +5396,10 @@ internal sealed class J2K
             _cio.Skip(header_size);
             return true;
         }
-        uint SP = (Stlm >> 6) & 0x01;
+        var SP = (Stlm >> 6) & 0x01;
 
-        uint Ptlm_size = (SP + 1) * 2;
-        uint entry_size = Ptlm_size + ST;
+        var Ptlm_size = (SP + 1) * 2;
+        var entry_size = Ptlm_size + ST;
 
         if (header_size % entry_size != 0)
         {
@@ -5461,7 +5433,7 @@ internal sealed class J2K
         tlm.tile_part_infos = new TlmTilePartInfo[tlm.entries_count + num_tileparts];
 
 
-        for (int i=0; i < num_tileparts; i++)
+        for (var i=0; i < num_tileparts; i++)
         {
             uint tile_index;
 
@@ -5482,7 +5454,7 @@ internal sealed class J2K
                 return true;
             }
 
-            uint length = _cio.Read(Ptlm_size);
+            var length = _cio.Read(Ptlm_size);
             header_size -= Ptlm_size;
 
             tlm.tile_part_infos[tlm.entries_count].tile_index =
@@ -5557,9 +5529,9 @@ internal sealed class J2K
         }
 
         int Zplt = _cio.ReadByte();
-        int packet_len = 0;
+        var packet_len = 0;
         header_size--;
-        for (int i = 0; i < header_size; i++)
+        for (var i = 0; i < header_size; i++)
         {
             int add = _cio.ReadByte();
             packet_len |= add & 0x7f;
@@ -5605,14 +5577,14 @@ internal sealed class J2K
         // The following code is for 2.5
         if (_cp.ppm_markers == null)
         {//This is the first PPM;
-            int new_count = Z_ppm + 1; // can't overflow, l_Z_ppm is byte
+            var new_count = Z_ppm + 1; // can't overflow, l_Z_ppm is byte
 
             _cp.ppm_markers = new PPX[new_count];
             _cp.ppm_markers_count = (uint)new_count;
         }
         else if (_cp.ppm_markers_count <= Z_ppm)
         {
-            int new_count = Z_ppm + 1; // can't overflow, l_Z_ppm is byte
+            var new_count = Z_ppm + 1; // can't overflow, l_Z_ppm is byte
             Array.Resize(ref _cp.ppm_markers, new_count);
             _cp.ppm_markers_count = (uint)new_count;
         }
@@ -5638,19 +5610,18 @@ internal sealed class J2K
     /// </remarks>
     internal bool MergePPM()
     {
-        uint i, ppm_data_size, N_ppm_remaining;
+        uint i;
 
         if (!_cp.ppm)
             return true;
 
-        ppm_data_size = 0;
-        N_ppm_remaining = 0;
+        uint ppm_data_size = 0;
+        uint N_ppm_remaining = 0;
         for (i = 0U; i < _cp.ppm_markers_count; ++i)
         {
             if (_cp.ppm_markers[i].Data != null)
             { // standard doesn't seem to require contiguous Zppm
-                OPJ_UINT32 N_ppm;
-                CIO data = new CIO(_cinfo, new MemoryStream(_cp.ppm_markers[i].Data), OpenMode.Read);
+                var data = new Cio(_cinfo, new MemoryStream(_cp.ppm_markers[i].Data), OpenMode.Read);
 
                 if (N_ppm_remaining >= data.BytesLeft)
                 {
@@ -5674,7 +5645,7 @@ internal sealed class J2K
                             _cinfo.Error("Not enough bytes to read Nppm");
                             return false;
                         }
-                        N_ppm = data.ReadUInt();
+                        var N_ppm = data.ReadUInt();
 
                         if (ppm_data_size > uint.MaxValue - N_ppm)
                         {
@@ -5712,10 +5683,9 @@ internal sealed class J2K
         {
             if (_cp.ppm_markers[i].Data != null)
             { /* standard doesn't seem to require contiguous Zppm */
-                OPJ_UINT32 N_ppm;
-                int data_size = (int) _cp.ppm_markers[i].DataSize;
-                byte[] data = _cp.ppm_markers[i].Data;
-                int data_pt = 0;
+                var data_size = (int) _cp.ppm_markers[i].DataSize;
+                var data = _cp.ppm_markers[i].Data;
+                var data_pt = 0;
 
                 if (N_ppm_remaining >= data_size)
                 {
@@ -5744,7 +5714,7 @@ internal sealed class J2K
                             _cinfo.Error("Not enough bytes to read Nppm");
                             return false;
                         }
-                        N_ppm = CIO.ReadUInt(data, data_pt);
+                        var N_ppm = Cio.ReadUInt(data, data_pt);
                         data_pt += 4;
                         data_size -= 4;
 
@@ -5798,7 +5768,7 @@ internal sealed class J2K
             return false;
         }
 
-        TileCodingParams tcp = _cp.tcps[_current_tile_number];
+        var tcp = _cp.tcps[_current_tile_number];
         tcp.ppt = true;
 
         int Z_ppt = _cio.ReadByte();
@@ -5807,13 +5777,13 @@ internal sealed class J2K
         //Allocate buffer to read the packet header
         if (tcp.ppt_markers == null)
         {   // First PPT marker
-            int count = Z_ppt + 1;
+            var count = Z_ppt + 1;
             tcp.ppt_markers = new PPX[count];
             tcp.ppt_markers_count = (uint)count;
         }
         else
         {   // NON-first PPT marker
-            int count = Z_ppt + 1;
+            var count = Z_ppt + 1;
             Array.Resize(ref tcp.ppt_markers, count);
             Array.Clear(tcp.ppt_markers, (int)tcp.ppt_markers_count, count - (int)tcp.ppt_markers_count);
             tcp.ppt_markers_count = (uint)count;
@@ -5849,8 +5819,8 @@ internal sealed class J2K
             return false;
         }
 
-        uint remaining_size = header_size - 36;
-        uint n_comps = remaining_size / 3u;
+        var remaining_size = header_size - 36;
+        var n_comps = remaining_size / 3u;
         if (remaining_size % 3 != 0)
         {
             _cinfo.Error("Error with SIZ marker size");
@@ -5912,8 +5882,8 @@ internal sealed class J2K
             if (!_dump_state)
 #endif
         {
-            uint siz_w = _private_image.x1 - _private_image.x0;
-            uint siz_h = _private_image.y1 - _private_image.y0;
+            var siz_w = _private_image.x1 - _private_image.x0;
+            var siz_h = _private_image.y1 - _private_image.y0;
 
             if (_ihdr_w > 0 && _ihdr_h > 0
                             && (_ihdr_w != siz_w || _ihdr_h != siz_h))
@@ -5929,8 +5899,8 @@ internal sealed class J2K
 
         // Read the component information
         OPJ_UINT32 prec0 = 0;
-        bool sgnd0 = false;
-        for (int i = 0; i < _private_image.comps.Length; i++)
+        var sgnd0 = false;
+        for (var i = 0; i < _private_image.comps.Length; i++)
         {
             var comp = new ImageComp();
             uint tmp = _cio.ReadByte();
@@ -5996,7 +5966,7 @@ internal sealed class J2K
             _cinfo.Error("Invalid number of tiles : {0} x {1} (maximum fixed by jpeg2000 norm is 65535 tiles)", _cp.tw, _cp.th);
             return false;
         }
-        uint n_tiles = _cp.tw * _cp.th;
+        var n_tiles = _cp.tw * _cp.th;
 
         //Define the tiles which will be decoded
         if (_specific_param.decoder.discard_tiles)
@@ -6018,26 +5988,27 @@ internal sealed class J2K
         _cp.tcps = new TileCodingParams[n_tiles];
         _specific_param.decoder.default_tcp = new TileCodingParams();
         _specific_param.decoder.default_tcp.tccps = TileCompParams.Create(_private_image.numcomps);
-        _specific_param.decoder.default_tcp.mct_records = new MctData[Constants.MCT_DEFAULT_NB_RECORDS];
-        _specific_param.decoder.default_tcp.n_max_mct_records = Constants.MCT_DEFAULT_NB_RECORDS;
-        _specific_param.decoder.default_tcp.mcc_records = new SimpleMccDecorrelationData[Constants.MCC_DEFAULT_NB_RECORDS];
-        _specific_param.decoder.default_tcp.n_max_mcc_records = Constants.MCC_DEFAULT_NB_RECORDS;
+        _specific_param.decoder.default_tcp.mct_records = new MctData[Constants.MctDefaultNbRecords];
+        _specific_param.decoder.default_tcp.n_max_mct_records = Constants.MctDefaultNbRecords;
+        _specific_param.decoder.default_tcp.mcc_records = new SimpleMccDecorrelationData[Constants.MccDefaultNbRecords];
+        _specific_param.decoder.default_tcp.n_max_mcc_records = Constants.MccDefaultNbRecords;
 
         // Set up default dc level shift
-        for (int i = 0; i < _private_image.numcomps; i++)
+        for (var i = 0; i < _private_image.numcomps; i++)
         {
             if (!_private_image.comps[i].sgnd)
                 _specific_param.decoder.default_tcp.tccps[i].dc_level_shift = 1 << ((int)_private_image.comps[i].prec - 1);
         }
 
-        for (int c = 0; c < _cp.tcps.Length; c++)
+        for (var c = 0; c < _cp.tcps.Length; c++)
         {
-            var tcp = new TileCodingParams();
-
-            //C# impl. note.
-            //The SOT marker will overwrite these, so one might
-            //get away with a "new TileCompParams[_image.numcomps]"
-            tcp.tccps = TileCompParams.Create(_private_image.numcomps);
+            var tcp = new TileCodingParams
+            {
+                //C# impl. note.
+                //The SOT marker will overwrite these, so one might
+                //get away with a "new TileCompParams[_image.numcomps]"
+                tccps = TileCompParams.Create(_private_image.numcomps)
+            };
 
             _cp.tcps[c] = tcp;
         }
@@ -6102,7 +6073,7 @@ internal sealed class J2K
         }
 
         header_size -= 5;
-        for (int i = 0; i < _private_image.numcomps; i++)
+        for (var i = 0; i < _private_image.numcomps; i++)
             tcp.tccps[i].csty = tcp.csty & CP_CSTY.PRT;
 
         if (!ReadSPCod_SPCoc(0, ref header_size))
@@ -6131,7 +6102,7 @@ internal sealed class J2K
         var ref_tccp = tccps[0];
         var prc_size = ref_tccp.numresolutions * sizeof(int);
 
-        for (int i = 1; i < _private_image.numcomps; i++)
+        for (var i = 1; i < _private_image.numcomps; i++)
         {
             var copied_tccp = tccps[i];
             copied_tccp.numresolutions = ref_tccp.numresolutions;
@@ -6157,10 +6128,10 @@ internal sealed class J2K
         }
 
         tccp.numresolutions = _cio.ReadByte() + 1u;
-        if (tccp.numresolutions > Constants.J2K_MAXRLVLS)
+        if (tccp.numresolutions > Constants.J2KMaxrlvls)
         {
             _cinfo.Error("Invalid value for numresolutions : {0}, max value is set in Constants.cs at {1}",
-                tccp.numresolutions, Constants.J2K_MAXRLVLS);
+                tccp.numresolutions, Constants.J2KMaxrlvls);
             return false;
         }
 
@@ -6208,7 +6179,7 @@ internal sealed class J2K
                 return false;
             }
 
-            for (int i = 0; i < tccp.numresolutions; i++)
+            for (var i = 0; i < tccp.numresolutions; i++)
             {
                 uint tmp = _cio.ReadByte();
                 //Precinct exponent 0 is only allowed for lowest resolution level (Table A.21)
@@ -6226,7 +6197,7 @@ internal sealed class J2K
         else
         {
             //Set default size for the precinct width and height
-            for (int i = 0; i < tccp.numresolutions; i++)
+            for (var i = 0; i < tccp.numresolutions; i++)
             {
                 tccp.prcw[i] = 15;
                 tccp.prch[i] = 15;
@@ -6259,20 +6230,20 @@ internal sealed class J2K
         {
             num_bands = tccp.qntsty == CCP_QNTSTY.NOQNT ? header_size : header_size / 2;
 
-            if (num_bands > Constants.J2K_MAXBANDS)
+            if (num_bands > Constants.J2KMaxbands)
             {
                 _cinfo.Warn("While reading CCP_QNTSTY element inside QCD or QCC marker segment, " +
                             "number of subbands ({0}) is greater to OPJ_J2K_MAXBANDS ({1}). So we limit the number of elements stored to " +
-                            "OPJ_J2K_MAXBANDS ({1}) and skip the rest. ", num_bands, Constants.J2K_MAXBANDS);
+                            "OPJ_J2K_MAXBANDS ({1}) and skip the rest. ", num_bands, Constants.J2KMaxbands);
             }
         }
 
         if (tccp.qntsty == CCP_QNTSTY.NOQNT)
         {
-            for (int bandno = 0; bandno < num_bands; bandno++)
+            for (var bandno = 0; bandno < num_bands; bandno++)
             {
                 tmp = _cio.ReadByte();
-                if (bandno < Constants.J2K_MAXBANDS)
+                if (bandno < Constants.J2KMaxbands)
                     tccp.stepsizes[bandno] = new StepSize((int)(tmp >> 3), 0);
             }
 
@@ -6282,10 +6253,10 @@ internal sealed class J2K
         }
         else
         {
-            for (int bandno = 0; bandno < num_bands; bandno++)
+            for (var bandno = 0; bandno < num_bands; bandno++)
             {
                 tmp = _cio.ReadUShort();
-                if (bandno < Constants.J2K_MAXBANDS)
+                if (bandno < Constants.J2KMaxbands)
                     tccp.stepsizes[bandno] = new StepSize((int)(tmp >> 11), (int)(tmp & 0x7ff));
             }
 
@@ -6297,9 +6268,9 @@ internal sealed class J2K
         // if scalar_derived -> compute other stepsizes
         if (tccp.qntsty == CCP_QNTSTY.SIQNT)
         {
-            for (int bandno = 1; bandno < Constants.J2K_MAXBANDS; bandno++)
+            for (var bandno = 1; bandno < Constants.J2KMaxbands; bandno++)
             {
-                int tmp2 = (bandno - 1) / 3;
+                var tmp2 = (bandno - 1) / 3;
                 tccp.stepsizes[bandno] = new StepSize(
                     tccp.stepsizes[0].expn - tmp2 > 0 ?
                         tccp.stepsizes[0].expn - tmp2 : 0, tccp.stepsizes[0].mant);
@@ -6317,8 +6288,8 @@ internal sealed class J2K
     {
         uint max = 0;
 
-        uint n_tiles = _cp.tw * _cp.th;
-        uint n_comp = _private_image.numcomps;
+        var n_tiles = _cp.tw * _cp.th;
+        var n_comp = _private_image.numcomps;
 
         for (uint i = 0; i < n_tiles; i++)
         {
@@ -6341,7 +6312,7 @@ internal sealed class J2K
         var tcp = _specific_param.decoder.state == J2K_STATUS.TPH ? _cp.tcps[_current_tile_number] : 
             _specific_param.decoder.default_tcp;
 
-        uint comp_room = _private_image.numcomps <= 256 ? 1u : 2;
+        var comp_room = _private_image.numcomps <= 256 ? 1u : 2;
         if (header_size < comp_room + 1)
         {
             _cinfo.Error("Error reading COC marker");
@@ -6371,7 +6342,7 @@ internal sealed class J2K
     /// </summary>
     internal bool ReadCRG(uint header_size)
     {
-        uint numcomps = _private_image.numcomps;
+        var numcomps = _private_image.numcomps;
         if (header_size != numcomps * 4)
         {
             _cinfo.Error("Error reading CRG marker");
@@ -6398,9 +6369,7 @@ internal sealed class J2K
     //2.1
     internal bool ReadCBD(uint header_size)
     {
-        OPJ_UINT32 n_comps, num_comps;
-
-        num_comps = _private_image.numcomps;
+        var num_comps = _private_image.numcomps;
 
         if (header_size != _private_image.numcomps + 2)
         {
@@ -6408,7 +6377,7 @@ internal sealed class J2K
             return false;
         }
 
-        n_comps = _cio.ReadUShort();                             /* Ncbd */
+        OPJ_UINT32 n_comps = _cio.ReadUShort() /* Ncbd */;
 
         if (n_comps != num_comps)
         {
@@ -6416,9 +6385,9 @@ internal sealed class J2K
             return false;
         }
 
-        for (int i = 0; i < num_comps; i++)
+        for (var i = 0; i < num_comps; i++)
         {
-            ImageComp comp = _private_image.comps[i];
+            var comp = _private_image.comps[i];
             OPJ_UINT32 comp_def = _cio.ReadByte();                    /* Component bit depth */
             comp.sgnd = ((comp_def >> 7) & 1) != 0;
             comp.prec = (comp_def & 0x7f) + 1;
@@ -6447,12 +6416,10 @@ internal sealed class J2K
     //2.1
     internal bool ReadMCO(uint p_header_size)
     {
-        OPJ_UINT32 l_tmp, i;
-        OPJ_UINT32 l_nb_stages;
-        TileCodingParams l_tcp;
+        OPJ_UINT32 i;
         TileCompParams l_tccp;
 
-        l_tcp = _specific_param.decoder.state == J2K_STATUS.TPH ?
+        var l_tcp = _specific_param.decoder.state == J2K_STATUS.TPH ?
             _cp.tcps[_current_tile_number] :
             _specific_param.decoder.default_tcp;
 
@@ -6462,7 +6429,7 @@ internal sealed class J2K
             return false;
         }
 
-        l_nb_stages = _cio.ReadByte();                           /* Nmco : only one tranform stage*/
+        OPJ_UINT32 l_nb_stages = _cio.ReadByte() /* Nmco : only one tranform stage*/;
 
         if (l_nb_stages > 1)
         {
@@ -6489,7 +6456,7 @@ internal sealed class J2K
 
         for (i = 0; i < l_nb_stages; ++i)
         {
-            l_tmp = _cio.ReadByte();
+            OPJ_UINT32 l_tmp = _cio.ReadByte();
 
             if (!AddMCT(l_tcp, _private_image, l_tmp))
             {
@@ -6504,13 +6471,9 @@ internal sealed class J2K
     private bool AddMCT(TileCodingParams tcp, JPXImage image, OPJ_UINT32 index)
     {
         OPJ_UINT32 i;
-        SimpleMccDecorrelationData mcc_record;
-        ArPtr<MctData> deco_array, offset_array_ptr;
-        OPJ_UINT32 data_size,mct_size, offset_size;
+        OPJ_UINT32 data_size;
         OPJ_UINT32 nb_elem;
-        OPJ_UINT32[] offset_data;
-        TileCompParams tccp;
-        mcc_record = tcp.mcc_records[0];
+        var mcc_record = tcp.mcc_records[0];
 
         for (i=0;i<tcp.n_mcc_records;i++) {
             mcc_record = tcp.mcc_records[i];
@@ -6529,7 +6492,7 @@ internal sealed class J2K
             return true;
         }
 
-        deco_array = mcc_record.decorrelation_array;
+        var deco_array = mcc_record.decorrelation_array;
 
         if (deco_array != null)
         {
@@ -6539,13 +6502,13 @@ internal sealed class J2K
             }
 
             nb_elem = image.numcomps * image.numcomps;
-            mct_size = nb_elem;
+            var mct_size = nb_elem;
             tcp.mct_decoding_matrix = new float[mct_size];
 
             deco_array.Deref.data.CopyToFloat(tcp.mct_decoding_matrix, (int) mct_size);
         }
 
-        offset_array_ptr = mcc_record.offset_array;
+        var offset_array_ptr = mcc_record.offset_array;
 
         if (offset_array_ptr != null) 
         {
@@ -6555,16 +6518,16 @@ internal sealed class J2K
             }
 
             nb_elem = image.numcomps;
-            offset_size = nb_elem;
-            offset_data = new uint[offset_size];
+            var offset_size = nb_elem;
+            var offset_data = new uint[offset_size];
 
             deco_array.Deref.data.CopyToInt(offset_data, (int)offset_size);
 
-            int current_offset_data = 0;
+            var current_offset_data = 0;
 
-            for (i=0;i<image.numcomps;++i) 
+            for (i=0;i<image.numcomps;++i)
             {
-                tccp = tcp.tccps[i];
+                var tccp = tcp.tccps[i];
                 tccp.dc_level_shift = (int) offset_data[current_offset_data++];
             }
         }
@@ -6579,17 +6542,10 @@ internal sealed class J2K
     internal bool ReadMCC(uint header_size)
     {
         OPJ_UINT32 i, j;
-        OPJ_UINT32 tmp;
-        OPJ_UINT32 indix;
-        TileCodingParams tcp;
-        SimpleMccDecorrelationData[] mcc_records;
         SimpleMccDecorrelationData mcc_record;
-        OPJ_UINT32 n_collections;
-        OPJ_UINT32 n_comps;
-        OPJ_UINT32 n_bytes_by_comp;
-        bool new_mcc = false;
+        var new_mcc = false;
 
-        tcp = _specific_param.decoder.state == J2K_STATUS.TPH ?
+        var tcp = _specific_param.decoder.state == J2K_STATUS.TPH ?
             _cp.tcps[_current_tile_number] :
             _specific_param.decoder.default_tcp;
 
@@ -6600,7 +6556,7 @@ internal sealed class J2K
         }
 
         // first marker
-        tmp = _cio.ReadUShort();                         // Zmcc
+        OPJ_UINT32 tmp = _cio.ReadUShort(); // Zmcc
         if (tmp != 0)
         {
             _cinfo.Error("Cannot take in charge multiple data spanning");
@@ -6614,9 +6570,9 @@ internal sealed class J2K
             return false;
         }
 
-        indix = _cio.ReadByte(); // Imcc . no need for other values, take the first
+        OPJ_UINT32 indix = _cio.ReadByte(); // Imcc . no need for other values, take the first
 
-        mcc_records = tcp.mcc_records;
+        var mcc_records = tcp.mcc_records;
 
         for (i = 0; i < tcp.n_mcc_records; ++i)
         {
@@ -6632,10 +6588,10 @@ internal sealed class J2K
         {
             if (tcp.n_mcc_records == tcp.n_max_mcc_records)
             {
-                tcp.n_max_mcc_records += Constants.MCC_DEFAULT_NB_RECORDS;
+                tcp.n_max_mcc_records += Constants.MccDefaultNbRecords;
                 Array.Resize(ref tcp.mcc_records, (int)tcp.n_max_mcc_records);
                 mcc_records = tcp.mcc_records;
-                for (uint c = i; i < mcc_records.Length; c++)
+                for (var c = i; i < mcc_records.Length; c++)
                     mcc_records[c] = new SimpleMccDecorrelationData();
             }
             i = tcp.n_mcc_records;
@@ -6653,7 +6609,7 @@ internal sealed class J2K
             return true;
         }
 
-        n_collections = _cio.ReadUShort();                              // Qmcc -> number of collections -> 1
+        OPJ_UINT32 n_collections = _cio.ReadUShort(); // Qmcc -> number of collections -> 1
 
         if (n_collections > 1)
         {
@@ -6681,11 +6637,11 @@ internal sealed class J2K
                 return true;
             }
 
-            n_comps = _cio.ReadUShort();;
+            OPJ_UINT32 n_comps = _cio.ReadUShort();;
 
             header_size -= 3;
 
-            n_bytes_by_comp = 1 + (n_comps >> 15);
+            var n_bytes_by_comp = 1 + (n_comps >> 15);
             mcc_record.n_comps = n_comps & 0x7fff;
 
             if (header_size < n_bytes_by_comp * mcc_record.n_comps + 2)
@@ -6806,12 +6762,8 @@ internal sealed class J2K
     internal bool ReadMCT(uint header_size)
     {
         OPJ_UINT32 i;
-        TileCodingParams tcp;
-        OPJ_UINT32 tmp;
-        OPJ_UINT32 indix;
-        MctData mct_data;
 
-        tcp = _specific_param.decoder.state == J2K_STATUS.TPH ?
+        var tcp = _specific_param.decoder.state == J2K_STATUS.TPH ?
             _cp.tcps[_current_tile_number] :
             _specific_param.decoder.default_tcp;
 
@@ -6822,7 +6774,7 @@ internal sealed class J2K
         }
 
         // first marker
-        tmp = _cio.ReadUShort(); // Zmct
+        OPJ_UINT32 tmp = _cio.ReadUShort(); // Zmct
         if (tmp != 0)
         {
             _cinfo.Error("Cannot take in charge mct data within multiple MCT records");
@@ -6838,9 +6790,9 @@ internal sealed class J2K
         // Imct -> no need for other values, take the first, type is double with decorrelation x0000 1101 0000 0000
         tmp = _cio.ReadUShort();                         // Imct
 
-        indix = tmp & 0xff;
+        var indix = tmp & 0xff;
         var l_mct_data_ar = tcp.mct_records;
-        mct_data = l_mct_data_ar[0];
+        var mct_data = l_mct_data_ar[0];
 
         for (i = 0; i < tcp.n_mct_records; ++i)
         {
@@ -6857,11 +6809,11 @@ internal sealed class J2K
         {
             if (tcp.n_mct_records == tcp.n_max_mct_records)
             {
-                tcp.n_max_mct_records += Constants.MCT_DEFAULT_NB_RECORDS;
+                tcp.n_max_mct_records += Constants.MctDefaultNbRecords;
 
                 Array.Resize<MctData>(ref tcp.mct_records, (int) tcp.n_max_mct_records);
                 mct_data = tcp.mct_records[tcp.n_mct_records];
-                for (uint c = tcp.n_mct_records; c < tcp.n_max_mct_records; c++)
+                for (var c = tcp.n_mct_records; c < tcp.n_max_mct_records; c++)
                     tcp.mct_records[c] = new MctData();
             }
 
@@ -6890,7 +6842,7 @@ internal sealed class J2K
         mct_data.data = new ShortOrIntOrFloatOrDoubleAr(mct_data.element_type,
             ShortOrIntOrFloatOrDoubleAr.SizeDiv(mct_data.element_type, (int)header_size));
         mct_data.data_size = (int)header_size;
-        byte[] tmp_buffer = new byte[header_size];
+        var tmp_buffer = new byte[header_size];
         _cio.Read(tmp_buffer, 0, (int)header_size);
         mct_data.data.SetBytes(tmp_buffer);
 
@@ -6945,7 +6897,7 @@ internal sealed class J2K
     /// <remarks>2.5 - opj_j2k_read_rgn</remarks>
     internal bool ReadRGN(uint header_size)
     {
-        int comp_room = _private_image.numcomps <= 256 ? 1 : 2;
+        var comp_room = _private_image.numcomps <= 256 ? 1 : 2;
         if (header_size != 2 + comp_room)
         {
             _cinfo.Error("Error reading RGN marker");
@@ -7001,9 +6953,9 @@ internal sealed class J2K
 
         var tccps = tcp.tccps;
         var ref_tccp = tccps[0];
-        const int size = Constants.J2K_MAXBANDS;
+        const int size = Constants.J2KMaxbands;
 
-        for (int i = 1; i < _private_image.numcomps; i++)
+        for (var i = 1; i < _private_image.numcomps; i++)
         {
             var copied_tccp = tccps[i];
             copied_tccp.qntsty = ref_tccp.qntsty;
@@ -7029,7 +6981,7 @@ internal sealed class J2K
     /// <remarks>2.5 - opj_j2k_read_qcc</remarks>
     internal bool ReadQCC(uint header_size)
     {
-        uint num_comp = _private_image.numcomps;
+        var num_comp = _private_image.numcomps;
         int compno;
 
         if (num_comp <= 256)
@@ -7078,7 +7030,7 @@ internal sealed class J2K
         uint max_poc = 0;
 
         var tcps = _cp.tcps;
-        uint n_tiles = _cp.th * _cp.tw;
+        var n_tiles = _cp.th * _cp.tw;
 
         for (uint i = 0; i < n_tiles; i++)
         {
@@ -7097,11 +7049,10 @@ internal sealed class J2K
     /// <returns>2.5 - opj_j2k_get_max_toc_size</returns>
     private uint GetMaxTocSize()
     {
-        uint n_tiles;
         uint max = 0;
         var tcps = _cp.tcps;
 
-        n_tiles = _cp.tw * _cp.th;
+        var n_tiles = _cp.tw * _cp.th;
 
         for (uint i = 0; i < n_tiles; i++)
         {
@@ -7119,18 +7070,16 @@ internal sealed class J2K
     private uint GetSpecificHeaderSizes()
     {
         uint n_bytes = 0;
-        uint n_comps;
-        uint coc_bytes, qcc_bytes;
 
-        n_comps = _private_image.numcomps - 1u;
+        var n_comps = _private_image.numcomps - 1u;
         n_bytes += GetMaxTocSize();
 
         if (!_cp.IsCinema)
         {
-            coc_bytes = GetMaxCocSize();
+            var coc_bytes = GetMaxCocSize();
             n_bytes += n_comps * coc_bytes;
 
-            qcc_bytes = GetMaxQccSize();
+            var qcc_bytes = GetMaxQccSize();
             n_bytes += n_comps * qcc_bytes;
         }
 
@@ -7174,11 +7123,11 @@ internal sealed class J2K
     /// <remarks>2.5 - opj_j2k_read_poc</remarks>
     internal bool ReadPOC(uint header_size)
     {
-        uint numcomps = _private_image.numcomps;
+        var numcomps = _private_image.numcomps;
 
-        uint comp_room = numcomps <= 256 ? 1u : 2u;
-        uint chunk_size = 5u + 2u * comp_room;
-        uint current_poc_nb = header_size / chunk_size;
+        var comp_room = numcomps <= 256 ? 1u : 2u;
+        var chunk_size = 5u + 2u * comp_room;
+        var current_poc_nb = header_size / chunk_size;
 
         if (current_poc_nb <= 0 || header_size % chunk_size != 0)
         {
@@ -7186,8 +7135,8 @@ internal sealed class J2K
             return false;
         }
 
-        TileCodingParams tcp = _specific_param.decoder.state == J2K_STATUS.TPH ? _cp.tcps[_current_tile_number] : _specific_param.decoder.default_tcp;
-        uint old_poc = tcp.POC ? tcp.numpocs + 1 : 0u;
+        var tcp = _specific_param.decoder.state == J2K_STATUS.TPH ? _cp.tcps[_current_tile_number] : _specific_param.decoder.default_tcp;
+        var old_poc = tcp.POC ? tcp.numpocs + 1 : 0u;
         current_poc_nb += old_poc;
 
         if (current_poc_nb >= 32)
@@ -7199,9 +7148,9 @@ internal sealed class J2K
         // Now poc is in use
         tcp.POC = true;
 
-        for (uint i = old_poc; i < current_poc_nb; i++)
+        for (var i = old_poc; i < current_poc_nb; i++)
         {
-            ProgOrdChang poc = tcp.pocs[i];
+            var poc = tcp.pocs[i];
             poc.resno0 = _cio.ReadByte();
             poc.compno0 = _cio.Read(comp_room);
             poc.layno1 = _cio.ReadUShort();
@@ -7245,14 +7194,9 @@ internal sealed class J2K
     //2.5.1 - opj_j2k_update_image_dimensions
     private bool UpdateImageDimensions(JPXImage image)
     {
-        uint it_comp;
-        int comp_x1, comp_y1;
-        ImageComp[] img_comp_ar = null;
-
-        img_comp_ar = image.comps;
-        for (it_comp = 0; it_comp < image.numcomps; ++it_comp)
+        var img_comp_ar = image.comps;
+        for (uint it_comp = 0; it_comp < image.numcomps; ++it_comp)
         {
-            int h, w;
             if (image.x0 > int.MaxValue ||
                 image.y0 > int.MaxValue ||
                 image.x1 > int.MaxValue ||
@@ -7265,11 +7209,11 @@ internal sealed class J2K
 
             img_comp.x0 = MyMath.uint_ceildiv(image.x0, img_comp.dx);
             img_comp.y0 = MyMath.uint_ceildiv(image.y0, img_comp.dy);
-            comp_x1 = MyMath.int_ceildiv((int)image.x1, (int)img_comp.dx);
-            comp_y1 = MyMath.int_ceildiv((int)image.y1, (int)img_comp.dy);
+            var comp_x1 = MyMath.int_ceildiv((int)image.x1, (int)img_comp.dx);
+            var comp_y1 = MyMath.int_ceildiv((int)image.y1, (int)img_comp.dy);
 
-            w = MyMath.int_ceildivpow2(comp_x1, (int)img_comp.factor)
-                - MyMath.int_ceildivpow2((int)img_comp.x0, (int)img_comp.factor);
+            var w = MyMath.int_ceildivpow2(comp_x1, (int)img_comp.factor)
+                    - MyMath.int_ceildivpow2((int)img_comp.x0, (int)img_comp.factor);
             if (w < 0)
             {
                 _cinfo.Error("Size x of the decoded component image is incorrect (comp[{0}].w={0}).",
@@ -7278,8 +7222,8 @@ internal sealed class J2K
             }
             img_comp.w = (OPJ_UINT32)w;
 
-            h = MyMath.int_ceildivpow2(comp_y1, (int)img_comp.factor)
-                - MyMath.int_ceildivpow2((int)img_comp.y0, (int)img_comp.factor);
+            var h = MyMath.int_ceildivpow2(comp_y1, (int)img_comp.factor)
+                    - MyMath.int_ceildivpow2((int)img_comp.y0, (int)img_comp.factor);
             if (h < 0)
             {
                 _cinfo.Error("Size y of the decoded component image is incorrect (comp[{0}].h={1}).\n",
@@ -7459,50 +7403,40 @@ internal sealed class J2K
     /// <remarks>2.5 - opj_j2k_update_rates</remarks>
     private void UpdateRates()
     {
-        CodingParameters cp;
-        JPXImage image;
-        TileCodingParams[] tcps;
-        ImageComp[] img_comps;
-
-        int x0,y0,x1,y1;
         float[] rates;
-        float sot_remove;
-        uint bits_empty, size_pixel;
-        long tile_size;
-        uint last_res;
         StrideFunc stride_func;
 
-        cp = _cp;
-        image = _private_image;
-        tcps = cp.tcps;
+        var cp = _cp;
+        var image = _private_image;
+        var tcps = cp.tcps;
 
-        bits_empty = 8 * image.comps[0].dx * image.comps[0].dy;
-        size_pixel = image.numcomps * image.comps[0].prec;
-        sot_remove = _bcio.Pos / (float)(cp.th * cp.tw);
+        var bits_empty = 8 * image.comps[0].dx * image.comps[0].dy;
+        var size_pixel = image.numcomps * image.comps[0].prec;
+        var sot_remove = _bcio.Pos / (float)(cp.th * cp.tw);
 
         if (cp.specific_param.enc.tp_on)
-            stride_func = new StrideFunc(GetTpStride);
+            stride_func = GetTpStride;
         else
-            stride_func = new StrideFunc(GetDefaultStride);
+            stride_func = GetDefaultStride;
 
         for (int i = 0, tcp_ptr = 0; i < cp.th; i++)
         {
-            for (int j = 0; j < cp.tw; ++j)
+            for (var j = 0; j < cp.tw; ++j)
             {
                 var tcp = tcps[tcp_ptr++];
 
-                float l_offset = stride_func(tcp) / tcp.numlayers;
+                var l_offset = stride_func(tcp) / tcp.numlayers;
 
                 /* 4 borders of the tile rescale on the image if necessary */
-                x0 = Math.Max((int)(cp.tx0 + j * cp.tdx), (int)image.x0);
-                y0 = Math.Max((int)(cp.ty0 + i * cp.tdy), (int)image.y0);
-                x1 = Math.Min((int)(cp.tx0 + (j + 1) * cp.tdx), (int)image.x1);
-                y1 = Math.Min((int)(cp.ty0 + (i + 1) * cp.tdy), (int)image.y1);
+                var x0 = Math.Max((int)(cp.tx0 + j * cp.tdx), (int)image.x0);
+                var y0 = Math.Max((int)(cp.ty0 + i * cp.tdy), (int)image.y0);
+                var x1 = Math.Min((int)(cp.tx0 + (j + 1) * cp.tdx), (int)image.x1);
+                var y1 = Math.Min((int)(cp.ty0 + (i + 1) * cp.tdy), (int)image.y1);
 
                 rates = tcp.rates;
 
                 /* Modification of the RATE >> */
-                for (int k = 0; k < tcp.numlayers; k++)
+                for (var k = 0; k < tcp.numlayers; k++)
                 {
                     if (rates[k] > 0)
                     {
@@ -7518,7 +7452,7 @@ internal sealed class J2K
 
         for (int i = 0, tcp_ptr = 0; i < cp.th; i++)
         {
-            for (int j = 0; j < cp.tw; ++j)
+            for (var j = 0; j < cp.tw; ++j)
             {
                 var tcp = tcps[tcp_ptr++];
                 rates = tcp.rates;
@@ -7533,11 +7467,11 @@ internal sealed class J2K
                     }
                 }
 
-                int rates_ptr = 1;
+                var rates_ptr = 1;
 
-                last_res = tcp.numlayers - 1;
+                var last_res = tcp.numlayers - 1;
 
-                for (int k = 1; k < last_res; k++)
+                for (var k = 1; k < last_res; k++)
                 {
                     if (rates[rates_ptr] > 0)
                     {
@@ -7564,10 +7498,10 @@ internal sealed class J2K
             }
         }
 
-        img_comps = image.comps;
-        tile_size = 0;
+        var img_comps = image.comps;
+        long tile_size = 0;
 
-        for (int i=0; i < image.numcomps; i++)
+        for (var i=0; i < image.numcomps; i++)
         {
             var img_comp = img_comps[i];
             tile_size += MyMath.uint_ceildiv(cp.tdx, img_comp.dx)
@@ -7619,9 +7553,9 @@ internal sealed class J2K
     //2.5 - opj_j2k_calculate_tp
     private bool CalculateTP(out uint n_tiles)
     {
-        int cn_tiles = (int) (_cp.tw * _cp.th);
+        var cn_tiles = (int) (_cp.tw * _cp.th);
         n_tiles = 0;
-        TileCodingParams[] tcps = _cp.tcps;
+        var tcps = _cp.tcps;
 
         for (uint tileno = 0; tileno < cn_tiles; tileno++)
         {
@@ -7631,7 +7565,7 @@ internal sealed class J2K
             var tcp = tcps[tileno];
             for (uint pino = 0; pino <= tcp.numpocs; pino++)
             {
-                uint tp_num = GetNumTP(pino, tileno);
+                var tp_num = GetNumTP(pino, tileno);
 
                 cur_totnum_tp += tp_num;
             }
@@ -7649,17 +7583,17 @@ internal sealed class J2K
         Debug.Assert(pino < _cp.tcps[tileno].numpocs + 1);
 
         var tcp = _cp.tcps[tileno];
-        ProgOrdChang current_poc = tcp.pocs[pino];
+        var current_poc = tcp.pocs[pino];
 
         //get the progression order as a character string
-        string prog = ConvertProgressionOrder(tcp.prg);
+        var prog = ConvertProgressionOrder(tcp.prg);
         Debug.Assert(prog.Length > 0);
 
         if (_cp.specific_param.enc.tp_on)
         {
             uint tpnum = 1;
 
-            for (int i = 0; i < 4; i++)
+            for (var i = 0; i < 4; i++)
             {
                 switch (prog[i])
                 {
@@ -7942,13 +7876,13 @@ internal sealed class J2K
         /// </summary>
         public bool can_decode
         {
-            get => (this.bitvector1 & 1u) != 0;
-            set => this.bitvector1 = value ? 1u | bitvector1 : ~1u & bitvector1;
+            get => (bitvector1 & 1u) != 0;
+            set => bitvector1 = value ? 1u | bitvector1 : ~1u & bitvector1;
         }
         public bool discard_tiles
         {
-            get => (this.bitvector1 & 2u) != 0;
-            set => this.bitvector1 = value ? 2u | bitvector1 : ~2u & bitvector1;
+            get => (bitvector1 & 2u) != 0;
+            set => bitvector1 = value ? 2u | bitvector1 : ~2u & bitvector1;
         }
 
         public bool skip_data

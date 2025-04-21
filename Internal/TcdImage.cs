@@ -264,7 +264,7 @@ internal sealed class TcdResolution
 
     public TcdResolution()
     {
-        for (int c = 0; c < bands.Length; c++)
+        for (var c = 0; c < bands.Length; c++)
             bands[c] = new TcdBand();
     }
 }

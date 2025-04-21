@@ -5,56 +5,56 @@ public static class Constants
     /// <summary>
     /// Number of maximum resolution level authorized
     /// </summary>
-    internal const int J2K_MAXRLVLS = 33;
+    internal const int J2KMaxrlvls = 33;
 
     /// <summary>
     /// Number of maximum sub-band linked to number of resolution level
     /// </summary>
-    internal const int J2K_MAXBANDS = 3 * J2K_MAXRLVLS - 2;
-    internal const int J2K_DEFAULT_NB_SEGS = 10;
-    internal const int J2K_TCD_MATRIX_MAX_LAYER_COUNT = 10;
-    internal const int J2K_TCD_MATRIX_MAX_RESOLUTION_COUNT = 10;
+    internal const int J2KMaxbands = 3 * J2KMaxrlvls - 2;
+    internal const int J2KDefaultNbSegs = 10;
+    internal const int J2KTcdMatrixMaxLayerCount = 10;
+    internal const int J2KTcdMatrixMaxResolutionCount = 10;
 
-    internal const int MQC_NUMCTXS = 19;
+    internal const int MqcNumctxs = 19;
 
-    internal const int T1_NUMCTXS = (int)T1_CTXNO.UNI + (int)OpenJpeg.T1_NUMCTXS.UNI;
+    internal const int T1Numctxs = (int)T1_CTXNO.UNI + (int)T1_NUMCTXS.UNI;
 
-    internal const int T1_NMSEDEC_BITS = 7;
+    internal const int T1NmsedecBits = 7;
 
-    internal const int T1_NMSEDEC_FRACBITS = T1_NMSEDEC_BITS - 1;
+    internal const int T1NmsedecFracbits = T1NmsedecBits - 1;
 
-    public const int CINEMA_24_CS = 1302083;
-    public const int CINEMA_48_CS = 651041;
-    public const int CINEMA_24_COMP = 1041666;
-    public const int CINEMA_48_COMP = 520833;
+    public const int Cinema24Cs = 1302083;
+    public const int Cinema48Cs = 651041;
+    public const int Cinema24Comp = 1041666;
+    public const int Cinema48Comp = 520833;
 
-    internal const int MCT_DEFAULT_NB_RECORDS = 10;
-    internal const int MCC_DEFAULT_NB_RECORDS = 10;
+    internal const int MctDefaultNbRecords = 10;
+    internal const int MccDefaultNbRecords = 10;
 
-    internal const int DEFAULT_CBLK_DATA_SIZE = 8192;
+    internal const int DefaultCblkDataSize = 8192;
 
     /// <summary>
     /// Org impl have this as ulong.MaxValue, but C# has a 2GB limit.
     /// </summary>
-    internal const int SIZE_MAX = int.MaxValue;
+    internal const int SizeMax = int.MaxValue;
 
     /// <summary>
     /// Default size of the buffer for header bytes
     /// </summary>
-    internal const int J2K_DEFAULT_HEADER_SIZE = 1000;
+    internal const int J2KDefaultHeaderSize = 1000;
 
     /// <summary>
     /// Margin for a fake FFFF marker
     /// </summary>
-    internal const int COMMON_CBLK_DATA_EXTRA = 2;
+    internal const int CommonCblkDataExtra = 2;
 
-    internal const int PARAM_DEFAULT_NUMRESOLUTION = 6;
-    internal const int PARAM_DEFAULT_CBLOCKW = 64;
-    internal const int PARAM_DEFAULT_CBLOCKH = 64;
-    internal const PROG_ORDER PARAM_DEFAULT_PROG_ORDER = PROG_ORDER.LRCP;
+    internal const int ParamDefaultNumresolution = 6;
+    internal const int ParamDefaultCblockw = 64;
+    internal const int ParamDefaultCblockh = 64;
+    internal const PROG_ORDER ParamDefaultProgOrder = PROG_ORDER.LRCP;
 
     /// <summary>
     /// Maximum main level
     /// </summary>
-    internal const ushort IMF_MAINLEVEL_MAX = 11;
+    internal const ushort ImfMainlevelMax = 11;
 }

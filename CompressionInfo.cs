@@ -1,4 +1,5 @@
 ﻿#region License
+
 /*
  * Copyright (c) 2002-2007, Communications and Remote Sensing Laboratory, Universite catholique de Louvain (UCL), Belgium
  * Copyright (c) 2002-2007, Professor Benoit Macq
@@ -30,7 +31,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+
 #endregion
+
 using System;
 using System.IO;
 
@@ -51,22 +54,22 @@ public sealed class CompressionInfo
     /// Whenever this object is a decompressor or
     /// a compressor
     /// </summary>
-    private readonly bool _is_decompressor;
+    private readonly bool _isDecompressor;
 
     /// <summary>
     /// Type of compression or decompression
     /// </summary>
-    private CodecFormat _codec_format;
+    private CodecFormat _codecFormat;
 
     /// <summary>
     /// Handles j2k stuff
     /// </summary>
-    private readonly J2K _j2k;
+    private readonly J2K _j2K;
 
     /// <summary>
     /// Handles JP2 stuff
     /// </summary>
-    private readonly JP2 _jp2;
+    private readonly Jp2 _jp2;
 
     /// <summary>
     /// For sending messages back to the client
@@ -76,19 +79,21 @@ public sealed class CompressionInfo
     /// <summary>
     /// Get or set event manager
     /// </summary>
-    public EventMgr EventManager { get => _mgr;
+    public EventMgr EventManager
+    {
+        get => _mgr;
         set => _mgr = value;
     }
 
     /// <summary>
     /// Optional data object for events
     /// </summary>
-    public object ClientData { get; set; }
+    public object ClientData { get; }
 
     /// <summary>
     /// Whenever this object is set up for decompression
     /// </summary>
-    public bool IsDecompressor => _is_decompressor;
+    public bool IsDecompressor => _isDecompressor;
 
     /// <summary>
     /// Allow multithreading
@@ -99,66 +104,66 @@ public sealed class CompressionInfo
     /// Functions for compressing an image
     /// </summary>
     /// <remarks>Openjpeg 2.1 API</remarks>
-    private readonly Compression CFuncs = new Compression();
+    private readonly Compression _cFuncs;
 
     /// <summary>
     /// Functions for decompresssing an image
     /// </summary>
     /// <remarks>Openjpeg 2.1 API</remarks>
-    private readonly Decompression DFuncs = new Decompression();
+    private readonly Decompression _dFuncs;
 
     /// <summary>
     /// Constructor
     /// </summary>
-    /// <param name="is_decompressor">
+    /// <param name="isDecompressor">
     /// Set true if you intent to decompress
     /// </param>
     /// <remarks>
     /// opj_create_compress
     /// </remarks>
-    public CompressionInfo(bool is_decompressor, CodecFormat format)
-    { 
-        _is_decompressor = is_decompressor;
-        _codec_format = format;
-        _j2k = J2K.Create(this);
+    public CompressionInfo(bool isDecompressor, CodecFormat format)
+    {
+        _isDecompressor = isDecompressor;
+        _codecFormat = format;
+        _j2K = J2K.Create(this);
         if (format == CodecFormat.Jpeg2P)
         {
-            _jp2 = new JP2(this, _j2k);
-            if (_is_decompressor)
+            _jp2 = new Jp2(this, _j2K);
+            if (_isDecompressor)
             {
-                DFuncs.SetupDecoder = new Decompression.SetupDecoderFunc(_jp2.SetupDecode);
-                DFuncs.ReadHeader = new Decompression.ReadHeaderFunc(_jp2.ReadHeader);
-                DFuncs.SetDecodeArea = new Decompression.SetDecodeAreaFunc(_jp2.SetDecodeArea);
-                DFuncs.Decode = new Decompression.DecodeFunc(_jp2.Decode);
-                DFuncs.TileDecode = new Decompression.TileDecodeFunc(_jp2.Decode);
-                DFuncs.EndDecompress = new Decompression.EndDecompressFunc(_jp2.EndDecompress);
+                _dFuncs.SetupDecoder = _jp2.SetupDecode;
+                _dFuncs.ReadHeader = _jp2.ReadHeader;
+                _dFuncs.SetDecodeArea = _jp2.SetDecodeArea;
+                _dFuncs.Decode = _jp2.Decode;
+                _dFuncs.TileDecode = _jp2.Decode;
+                _dFuncs.EndDecompress = _jp2.EndDecompress;
             }
             else
-            {                    
-                CFuncs.SetupEncoder = new Compression.SetupEncoderFunc(_jp2.SetupEncoder);
-                CFuncs.StartCompress = new Compression.StartCompressFunc(_jp2.StartCompress);
-                CFuncs.EndCompress = new Compression.EndCompressFunc(_jp2.EndCompress);
-                CFuncs.Encode = new Compression.EncodeFunc(_jp2.Encode);
+            {
+                _cFuncs.SetupEncoder = _jp2.SetupEncoder;
+                _cFuncs.StartCompress = _jp2.StartCompress;
+                _cFuncs.EndCompress = _jp2.EndCompress;
+                _cFuncs.Encode = _jp2.Encode;
             }
         }
         else if (format == CodecFormat.Jpeg2K)
         {
             //_j2k = J2K.Create(this);
-            if (_is_decompressor)
+            if (_isDecompressor)
             {
-                DFuncs.SetupDecoder = new Decompression.SetupDecoderFunc(_j2k.SetupDecode);
-                DFuncs.ReadHeader = new Decompression.ReadHeaderFunc(_j2k.ReadHeader);
-                DFuncs.SetDecodeArea = new Decompression.SetDecodeAreaFunc(_j2k.SetDecodeArea);
-                DFuncs.Decode = new Decompression.DecodeFunc(_j2k.Decode);
-                DFuncs.TileDecode = new Decompression.TileDecodeFunc(_j2k.Decode);
-                DFuncs.EndDecompress = new Decompression.EndDecompressFunc(_j2k.EndDecompress);
+                _dFuncs.SetupDecoder = _j2K.SetupDecode;
+                _dFuncs.ReadHeader = _j2K.ReadHeader;
+                _dFuncs.SetDecodeArea = _j2K.SetDecodeArea;
+                _dFuncs.Decode = _j2K.Decode;
+                _dFuncs.TileDecode = _j2K.Decode;
+                _dFuncs.EndDecompress = _j2K.EndDecompress;
             }
             else
             {
-                CFuncs.SetupEncoder = new Compression.SetupEncoderFunc(_j2k.SetupEncoder);
-                CFuncs.StartCompress = new Compression.StartCompressFunc(_j2k.StartCompress);
-                CFuncs.EndCompress = new Compression.EndCompressFunc(_j2k.EndCompress);
-                CFuncs.Encode = new Compression.EncodeFunc(_j2k.Encode);
+                _cFuncs.SetupEncoder = _j2K.SetupEncoder;
+                _cFuncs.StartCompress = _j2K.StartCompress;
+                _cFuncs.EndCompress = _j2K.EndCompress;
+                _cFuncs.Encode = _j2K.Encode;
             }
         }
         else
@@ -174,14 +179,15 @@ public sealed class CompressionInfo
     /// <remarks>
     /// 2.5
     /// </remarks>
-    public bool SetupDecoder(CIO cio, DecompressionParameters parameters)
+    public bool SetupDecoder(Cio cio, DecompressionParameters parameters)
     {
-        if (cio != null && cio.CanSeek && parameters != null && _is_decompressor)
+        if (cio is { CanSeek: true } && parameters != null && _isDecompressor)
         {
             DisableMultiThreading = parameters.DisableMultiThreading;
-            DFuncs.SetupDecoder(cio, parameters);
+            _dFuncs.SetupDecoder(cio, parameters);
             return true;
         }
+
         return false;
     }
 
@@ -195,9 +201,9 @@ public sealed class CompressionInfo
     /// </remarks>
     public bool ReadHeader(out JPXImage image)
     {
-        if (_is_decompressor)
+        if (_isDecompressor)
         {
-            return DFuncs.ReadHeader(out image);
+            return _dFuncs.ReadHeader(out image);
         }
         else
         {
@@ -207,10 +213,10 @@ public sealed class CompressionInfo
     }
 
     //2.5
-    public bool SetDecodeArea(JPXImage image, int start_x, int start_y, int end_x, int end_y)
+    public bool SetDecodeArea(JPXImage image, int startX, int startY, int endX, int endY)
     {
-        if (_is_decompressor)
-            return DFuncs.SetDecodeArea(image, start_x, start_y, end_x, end_y);                
+        if (_isDecompressor)
+            return _dFuncs.SetDecodeArea(image, startX, startY, endX, endY);
         return false;
     }
 
@@ -222,10 +228,10 @@ public sealed class CompressionInfo
     /// <returns>True if setup was a sucess</returns>
     public bool SetupEncoder(CompressionParameters parameters, JPXImage image)
     {
-        if (parameters != null && image != null && !_is_decompressor && parameters.Valid)
+        if (parameters != null && image != null && !_isDecompressor && parameters.Valid)
         {
             DisableMultiThreading = parameters.DisableMultiThreading;
-            return CFuncs.SetupEncoder(parameters, image);
+            return _cFuncs.SetupEncoder(parameters, image);
         }
 
         return false;
@@ -233,27 +239,28 @@ public sealed class CompressionInfo
 
     public bool SetExtraOptions(ExtraOption extra)
     {
-        if (extra != null && _j2k != null)
-            return _j2k.SetExtraOptions(extra);
+        if (extra != null && _j2K != null)
+            return _j2K.SetExtraOptions(extra);
 
         return false;
     }
 
     //2.5 - opj_start_compress
-    public bool StartCompress(CIO cio)
+    public bool StartCompress(Cio cio)
     {
         if (cio != null)
         {
-            if (!_is_decompressor)
-                return CFuncs.StartCompress(cio);
+            if (!_isDecompressor)
+                return _cFuncs.StartCompress(cio);
         }
+
         return false;
     }
 
     public bool Encode()
     {
-        if (!_is_decompressor)
-            return CFuncs.Encode();
+        if (!_isDecompressor)
+            return _cFuncs.Encode();
         return false;
     }
 
@@ -263,8 +270,8 @@ public sealed class CompressionInfo
     /// <remarks>2.5 - opj_end_compress</remarks>
     public bool EndCompress()
     {
-        if (!_is_decompressor)
-            return CFuncs.EndCompress();
+        if (!_isDecompressor)
+            return _cFuncs.EndCompress();
         return false;
     }
 
@@ -279,14 +286,11 @@ public sealed class CompressionInfo
     /// 
     /// I.e. this is now eq. with "opj_stream_create_default_file_stream"
     /// </remarks>
-    public CIO OpenCIO(Stream file, bool read)
+    public Cio OpenCio(Stream file, bool read)
     {
-        if (file == null) throw new ArgumentNullException(); ;
+        ArgumentNullException.ThrowIfNull(file);
 
-        if (read)
-            return new CIO(this, file, OpenMode.Read);
-        else
-            return new CIO(this, file, _j2k.ImageLength);
+        return read ? new Cio(this, file, OpenMode.Read) : new Cio(this, file, _j2K.ImageLength);
     }
 
     //2.5
@@ -294,18 +298,18 @@ public sealed class CompressionInfo
     {
         if (image == null) throw new ArgumentNullException();
 
-        if (_is_decompressor)
-            return DFuncs.Decode(image);
+        if (_isDecompressor)
+            return _dFuncs.Decode(image);
 
         return false;
     }
 
-    public bool Decode(JPXImage image, uint tile_no)
+    public bool Decode(JPXImage image, uint tileNo)
     {
         if (image == null) throw new ArgumentNullException();
 
-        if (_is_decompressor)
-            return DFuncs.TileDecode(image, tile_no);
+        if (_isDecompressor)
+            return _dFuncs.TileDecode(image, tileNo);
 
         return false;
     }
@@ -313,10 +317,11 @@ public sealed class CompressionInfo
     //2.5 - opj_end_decompress
     public bool EndDecompress()
     {
-        if (_is_decompressor)
+        if (_isDecompressor)
         {
-            return DFuncs.EndDecompress();
+            return _dFuncs.EndDecompress();
         }
+
         return false;
     }
 
@@ -327,9 +332,9 @@ public sealed class CompressionInfo
     /// <param name="arg0">Parameters to put into the message</param>
     internal void Error(string msg, params object[] arg0)
     {
-        if (_mgr == null || _mgr._error == null) return;
+        if (_mgr == null || _mgr.Error == null) return;
 
-        _mgr._error(string.Format(msg, arg0), ClientData);
+        _mgr.Error(string.Format(msg, arg0), ClientData);
     }
 
     /// <summary>
@@ -337,12 +342,12 @@ public sealed class CompressionInfo
     /// </summary>
     /// <param name="msg">Message</param>
     /// <param name="arg0">Parameters to put into the message</param>
-    internal void ErrorMT(string msg, params object[] arg0)
+    internal void ErrorMt(string msg, params object[] arg0)
     {
-        if (_mgr == null || _mgr._error == null) return;
+        if (_mgr == null || _mgr.Error == null) return;
 
         //Locking on _mgr is not ideal, as this object is publically visible
-        lock (_mgr) _mgr._error(string.Format(msg, arg0), ClientData);
+        lock (_mgr) _mgr.Error(string.Format(msg, arg0), ClientData);
     }
 
     /// <summary>
@@ -352,9 +357,9 @@ public sealed class CompressionInfo
     /// <param name="arg0">Parameters to put into the message</param>
     internal void Info(string msg, params object[] arg0)
     {
-        if (_mgr == null || _mgr._info == null) return;
+        if (_mgr == null || _mgr.Info == null) return;
 
-        _mgr._info(string.Format(msg, arg0), ClientData);
+        _mgr.Info(string.Format(msg, arg0), ClientData);
     }
 
     /// <summary>
@@ -364,9 +369,9 @@ public sealed class CompressionInfo
     /// <param name="arg0">Parameters to put into the message</param>
     internal void Warn(string msg, params object[] arg0)
     {
-        if (_mgr == null || _mgr._warning == null) return;
+        if (_mgr == null || _mgr.Warning == null) return;
 
-        _mgr._warning(string.Format(msg, arg0), ClientData);
+        _mgr.Warning(string.Format(msg, arg0), ClientData);
     }
 
     /// <summary>
@@ -374,12 +379,12 @@ public sealed class CompressionInfo
     /// </summary>
     /// <param name="msg">Message</param>
     /// <param name="arg0">Parameters to put into the message</param>
-    internal void WarnMT(string msg, params object[] arg0)
+    internal void WarnMt(string msg, params object[] arg0)
     {
-        if (_mgr == null || _mgr._warning == null) return;
+        if (_mgr == null || _mgr.Warning == null) return;
 
         //Locking on _mgr is not ideal, as this object is publically visible
-        lock(_mgr) _mgr._warning(string.Format(msg, arg0), ClientData);
+        lock (_mgr) _mgr.Warning(string.Format(msg, arg0), ClientData);
     }
 }
 
@@ -389,11 +394,16 @@ public sealed class CompressionInfo
 /// </summary>
 internal struct Compression
 {
-    internal delegate bool StartCompressFunc(CIO cio);
+    internal delegate bool StartCompressFunc(Cio cio);
+
     internal delegate bool EncodeFunc();
-    internal delegate bool WriteTileFunc(uint tile_index, byte[] data, int data_size, CIO cio);
+
+    internal delegate bool WriteTileFunc(uint tileIndex, byte[] data, int dataSize, Cio cio);
+
     internal delegate bool EndCompressFunc();
+
     internal delegate void DestroyFunc();
+
     internal delegate bool SetupEncoderFunc(CompressionParameters cparameters, JPXImage image);
 
     internal StartCompressFunc StartCompress;
@@ -403,13 +413,19 @@ internal struct Compression
     internal DestroyFunc Destroy;
     internal SetupEncoderFunc SetupEncoder;
 }
+
 internal struct Decompression
 {
-    internal delegate void SetupDecoderFunc(CIO cio, DecompressionParameters param);
+    internal delegate void SetupDecoderFunc(Cio cio, DecompressionParameters param);
+
     internal delegate bool ReadHeaderFunc(out JPXImage image);
-    internal delegate bool SetDecodeAreaFunc(JPXImage image, int start_x, int start_y, int end_x, int end_y);
+
+    internal delegate bool SetDecodeAreaFunc(JPXImage image, int startX, int startY, int endX, int endY);
+
     internal delegate bool DecodeFunc(JPXImage image);
-    internal delegate bool TileDecodeFunc(JPXImage image, uint tile_index);
+
+    internal delegate bool TileDecodeFunc(JPXImage image, uint tileIndex);
+
     internal delegate bool EndDecompressFunc();
 
     internal SetupDecoderFunc SetupDecoder;

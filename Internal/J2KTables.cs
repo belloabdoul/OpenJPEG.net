@@ -42,7 +42,7 @@ internal sealed class DecMstabent
     {
         get 
         {
-            for (int c = 0; c < _marks.Length; c++)
+            for (var c = 0; c < _marks.Length; c++)
             {
                 var a_mark = _marks[c];
                 if (a_mark.Mark == mark)

@@ -117,7 +117,7 @@ public class JPXImage
         get
         {
             uint bpc = 0;
-            for (int c = 0; c < comps.Length; c++)
+            for (var c = 0; c < comps.Length; c++)
                 bpc = Math.Max(bpc, comps[c].prec);
             return (int) bpc;
         }
@@ -130,8 +130,8 @@ public class JPXImage
     {
         get
         {
-            uint bpc = comps[0].prec;
-            for (int c = 1; c < comps.Length; c++)
+            var bpc = comps[0].prec;
+            for (var c = 1; c < comps.Length; c++)
                 if (bpc != comps[c].prec)
                     return false;
             return true;
@@ -147,8 +147,8 @@ public class JPXImage
         {
             var d = comps[0].Data;
             if (d == null) return false;
-            int size = d.Length;
-            for (int c = 1; c < comps.Length; c++)
+            var size = d.Length;
+            for (var c = 1; c < comps.Length; c++)
                 if (size != comps[c].Data.Length)
                     return false;
             return true;
@@ -163,7 +163,7 @@ public class JPXImage
         get
         {
             var numcomps = Math.Min(NumberOfComponents, 4);
-            for (int compno = 1; compno < numcomps; ++compno)
+            for (var compno = 1; compno < numcomps; ++compno)
             {
                 if (comps[0].dx != comps[compno].dx ||
                     comps[0].dy != comps[compno].dy ||
@@ -191,7 +191,7 @@ public class JPXImage
 
                 //Should perhaps check the width and height parameters as well.
                 uint dx = c0.dx, dy = c0.dy;
-                for (int c = 1; c < comps.Length; c++)
+                for (var c = 1; c < comps.Length; c++)
                 {
                     var cn = comps[c];
                     if (cn.dx != dx || cn.dy != dy)
@@ -211,7 +211,7 @@ public class JPXImage
         get
         {
             if (channel_definitions == null) return false;
-            for (int c = 0; c < channel_definitions.Length; c++)
+            for (var c = 0; c < channel_definitions.Length; c++)
             {
                 var typ = channel_definitions[c].typ;
                 if (typ == 1 || typ == 2)
@@ -237,7 +237,7 @@ public class JPXImage
         get
         {
             uint img_size = 0;
-            for (int i = 0; i < comps.Length; i++)
+            for (var i = 0; i < comps.Length; i++)
                 img_size += comps[i].w * comps[i].h * comps[i].prec;
             return (int) img_size;
         }
@@ -257,8 +257,8 @@ public class JPXImage
         { 
             if (channel_definitions == null)
                 return (int)numcomps;
-            int ncomps = 0;
-            for (int c = 0; c < channel_definitions.Length; c++)
+            var ncomps = 0;
+            for (var c = 0; c < channel_definitions.Length; c++)
                 if (channel_definitions[c].typ == 0 && channel_definitions[c].asoc != 0)
                     ncomps++;
             return ncomps;
@@ -276,13 +276,13 @@ public class JPXImage
         {
             if (channel_definitions == null) return null;
             var nalpha = 0;
-            for (int c = 0; c < channel_definitions.Length; c++)
+            for (var c = 0; c < channel_definitions.Length; c++)
                 if (channel_definitions[c].typ != 0)
                     nalpha++;
             if (nalpha == 0) return null;
             var ac = new ImageComp[nalpha];
             nalpha = 0;
-            for (int c = 0; c < channel_definitions.Length; c++)
+            for (var c = 0; c < channel_definitions.Length; c++)
                 if (channel_definitions[c].typ != 0)
                 {
                     //Note that jp2.ApplyCDEF messes this up by moving
@@ -329,7 +329,7 @@ public class JPXImage
         this.y0 = (uint)y0;
         this.y1 = (uint)y1;
         this.comps = comps;
-        this.color_space = cs;
+        color_space = cs;
         numcomps = (uint)comps.Length;
     }
 
@@ -343,7 +343,7 @@ public class JPXImage
     public bool ApplyIndex()
     {
         if (color_info != null)
-            return JP2.ApplyPCLR(this, color_info, null);
+            return Jp2.ApplyPclr(this, color_info, null);
         return true;
     }
 
@@ -368,7 +368,7 @@ public class JPXImage
         numcomps = src.numcomps;
         comps = new ImageComp[numcomps];
 
-        for (int compno = 0; compno < comps.Length; compno++)
+        for (var compno = 0; compno < comps.Length; compno++)
         {
             var comp = (ImageComp) src.comps[compno].Clone();
             comp.data = null;
@@ -391,27 +391,23 @@ public class JPXImage
     /// </remarks>
     internal void CompHeaderUpdate(CodingParameters cp)
     {
-        uint i, l_width, l_height;
-        uint l_x0, l_y0, l_x1, l_y1;
-        uint l_comp_x0, l_comp_y0, l_comp_x1, l_comp_y1;
-
-        l_x0 = Math.Max(cp.tx0, x0);
-        l_y0 = Math.Max(cp.ty0, y0);
-        l_x1 = cp.tx0 + (cp.tw - 1U) *
-            cp.tdx; /* validity of p_cp members used here checked in opj_j2k_read_siz. Can't overflow. */
-        l_y1 = cp.ty0 + (cp.th - 1U) * cp.tdy; /* can't overflow */
+        var l_x0 = Math.Max(cp.tx0, x0);
+        var l_y0 = Math.Max(cp.ty0, y0);
+        var l_x1 = cp.tx0 + (cp.tw - 1U) *
+            cp.tdx /* validity of p_cp members used here checked in opj_j2k_read_siz. Can't overflow. */;
+        var l_y1 = cp.ty0 + (cp.th - 1U) * cp.tdy /* can't overflow */;
         l_x1 = Math.Min(MyMath.uint_adds(l_x1, cp.tdx), x1);
         l_y1 = Math.Min(MyMath.uint_adds(l_y1, cp.tdy), y1);
 
-        for (i = 0; i < comps.Length; i++)
+        for (uint i = 0; i < comps.Length; i++)
         {
             var comp = comps[i];
-            l_comp_x0 = MyMath.uint_ceildiv(l_x0, comp.dx);
-            l_comp_y0 = MyMath.uint_ceildiv(l_y0, comp.dy);
-            l_comp_x1 = MyMath.uint_ceildiv(l_x1, comp.dx);
-            l_comp_y1 = MyMath.uint_ceildiv(l_y1, comp.dy);
-            l_width = MyMath.uint_ceildivpow2(l_comp_x1 - l_comp_x0, (int)comp.factor);
-            l_height = MyMath.uint_ceildivpow2(l_comp_y1 - l_comp_y0, (int)comp.factor);
+            var l_comp_x0 = MyMath.uint_ceildiv(l_x0, comp.dx);
+            var l_comp_y0 = MyMath.uint_ceildiv(l_y0, comp.dy);
+            var l_comp_x1 = MyMath.uint_ceildiv(l_x1, comp.dx);
+            var l_comp_y1 = MyMath.uint_ceildiv(l_y1, comp.dy);
+            var l_width = MyMath.uint_ceildivpow2(l_comp_x1 - l_comp_x0, (int)comp.factor);
+            var l_height = MyMath.uint_ceildivpow2(l_comp_y1 - l_comp_y0, (int)comp.factor);
             comp.w = l_width;
             comp.h = l_height;
             comp.x0 = l_comp_x0;
@@ -431,7 +427,7 @@ public class JPXImage
             
         //Resize channels if needed
         var cc = new int[comps.Length][];
-        for (int c = 0; c < comps.Length; c++)
+        for (var c = 0; c < comps.Length; c++)
         {
             var comp = comps[c];
             cc[c] = Util.Scaler.Rezise(comp.data, (int)comp.w, (int)comp.h, (int)w, (int)h);
@@ -443,9 +439,9 @@ public class JPXImage
 
         for (int i = 0, pos = 0; i < h; i++)
         {
-            for (int j = 0; j < w; j++, pos++)
+            for (var j = 0; j < w; j++, pos++)
             {
-                for (int k = 0; k < cc.Length; k++)
+                for (var k = 0; k < cc.Length; k++)
                 {
                     var comp = comps[k];
                     bio.Write(cc[k][pos], (int)comp.prec); //comp.bpp is usually 0
@@ -467,7 +463,7 @@ public class JPXImage
     public void SetAlphaOnLastChannel(ushort type)
     {
         if (type == 0) return;
-        int index = comps.Length - 1;
+        var index = comps.Length - 1;
         if (channel_definitions == null)
         {
             SetAlpha(index);
@@ -475,7 +471,7 @@ public class JPXImage
         }
         else
         {
-            for (int c = 0; c < channel_definitions.Length; c++)
+            for (var c = 0; c < channel_definitions.Length; c++)
             {
                 if (channel_definitions[c].asoc - 1 == index || channel_definitions[c].asoc == 0)
                 {
@@ -492,7 +488,7 @@ public class JPXImage
         if (channel_definitions == null)
         {
             channel_definitions = new JP2cdefInfo[numcomps];
-            for (int c = 0; c < channel_definitions.Length; c++)
+            for (var c = 0; c < channel_definitions.Length; c++)
             {
                 channel_definitions[c].cn = (ushort)c;
                 channel_definitions[c].asoc = (ushort)(c + 1);
@@ -511,13 +507,13 @@ public class JPXImage
         if (channel_definitions == null)
             return comps;
 
-        int nopague = 0;
-        for (int c = 0; c < channel_definitions.Length; c++)
+        var nopague = 0;
+        for (var c = 0; c < channel_definitions.Length; c++)
             if (channel_definitions[c].typ == 0 && channel_definitions[c].asoc != 0)
                 nopague = Math.Max(channel_definitions[c].asoc, nopague);
         var oc = new ImageComp[nopague];
         nopague = 0;
-        for (int c = 0; c < channel_definitions.Length; c++)
+        for (var c = 0; c < channel_definitions.Length; c++)
             if (channel_definitions[c].typ == 0 && channel_definitions[c].asoc != 0)
                 //Note that "comps[channel_definitions[c].assoc - 1]" is not the 
                 //correct value, that would be comps[channel_definitions[c].cn], but
@@ -535,15 +531,15 @@ public class JPXImage
     {
         if (ColorSpace != COLOR_SPACE.CMYK)
         {
-            string msg = "Colorspace must be CMYK";
+            var msg = "Colorspace must be CMYK";
             if (cinfo == null)
                 throw new NotSupportedException(msg);
             cinfo.Error(msg);
             return false;
         }
 
-        uint w = comps[0].w;
-        uint h = comps[0].h;
+        var w = comps[0].w;
+        var h = comps[0].h;
 
         if (numcomps < 4 ||
             comps[0].dx != comps[1].dx ||
@@ -554,27 +550,27 @@ public class JPXImage
             comps[0].dy != comps[3].dy
            )
         {
-            string msg = "color_cmyk_to_rgb - can't convert";
+            var msg = "color_cmyk_to_rgb - can't convert";
             if (cinfo == null)
                 throw new NotSupportedException(msg);
             cinfo.Error(msg);
             return false;
         }
 
-        uint max = w * h;
+        var max = w * h;
 
-        float sC = 1.0F / ((1 << (int)comps[0].prec) - 1);
-        float sM = 1.0F / ((1 << (int)comps[1].prec) - 1);
-        float sY = 1.0F / ((1 << (int)comps[2].prec) - 1);
-        float sK = 1.0F / ((1 << (int)comps[3].prec) - 1);
+        var sC = 1.0F / ((1 << (int)comps[0].prec) - 1);
+        var sM = 1.0F / ((1 << (int)comps[1].prec) - 1);
+        var sY = 1.0F / ((1 << (int)comps[2].prec) - 1);
+        var sK = 1.0F / ((1 << (int)comps[3].prec) - 1);
 
-        for (int i = 0; i < max; ++i)
+        for (var i = 0; i < max; ++i)
         {
             // CMYK values from 0 to 1
-            float C = comps[0].data[i] * sC;
-            float M = comps[1].data[i] * sM;
-            float Y = comps[2].data[i] * sY;
-            float K = comps[3].data[i] * sK;
+            var C = comps[0].data[i] * sC;
+            var M = comps[1].data[i] * sM;
+            var Y = comps[2].data[i] * sY;
+            var K = comps[3].data[i] * sK;
 
             // Invert all CMYK values
             C = 1.0F - C;
@@ -621,29 +617,29 @@ public class JPXImage
             comps[0].dy != comps[2].dy
            )
         {
-            string msg = "color_esycc_to_rgb - Colorspace must be sYYC";
+            var msg = "color_esycc_to_rgb - Colorspace must be sYYC";
             if (cinfo == null)
                 throw new NotSupportedException(msg);
             cinfo.Error(msg);
             return false;
         }
 
-        int flip_value = 1 << ((int)comps[0].prec - 1);
-        int max_value = (1 << (int)comps[0].prec) - 1;
+        var flip_value = 1 << ((int)comps[0].prec - 1);
+        var max_value = (1 << (int)comps[0].prec) - 1;
 
-        uint w = comps[0].w;
-        uint h = comps[0].h;
+        var w = comps[0].w;
+        var h = comps[0].h;
 
-        bool sign1 = comps[1].sgnd;
-        bool sign2 = comps[2].sgnd;
+        var sign1 = comps[1].sgnd;
+        var sign2 = comps[2].sgnd;
 
-        uint max = w * h;
+        var max = w * h;
 
         for (uint i = 0; i < max; ++i)
         {
-            int y = comps[0].data[i];
-            int cb = comps[1].data[i];
-            int cr = comps[2].data[i];
+            var y = comps[0].data[i];
+            var cb = comps[1].data[i];
+            var cr = comps[2].data[i];
 
             if (!sign1)
                 cb -= flip_value;
@@ -651,7 +647,7 @@ public class JPXImage
                 cr -= flip_value;
 
 #if TEST_MATH_MODE
-            int val = (int)(y - 0.0000368f * cb + 1.40199f * cr + 0.5f);
+            var val = (int)(y - 0.0000368f * cb + 1.40199f * cr + 0.5f);
 #else
                 int val = (int)(y - 0.0000368f * cb + 1.40199f * cr + 0.5f);
 #endif
@@ -697,7 +693,7 @@ public class JPXImage
     {
         if (ColorSpace != COLOR_SPACE.sYCC)
         {
-            string msg = "Colorspace must be sYYC";
+            var msg = "Colorspace must be sYYC";
             if (cinfo == null)
                 throw new NotSupportedException(msg);
             cinfo.Error(msg);
@@ -739,7 +735,7 @@ public class JPXImage
         }
         else
         {
-            string msg = "Can't covert this image to RGB";
+            var msg = "Can't covert this image to RGB";
             if (cinfo == null)
                 throw new NotImplementedException(msg);
             cinfo.Error(msg);
@@ -751,31 +747,28 @@ public class JPXImage
 
     private void sycc444_to_rgb()
     {
-        int[] d0, d1, d2;
-        int r, g, b;
-        int y, cb, cr;
-        long maxw, maxh, max, i;
-        int offset, upb;
+        int g, b;
+        int cb, cr;
 
-        upb = (int)comps[0].prec;
-        offset = 1 << (upb - 1);
+        var upb = (int)comps[0].prec;
+        var offset = 1 << (upb - 1);
         upb = (1 << upb) - 1;
 
-        maxw = comps[0].w;
-        maxh = comps[0].h;
-        max = maxw * maxh;
+        long maxw = comps[0].w;
+        long maxh = comps[0].h;
+        var max = maxw * maxh;
 
-        int[] y_ar = comps[0].data;
-        int[] cb_ar = comps[1].data;
-        int[] cr_ar = comps[2].data;
-        y = cb = cr = 0;
+        var y_ar = comps[0].data;
+        var cb_ar = comps[1].data;
+        var cr_ar = comps[2].data;
+        var y = cb = cr = 0;
 
-        d0 = new int[max];
-        d1 = new int[max];
-        d2 = new int[max];
-        r = g = b = 0;
+        var d0 = new int[max];
+        var d1 = new int[max];
+        var d2 = new int[max];
+        var r = g = b = 0;
 
-        for (i = 0U; i < max; ++i)
+        for (long i = 0U; i < max; ++i)
         {
             sycc_to_rgb(offset, upb, y_ar[y], cb_ar[cb], cr_ar[cr], out d0[r], out d1[g], out d2[b]);
             ++y;
@@ -793,36 +786,32 @@ public class JPXImage
 
     private void sycc422_to_rgb()
     {
-        int[] d0, d1, d2;
-        int r, g, b;
-        int y, cb, cr;
-        long maxw, maxh, max, offx, loopmaxw;
-        int offset, upb;
-        long i;
+        int g, b;
+        int cb, cr;
 
-        upb = (int)comps[0].prec;
-        offset = 1 << (upb - 1);
+        var upb = (int)comps[0].prec;
+        var offset = 1 << (upb - 1);
         upb = (1 << upb) - 1;
 
-        maxw = comps[0].w;
-        maxh = comps[0].h;
-        max = maxw * maxh;
+        long maxw = comps[0].w;
+        long maxh = comps[0].h;
+        var max = maxw * maxh;
 
-        int[] y_ar = comps[0].data;
-        int[] cb_ar = comps[1].data;
-        int[] cr_ar = comps[2].data;
-        y = cb = cr = 0;
+        var y_ar = comps[0].data;
+        var cb_ar = comps[1].data;
+        var cr_ar = comps[2].data;
+        var y = cb = cr = 0;
 
-        d0 = new int[max];
-        d1 = new int[max];
-        d2 = new int[max];
-        r = g = b = 0;
+        var d0 = new int[max];
+        var d1 = new int[max];
+        var d2 = new int[max];
+        var r = g = b = 0;
 
         // if img->x0 is odd, then first column shall use Cb/Cr = 0
-        offx = x0 & 1U;
-        loopmaxw = maxw - offx;
+        long offx = x0 & 1U;
+        var loopmaxw = maxw - offx;
 
-        for (i = 0U; i < maxh; ++i)
+        for (long i = 0U; i < maxh; ++i)
         {
             long j;
 
@@ -875,43 +864,38 @@ public class JPXImage
 
     private void sycc420_to_rgb()
     {
-        int[] d0, d1, d2;
-        int r, g, b, nr, ng, nb;
-        int y, cb, cr, ny;
-        long maxw, maxh, max, offx, loopmaxw, offy, loopmaxh;
-        int offset, upb;
+        int g, b;
+        int cb, cr;
         long i;
 
-        upb = (int)comps[0].prec;
-        offset = 1 << (upb - 1);
+        var upb = (int)comps[0].prec;
+        var offset = 1 << (upb - 1);
         upb = (1 << upb) - 1;
 
-        maxw = comps[0].w;
-        maxh = comps[0].h;
-        max = maxw * maxh;
+        long maxw = comps[0].w;
+        long maxh = comps[0].h;
+        var max = maxw * maxh;
 
-        int[] y_ar = comps[0].data;
-        int[] cb_ar = comps[1].data;
-        int[] cr_ar = comps[2].data;
-        y = cb = cr = 0;
+        var y_ar = comps[0].data;
+        var cb_ar = comps[1].data;
+        var cr_ar = comps[2].data;
+        var y = cb = cr = 0;
 
-        d0 = new int[max];
-        d1 = new int[max];
-        d2 = new int[max];
-        r = g = b = 0;
+        var d0 = new int[max];
+        var d1 = new int[max];
+        var d2 = new int[max];
+        var r = g = b = 0;
 
         // if x0 is odd, then first column shall use Cb/Cr = 0
-        offx = x0 & 1U;
-        loopmaxw = maxw - offx;
+        long offx = x0 & 1U;
+        var loopmaxw = maxw - offx;
         // if y0 is odd, then first line shall use Cb/Cr = 0
-        offy = y0 & 1U;
-        loopmaxh = maxh - offy;
+        long offy = y0 & 1U;
+        var loopmaxh = maxh - offy;
 
         if (offy > 0U)
         {
-            long j;
-
-            for (j = 0; j < maxw; ++j)
+            for (long j = 0; j < maxw; ++j)
             {
                 sycc_to_rgb(offset, upb, y_ar[y], 0, 0, out d0[r], out d1[g], out d2[b]);
                 ++y;
@@ -925,10 +909,10 @@ public class JPXImage
         {
             long j;
 
-            ny = (int)(y + maxw); // pointer to y_ar
-            nr = (int)(r + maxw); // pointer to d0
-            ng = (int)(g + maxw); // pointer to d1
-            nb = (int)(b + maxw); // pointer to d2
+            var ny = (int)(y + maxw); // pointer to y_ar
+            var nr = (int)(r + maxw); // pointer to d0
+            var ng = (int)(g + maxw); // pointer to d1
+            var nb = (int)(b + maxw); // pointer to d2
 
             if (offx > 0U)
             {
@@ -1047,11 +1031,9 @@ public class JPXImage
     private static void sycc_to_rgb(int offset, int upb, int y, int cb, int cr,
         out int out_r, out int out_g, out int out_b)
     {
-        int r, g, b;
-
         cb -= offset;
         cr -= offset;
-        r = y + (int)(1.402 * (float)cr);
+        var r = y + (int)(1.402 * (float)cr);
         if (r < 0)
         {
             r = 0;
@@ -1062,7 +1044,7 @@ public class JPXImage
         }
         out_r = r;
 
-        g = y - (int)(0.344 * (float)cb + 0.714 * (float)cr);
+        var g = y - (int)(0.344 * (float)cb + 0.714 * (float)cr);
         if (g < 0)
         {
             g = 0;
@@ -1073,7 +1055,7 @@ public class JPXImage
         }
         out_g = g;
 
-        b = y + (int)(1.772 * (float)cb);
+        var b = y + (int)(1.772 * (float)cb);
         if (b < 0)
         {
             b = 0;
@@ -1118,17 +1100,11 @@ public class JPXImage
             }
                 break;
         }
-            
-        int width, height, bpp, x, y;
-        bool write_alpha;
-        uint i;
-        int adjustR, adjustG = 0, adjustB = 0;
-        uint alpha_channel;
-        float r, g, b, a;
-        byte val;
-        float scale;
 
-        for (i = 0; i < numcomps - 1; i++)
+        int adjustG = 0, adjustB = 0;
+        float g, b;
+
+        for (uint i = 0; i < numcomps - 1; i++)
         {
             if (comps[0].dx != comps[i + 1].dx
                 || comps[0].dy != comps[i + 1].dy
@@ -1141,38 +1117,38 @@ public class JPXImage
             }
         }
 
-        width = (int)comps[0].w;
-        height = (int)comps[0].h;
+        var width = (int)comps[0].w;
+        var height = (int)comps[0].h;
 
         // Mono with alpha, or RGB with alpha.
-        write_alpha = numcomps == 2 || numcomps == 4;
+        var write_alpha = numcomps == 2 || numcomps == 4;
 
         // Write TGA header
-        bpp = write_alpha ? 32 : 24;
+        var bpp = write_alpha ? 32 : 24;
 
         using (var bw = new BWrite(o))
         {
             if (!TGAWriteHeader(bw, bpp, width, height, true, cinfo))
                 return false;
 
-            alpha_channel = numcomps - 1;
+            var alpha_channel = numcomps - 1;
 
-            scale = 255.0f / ((1 << (int)comps[0].prec) - 1);
+            var scale = 255.0f / ((1 << (int)comps[0].prec) - 1);
 
-            adjustR = comps[0].sgnd ? 1 << ((int)comps[0].prec - 1) : 0;
+            var adjustR = comps[0].sgnd ? 1 << ((int)comps[0].prec - 1) : 0;
             if (numcomps >= 3)
             {
                 adjustG = comps[1].sgnd ? 1 << ((int)comps[1].prec - 1) : 0;
                 adjustB = comps[2].sgnd ? 1 << ((int)comps[2].prec - 1) : 0;
             }
 
-            for (y = 0; y < height; y++)
+            for (var y = 0; y < height; y++)
             {
-                uint index = (uint)(y * width);
+                var index = (uint)(y * width);
 
-                for (x = 0; x < width; x++, index++)
+                for (var x = 0; x < width; x++, index++)
                 {
-                    r = comps[0].data[index] + adjustR;
+                    float r = comps[0].data[index] + adjustR;
 
                     if (numcomps > 2)
                     {
@@ -1195,7 +1171,7 @@ public class JPXImage
                     {
                         b = 0f;
                     }
-                    val = (byte)(b * scale);
+                    var val = (byte)(b * scale);
                     bw.s.Write(val);
 
                     if (g > 255f)
@@ -1222,7 +1198,7 @@ public class JPXImage
 
                     if (write_alpha)
                     {
-                        a = comps[alpha_channel].data[index];
+                        float a = comps[alpha_channel].data[index];
                         if (a > 255f)
                         {
                             a = 255f;
@@ -1243,7 +1219,7 @@ public class JPXImage
 
     private bool TGAWriteHeader(BWrite bw, int bits_per_pixel, int width, int height, bool flip_image, CompressionInfo cinfo)
     {
-        byte pixel_depth, image_desc;
+        byte pixel_depth;
 
         if (bits_per_pixel == 0 || width == 0 || height == 0)
             return false;
@@ -1272,7 +1248,7 @@ public class JPXImage
         bw.WriteShort((short)width);
         bw.WriteShort((short)height);
 
-        image_desc = 8; // 8 bits per component.
+        byte image_desc = 8; // 8 bits per component.
 
         if (flip_image)
             image_desc |= 32;
@@ -1391,9 +1367,6 @@ public class JPXImage
 
             for (i = 0; i < w * h; i++)
             {
-                byte rc, gc, bc;
-                int r, g, b;
-
                 //C# - i == Bitmap images differs at position: X
                 //  This is useful for finding the position in the component. Just hover the mousepointer
                 //  overf the last + sign in w * h - ((i) / (w) + 1) * w + (i) % (w)
@@ -1401,8 +1374,7 @@ public class JPXImage
                 //{
                 //    i = i;
                 //}
-
-                r = comps[0].data[w * h - (i / w + 1) * w + i % w];
+                var r = comps[0].data[w * h - (i / w + 1) * w + i % w];
                 r += comps[0].sgnd ? 1 << ((int)comps[0].prec - 1) : 0;
                 if (adjustR > 0)
                 {
@@ -1416,9 +1388,9 @@ public class JPXImage
                 {
                     r = 0;
                 }
-                rc = (byte)r;
+                var rc = (byte)r;
 
-                g = comps[1].data[w * h - (i / w + 1) * w + i % w];
+                var g = comps[1].data[w * h - (i / w + 1) * w + i % w];
                 g += comps[1].sgnd ? 1 << ((int)comps[1].prec - 1) : 0;
                 if (adjustG > 0)
                 {
@@ -1432,9 +1404,9 @@ public class JPXImage
                 {
                     g = 0;
                 }
-                gc = (byte)g;
+                var gc = (byte)g;
 
-                b = comps[2].data[w * h - (i / w + 1) * w + i % w];
+                var b = comps[2].data[w * h - (i / w + 1) * w + i % w];
                 b += comps[2].sgnd ? 1 << ((int)comps[2].prec - 1) : 0;
                 if (adjustB > 0)
                 {
@@ -1448,7 +1420,7 @@ public class JPXImage
                 {
                     b = 0;
                 }
-                bc = (byte)b;
+                var bc = (byte)b;
 
                 bw.WriteBytes(bc, gc, rc);
 
@@ -1512,18 +1484,15 @@ public class JPXImage
             }
 
             for (i = 0; i < w * h; i++) {
-                byte rc;
-                int r;
-
-                //C# - i == Bitmap images differs at position: X
-                //  This is useful for finding the position in the component. Just hover the mousepointer
-                //  overf the last + sign in w * h - ((i) / (w) + 1) * w + (i) % (w)
-                //if (i == 41187)
-                //{
-                //    i = i;
-                //}
-
-                r = comps[0].data[w * h - (i / w + 1) * w + i % w];
+                var r =
+                    //C# - i == Bitmap images differs at position: X
+                    //  This is useful for finding the position in the component. Just hover the mousepointer
+                    //  overf the last + sign in w * h - ((i) / (w) + 1) * w + (i) % (w)
+                    //if (i == 41187)
+                    //{
+                    //    i = i;
+                    //}
+                    comps[0].data[w * h - (i / w + 1) * w + i % w];
                 r += comps[0].sgnd ? 1 << ((int)comps[0].prec - 1) : 0;
                 if (adjustR > 0)
                     r = (r >> adjustR) + (r >> (adjustR - 1)) % 2;
@@ -1535,7 +1504,7 @@ public class JPXImage
                 {
                     r = 0;
                 }
-                rc = (byte)r;
+                var rc = (byte)r;
 
                 bw.WriteBytes(rc);
 
@@ -1557,14 +1526,14 @@ public class JPXImage
     {
         var max_bpc = (uint) MaxBPC;
         double max_val = (1 << (int)max_bpc) - 1;
-        for (int c=0; c < comps.Length; c++)
+        for (var c=0; c < comps.Length; c++)
         {
             var comp = comps[c];
             if (comp.prec < max_bpc)
             {
                 var ip = new Util.LinearInterpolator(0, (1 << (int)comp.prec) - 1, 0, max_val);
                 var d = comp.data;
-                for(int i=0; i<d.Length; i++)
+                for(var i=0; i<d.Length; i++)
                     d[i] = (int)Math.Round(ip.Interpolate(d[i]));
 
                 comp.bpp = (int)max_bpc;

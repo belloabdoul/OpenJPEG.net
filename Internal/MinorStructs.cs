@@ -167,18 +167,18 @@ internal struct ShortOrIntOrFloatOrDoubleAr
         switch (Type)
         {
             case ELEMENT_TYPE.INT16:
-                for (int c = 0; c < num_to_copy; c++)
+                for (var c = 0; c < num_to_copy; c++)
                     SA[c] = (short)ar[c];
                 break;
             case ELEMENT_TYPE.INT32:
-                for (int c = 0; c < num_to_copy; c++)
+                for (var c = 0; c < num_to_copy; c++)
                     IA[c] = (int)ar[c];
                 break;
             case ELEMENT_TYPE.FLOAT:
                 Array.Copy(ar, FA, num_to_copy);
                 break;
             case ELEMENT_TYPE.DOUBLE:
-                for (int c = 0; c < num_to_copy; c++)
+                for (var c = 0; c < num_to_copy; c++)
                     DA[c] = ar[c];
                 break;
         }
@@ -189,18 +189,18 @@ internal struct ShortOrIntOrFloatOrDoubleAr
         switch (Type)
         {
             case ELEMENT_TYPE.INT16:
-                for (int c = 0; c < num_to_copy; c++)
+                for (var c = 0; c < num_to_copy; c++)
                     ar[c] = SA[c];
                 break;
             case ELEMENT_TYPE.INT32:
-                for (int c = 0; c < num_to_copy; c++)
+                for (var c = 0; c < num_to_copy; c++)
                     ar[c] = IA[c];
                 break;
             case ELEMENT_TYPE.FLOAT:
                 Buffer.BlockCopy(FA, 0, ar, 0, num_to_copy * sizeof(float));
                 break;
             case ELEMENT_TYPE.DOUBLE:
-                for (int c = 0; c < num_to_copy; c++)
+                for (var c = 0; c < num_to_copy; c++)
                     ar[c] = (float)DA[c];
                 break;
         }
@@ -211,18 +211,18 @@ internal struct ShortOrIntOrFloatOrDoubleAr
         switch (Type)
         {
             case ELEMENT_TYPE.INT16:
-                for (int c = 0; c < num_to_copy; c++)
+                for (var c = 0; c < num_to_copy; c++)
                     ar[c] = SA[c];
                 break;
             case ELEMENT_TYPE.INT32:
-                for (int c = 0; c < num_to_copy; c++)
+                for (var c = 0; c < num_to_copy; c++)
                     ar[c] = IA[c];
                 break;
             case ELEMENT_TYPE.FLOAT:
                 Buffer.BlockCopy(FA, 0, ar, 0, num_to_copy * sizeof(float));
                 break;
             case ELEMENT_TYPE.DOUBLE:
-                for (int c = 0; c < num_to_copy; c++)
+                for (var c = 0; c < num_to_copy; c++)
                     ar[c] = (int)DA[c];
                 break;
         }
@@ -233,18 +233,18 @@ internal struct ShortOrIntOrFloatOrDoubleAr
         switch (Type)
         {
             case ELEMENT_TYPE.INT16:
-                for (int c = 0; c < num_to_copy; c++)
+                for (var c = 0; c < num_to_copy; c++)
                     ar[c] = (uint)SA[c];
                 break;
             case ELEMENT_TYPE.INT32:
-                for (int c = 0; c < num_to_copy; c++)
+                for (var c = 0; c < num_to_copy; c++)
                     ar[c] = (uint)IA[c];
                 break;
             case ELEMENT_TYPE.FLOAT:
                 Buffer.BlockCopy(FA, 0, ar, 0, num_to_copy * sizeof(float));
                 break;
             case ELEMENT_TYPE.DOUBLE:
-                for (int c = 0; c < num_to_copy; c++)
+                for (var c = 0; c < num_to_copy; c++)
                     ar[c] = (uint)DA[c];
                 break;
         }

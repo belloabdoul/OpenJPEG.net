@@ -6,8 +6,8 @@ namespace OpenJpeg.Util;
 internal class BitWriter
 {
     internal byte[] _buf = new byte[256];
-    private int _buf_pos = 0;
-    private byte _unfinished_byte = 0;
+    private int _buf_pos;
+    private byte _unfinished_byte;
     private int _u_pos = 8;
     private readonly Stream _target;
 
@@ -18,7 +18,7 @@ internal class BitWriter
 
     public void Write(int value, int nbits)
     {
-        for (int i = nbits - 1; i >= 0; i--)
+        for (var i = nbits - 1; i >= 0; i--)
             WriteBit((value >> i) & 1);
     }
 

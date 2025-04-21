@@ -201,7 +201,7 @@ public class ImageComp : ICloneable
         prec = 1;
         bpp = 1;
 
-        for (int c = 0; c < data.Length; c++)
+        for (var c = 0; c < data.Length; c++)
             data[c] = data[c] > threshold ? 1 : 0;
     }
 
@@ -221,29 +221,29 @@ public class ImageComp : ICloneable
             {
                 long newMax = 1u << new_prec;
                 long oldMax = 1u << (int)prec;
-                for (int c = 0; c < data.Length; c++)
+                for (var c = 0; c < data.Length; c++)
                     data[c] = (int)(data[c] * newMax / oldMax);
             }
             else
             {
                 ulong newMax = 1u << new_prec;
                 ulong oldMax = 1u << (int)prec;
-                for (int c = 0; c < data.Length; c++)
+                for (var c = 0; c < data.Length; c++)
                     data[c] = (int)((ulong)data[c] * newMax / oldMax);
             }
         }
         else
         {
             //Scale down
-            int shift = (int)(prec - new_prec);
+            var shift = (int)(prec - new_prec);
             if (Signed)
             {
-                for (int c = 0; c < data.Length; c++)
+                for (var c = 0; c < data.Length; c++)
                     data[c] >>= shift;
             }
             else
             {
-                for (int c = 0; c < data.Length; c++)
+                for (var c = 0; c < data.Length; c++)
                     data[c] = (int)((uint)data[c] >> shift);
             }
         }

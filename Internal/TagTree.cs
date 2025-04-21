@@ -75,15 +75,16 @@ internal sealed class TagTree
     internal static TagTree Create(uint numleafsh, uint numleafsv, CompressionInfo cinfo)
     {
         uint n;
-        var tt = new TagTree();
+        var tt = new TagTree
+        {
+            _numleafsh = numleafsh,
+            _numleafsv = numleafsv
+        };
 
-        tt._numleafsh = numleafsh;
-        tt._numleafsv = numleafsv;
+        var nplh = new int[32];
+        var nplv = new int[32];
 
-        int[] nplh = new int[32];
-        int[] nplv = new int[32];
-
-        int numlvls = 0;
+        var numlvls = 0;
         nplh[0] = (int)numleafsh;
         nplv[0] = (int)numleafsv;
         tt._numnodes = 0;
@@ -108,23 +109,23 @@ internal sealed class TagTree
         //I've rewritten to make C# happy, but this needs to be tested.
         // (org. code is tgt_create(..) in tft.c)
         tt.nodes = new TagNode[tt._numnodes];
-        for (int c = 0; c < tt.nodes.Length; c++)
+        for (var c = 0; c < tt.nodes.Length; c++)
             tt.nodes[c] = new TagNode();
         TagNode parentnode;
-        int node_pos = 0;
-        int parrent_node_pos = (int)(numleafsh * numleafsv);
-        int parrent0_node_pos = parrent_node_pos;
+        var node_pos = 0;
+        var parrent_node_pos = (int)(numleafsh * numleafsv);
+        var parrent0_node_pos = parrent_node_pos;
         if (parrent_node_pos >= tt.nodes.Length)
             parentnode = null; //<-- Invalid parrent
         else
             parentnode = tt.nodes[parrent_node_pos];
-        TagNode parentnode0 = parentnode;
+        var parentnode0 = parentnode;
 
-        for (int i = 0; i < numlvls - 1; i++)
+        for (var i = 0; i < numlvls - 1; i++)
         {
-            for (int j = 0; j < nplv[i]; j++)
+            for (var j = 0; j < nplv[i]; j++)
             {
-                int k = nplh[i];
+                var k = nplh[i];
                 while (--k >= 0)
                 {
                     tt.nodes[node_pos++].parent = parentnode;
@@ -172,12 +173,12 @@ internal sealed class TagTree
         if (_numleafsh == num_leafs_h && _numleafsv == num_leafs_v)
             return;
 
-        this._numleafsh = num_leafs_h;
-        this._numleafsv = num_leafs_v;
+        _numleafsh = num_leafs_h;
+        _numleafsv = num_leafs_v;
 
-        int[] nplh = new int[32];
-        int[] nplv = new int[32];
-        int _num_levels = 0;
+        var nplh = new int[32];
+        var nplv = new int[32];
+        var _num_levels = 0;
         nplh[0] = (int)_numleafsh;
         nplv[0] = (int)_numleafsv;
         _numnodes = 0;
@@ -199,9 +200,9 @@ internal sealed class TagTree
         }
         if (nodes.Length != _numnodes)
         {
-            int old_size = nodes.Length;
+            var old_size = nodes.Length;
             Array.Resize<TagNode>(ref nodes, (int)_numnodes);
-            for (int c = old_size; c < nodes.Length; c++)
+            for (var c = old_size; c < nodes.Length; c++)
                 nodes[c] = new TagNode();
         }
 
@@ -209,20 +210,20 @@ internal sealed class TagTree
         //I've rewritten to make C# happy, but this needs to be tested.
         // (org. code is tgt_create(..) in tft.c)
         TagNode parentnode;
-        int node_pos = 0;
-        int parrent_node_pos = (int)(_numleafsh * _numleafsv);
-        int parrent0_node_pos = parrent_node_pos;
+        var node_pos = 0;
+        var parrent_node_pos = (int)(_numleafsh * _numleafsv);
+        var parrent0_node_pos = parrent_node_pos;
         if (parrent_node_pos >= nodes.Length)
             parentnode = null; //<-- Invalid parrent pointer is set to null
         else
             parentnode = nodes[parrent_node_pos];
-        TagNode parentnode0 = parentnode;
+        var parentnode0 = parentnode;
 
-        for (int i = 0; i < _num_levels - 1; i++)
+        for (var i = 0; i < _num_levels - 1; i++)
         {
-            for (int j = 0; j < nplv[i]; j++)
+            for (var j = 0; j < nplv[i]; j++)
             {
-                int k = nplh[i];
+                var k = nplh[i];
                 while (--k >= 0)
                 {
                     nodes[node_pos++].parent = parentnode;
@@ -260,7 +261,7 @@ internal sealed class TagTree
     internal static void Reset(TagTree tt)
     {
         if (tt == null) return;
-        for (int i = 0; i < tt._numnodes; i++)
+        for (var i = 0; i < tt._numnodes; i++)
         {
             var current_node = tt.nodes[i];
             current_node.value = 999;
@@ -279,7 +280,7 @@ internal sealed class TagTree
     /// <remarks>2.5 - opj_tgt_setvalue</remarks>
     internal void SetValue(int leafno, int value)
     {
-        TagNode node = nodes[leafno];
+        var node = nodes[leafno];
         while (node != null && node.value > value)
         {
             node.value = value;
@@ -301,12 +302,12 @@ internal sealed class TagTree
         //C# Setting it to -1 so that we can detect
         //   that it hasn't moved. Org. impl does a
         //   pointer comparison instead.
-        int stkptr = -1;
+        var stkptr = -1;
 
         //Builds a list that goes from "great grandparent"
         //in node, to the leaf node on the beginning of the 
         //list
-        TagNode node = nodes[leafno];
+        var node = nodes[leafno];
         while (node.parent != null)
         {
             stk[++stkptr] = node;
@@ -315,7 +316,7 @@ internal sealed class TagTree
 
         //Computes the list. Works from highest parent
         //and down to the leaf node
-        for (int low = 0; ; )
+        for (var low = 0; ; )
         {
             if (low > node.low)
                 node.low = low;
@@ -349,12 +350,12 @@ internal sealed class TagTree
     internal bool Decode(BIO bio, uint leafno, uint threshold)
     {
         var stk = new TagNode[31];
-        int stk_pos = -1;
+        var stk_pos = -1;
 
         //Builds a list that goes from "great grandparent"
         //in node, to the leaf node on the beginning of the 
         //list
-        TagNode node = nodes[leafno];
+        var node = nodes[leafno];
         while (node.parent != null)
         {
             stk[++stk_pos] = node;
@@ -363,7 +364,7 @@ internal sealed class TagTree
 
         //Computes the list. Works from highest parent
         //and down to the leaf node
-        for (int low = 0; ; )
+        for (var low = 0; ; )
         {
             if (low > node.low)
                 node.low = low;

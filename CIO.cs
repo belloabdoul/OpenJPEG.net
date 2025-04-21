@@ -32,7 +32,7 @@ namespace OpenJpeg;
 /// up to 256 bytes, and has to be manually flushed
 /// after use.
 /// </remarks>
-public class CIO // Character In/Out
+public class Cio // Character In/Out
 {
     #region Variables and properties
 
@@ -67,7 +67,7 @@ public class CIO // Character In/Out
     /// Owner reference
     /// </summary>
     /// <remarks>Is only used for a sanity check in one location, so may as well drop this</remarks>
-    internal readonly CompressionInfo _cinfo;
+    internal readonly CompressionInfo Cinfo;
 
     /// <summary>
     /// Get/Set position in the stream
@@ -105,20 +105,20 @@ public class CIO // Character In/Out
 
     #region Init
 
-    internal CIO(CompressionInfo parent, Stream s, OpenMode m) 
+    internal Cio(CompressionInfo parent, Stream s, OpenMode m) 
     { 
         _s = s;
         _m = m;
-        _cinfo = parent;
+        Cinfo = parent;
     }
 
-    internal CIO(CompressionInfo parent, Stream s, int img_size)
+    internal Cio(CompressionInfo parent, Stream s, int imgSize)
     {
         _s = s;
         _m = OpenMode.Write;
-        _cinfo = parent;
+        Cinfo = parent;
         //Size is the estimated size of the image.
-        _size = (long)(img_size * 0.1625 + 2000);
+        _size = (long)(imgSize * 0.1625 + 2000);
     }
 
     #endregion
@@ -214,9 +214,9 @@ public class CIO // Character In/Out
 
     public int Read(byte[] buf, int offset, int count)
     {
-        for (int nToRead = count; nToRead > 0; )
+        for (var nToRead = count; nToRead > 0; )
         {
-            int read = _s.Read(buf, offset, nToRead);
+            var read = _s.Read(buf, offset, nToRead);
             if (read == 0)
                 return count - nToRead;
 
@@ -233,10 +233,8 @@ public class CIO // Character In/Out
     /// <returns>Value</returns>
     public int Read(int n)
     {
-        int i;
-        uint v;
-        v = 0;
-        for (i = n - 1; i >= 0; i--) {
+        uint v = 0;
+        for (var i = n - 1; i >= 0; i--) {
             v +=  (uint) ReadByte() << (i << 3);
         }
         return (int) v;
@@ -249,10 +247,8 @@ public class CIO // Character In/Out
     /// <returns>Value</returns>
     public uint Read(uint n)
     {
-        int i;
-        uint v;
-        v = 0;
-        for (i = (int)(n - 1); i >= 0; i--)
+        uint v = 0;
+        for (var i = (int)(n - 1); i >= 0; i--)
         {
             v += (uint)ReadByte() << (i << 3);
         }
@@ -264,14 +260,14 @@ public class CIO // Character In/Out
     /// </summary>
     public bool ReadBool()
     {
-        int ret = _s.ReadByte();
+        var ret = _s.ReadByte();
         if (ret == -1) throw new EndOfStreamException();
         return ret != 0;
     }
 
     public byte ReadByte()
     {
-        int ret = _s.ReadByte();
+        var ret = _s.ReadByte();
         if (ret == -1) throw new EndOfStreamException();
         return (byte)ret;
     }
@@ -324,7 +320,7 @@ public class CIO // Character In/Out
 /// Used for writing markers that need a "length" in the
 /// header.
 /// </summary>
-internal class BufferCIO
+internal class BufferCio
 {
     private byte[] _buffer;
     private int _pos;
@@ -364,7 +360,7 @@ internal class BufferCIO
     /// </summary>
     public int CommitSize => _pos;
 
-    internal BufferCIO(CIO cio)
+    internal BufferCio(Cio cio)
     {
         _cio = cio.Stream;
     }
@@ -377,7 +373,7 @@ internal class BufferCIO
     public static void WriteUShort(byte[] data, int pos, ushort n)
     {
         data[pos++] = (byte)(n >> 8);
-        data[pos++] = (byte)n;
+        data[pos] = (byte)n;
     }
 
     public void WriteUShort(long n)
@@ -407,7 +403,7 @@ internal class BufferCIO
     public static void Write(byte[] data, int pos, J2K_Marker m)
     {
         data[pos++] = (byte)((ushort)m >> 8);
-        data[pos++] = (byte)m;
+        data[pos] = (byte)m;
     }
 
     public void Write(int m)
@@ -424,7 +420,7 @@ internal class BufferCIO
 
     public void Write(int v, int n)
     {
-        for (int i = n - 1; i >= 0; i--)
+        for (var i = n - 1; i >= 0; i--)
             _buffer[_pos++] = (byte)(v >> (i << 3));
     }
     public void Write(uint v, int n)
@@ -478,7 +474,7 @@ internal class BufferCIO
         //in C#. Buffer.BlockCopy might work for all I know, but I doubt it.
 
         //1. We copy all existing data to a tmp buffer.
-        byte[] tmp = new byte[_pos - (int)count];
+        var tmp = new byte[_pos - (int)count];
         Buffer.BlockCopy(_buffer, (int)pos, tmp, 0, tmp.Length);
 
         //Copies the new data into buffer

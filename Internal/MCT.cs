@@ -16,17 +16,14 @@ internal static class MCT
         uint pNbComps,
         float[] pMatrix)
     {
-        uint i, j, lIndex;
-        float lCurrentValue;
-
-        for (i = 0; i < pNbComps; ++i)
+        for (uint i = 0; i < pNbComps; ++i)
         {
             pNorms[i] = 0;
-            lIndex = i;
+            var lIndex = i;
 
-            for (j = 0; j < pNbComps; ++j)
+            for (uint j = 0; j < pNbComps; ++j)
             {
-                lCurrentValue = pMatrix[lIndex];
+                var lCurrentValue = pMatrix[lIndex];
                 lIndex += pNbComps;
                 pNorms[i] += lCurrentValue * lCurrentValue;
             }
@@ -67,30 +64,30 @@ internal static class MCT
     internal static void EncodeCustom(float[] mct, int n, int[][] data, bool isSigned)
     {
         Debug.Assert(false, "Untested code"); //<-- Org code has multi dimensional pointers.
-        uint NMatCoeff = (uint) (data.Length * data.Length); //C#: data.Length = pNbComp
+        var NMatCoeff = (uint) (data.Length * data.Length); //C#: data.Length = pNbComp
         uint multiplicator = 1 << 13;
 
         //C# Org impl creates two arrays with one malloc (that's why there's data.Length + NMatCoeff)
-        int[] current_data = new int[data.Length];
-        int[] current_matrix = new int[NMatCoeff];
+        var current_data = new int[data.Length];
+        var current_matrix = new int[NMatCoeff];
 
-        for (int i = 0; i < current_matrix.Length; i++)
+        for (var i = 0; i < current_matrix.Length; i++)
             current_matrix[i] = (int)(mct[i] * multiplicator);
 
         //C# d = pointer on data's second dimension
-        int[] d = new int[data.Length];
+        var d = new int[data.Length];
         for (int i = 0, cm_ptr = 0; i < n; i++)
         {
             //Current data is filled up with one int from each component
-            for (int j = 0; j < data.Length; j++)
+            for (var j = 0; j < data.Length; j++)
                 current_data[j] = data[j][d[j]];
 
-            for (int j = 0; j < data.Length; j++)
+            for (var j = 0; j < data.Length; j++)
             {
                 var data_j = data[j];
                 var d_j = d[j];
                 data_j[d_j] = 0;
-                for (int k = 0; k < data.Length; k++)
+                for (var k = 0; k < data.Length; k++)
                 {
                     data_j[d_j] += MyMath.fix_mul(current_matrix[cm_ptr++], current_data[k]);
                 }
@@ -113,19 +110,19 @@ internal static class MCT
     /// </remarks>
     internal static void DecodeCustom(float[] mct, int n, int[][] data, uint n_comps, bool isSigned)
     {
-        IntOrFloat[] current_data = new IntOrFloat[n_comps];
-        IntOrFloat[] current_result = new IntOrFloat[n_comps]; 
+        var current_data = new IntOrFloat[n_comps];
+        var current_result = new IntOrFloat[n_comps]; 
 
         for (int i = 0, d = 0; i < n; i++)
         {
-            int mct_c = 0;
-            for (int j = 0; j < data.Length; j++)
+            var mct_c = 0;
+            for (var j = 0; j < data.Length; j++)
                 current_data[j].I = data[j][d];
 
-            for (int j = 0; j < data.Length; j++)
+            for (var j = 0; j < data.Length; j++)
             {
                 current_result[j].F = 0;
-                for (int k = 0; k < n_comps; k++)
+                for (var k = 0; k < n_comps; k++)
                     current_result[j].F += mct[mct_c++] * current_data[k].F;
 
                 data[j][d++] = current_result[j].I;
@@ -138,7 +135,7 @@ internal static class MCT
     {
         IntOrFloat r = new IntOrFloat(), g = new IntOrFloat(), b = new IntOrFloat();
         IntOrFloat y = new IntOrFloat(), u = new IntOrFloat(), v = new IntOrFloat();
-        for (int i = 0; i < n; ++i)
+        for (var i = 0; i < n; ++i)
         {
             r.I = c0[i];
             g.I = c1[i];
@@ -170,14 +167,14 @@ internal static class MCT
     {
         //C# Snip SSE code
 
-        for (int i = 0; i < n; ++i)
+        for (var i = 0; i < n; ++i)
         {
-            int r = c0[i];
-            int g = c1[i];
-            int b = c2[i];
-            int y = (r + g * 2 + b) >> 2;
-            int u = b - g;
-            int v = r - g;
+            var r = c0[i];
+            var g = c1[i];
+            var b = c2[i];
+            var y = (r + g * 2 + b) >> 2;
+            var u = b - g;
+            var v = r - g;
             c0[i] = y;
             c1[i] = u;
             c2[i] = v;
@@ -198,14 +195,14 @@ internal static class MCT
     /// </remarks>
     internal static void Decode(int[] c0, int[] c1, int[] c2, int n)
     {
-        for (int i = 0; i < n; ++i)
+        for (var i = 0; i < n; ++i)
         {
-            int y = c0[i];
-            int u = c1[i];
-            int v = c2[i];
-            int g = y - ((u + v) >> 2);
-            int r = v + g;
-            int b = u + g;
+            var y = c0[i];
+            var u = c1[i];
+            var v = c2[i];
+            var g = y - ((u + v) >> 2);
+            var r = v + g;
+            var b = u + g;
             c0[i] = r;
             c1[i] = g;
             c2[i] = b;
@@ -224,17 +221,17 @@ internal static class MCT
     /// <param name="n">Number of samples for each component</param>
     internal static void DecodeReal(int[] c0, int[] c1, int[] c2, int n)
     {
-        IntOrFloat y = new IntOrFloat();
-        IntOrFloat u = new IntOrFloat();
-        IntOrFloat v = new IntOrFloat();
-        IntOrFloat r = new IntOrFloat();
-        IntOrFloat g = new IntOrFloat();
-        IntOrFloat b = new IntOrFloat();
+        var y = new IntOrFloat();
+        var u = new IntOrFloat();
+        var v = new IntOrFloat();
+        var r = new IntOrFloat();
+        var g = new IntOrFloat();
+        var b = new IntOrFloat();
 
         //C# Snip SSE2
 
         //C# Liberal application of (float) to reduce math precision to the same as the org. impl
-        for (int i = 0; i < n; ++i)
+        for (var i = 0; i < n; ++i)
         {
             y.I = c0[i];
             u.I = c1[i];
@@ -256,7 +253,7 @@ internal static class MCT
                 //
                 //   Other builds may give different results.
                 g.F = y.F;
-                float tmp = u.F * 0.344130009f;
+                var tmp = u.F * 0.344130009f;
                 g.F -= tmp;
                 tmp = v.F * 0.714139998f;
                 g.F -= tmp;
@@ -347,14 +344,14 @@ internal class SimpleMccDecorrelationData : ICloneable
         if (decorrelation_array != null)
         {
             var ap = new ArPtr<MctData>(new MctData[decorrelation_array.Data.Length], decorrelation_array.Pos);
-            for(int c=0; c < ap.Data.Length; c++)
+            for(var c=0; c < ap.Data.Length; c++)
                 ap.Data[c] = (MctData) decorrelation_array.Data[c].Clone();
             clone.decorrelation_array = ap;
         }
         if (offset_array != null)
         {
             var ap = new ArPtr<MctData>(new MctData[offset_array.Data.Length], offset_array.Pos);
-            for (int c = 0; c < ap.Data.Length; c++)
+            for (var c = 0; c < ap.Data.Length; c++)
                 ap.Data[c] = (MctData) offset_array.Data[c].Clone();
             clone.offset_array = ap;
         }

@@ -77,7 +77,7 @@ internal sealed class Tier1Coding
         {
             var f = new uint[flags.Length];
             //Buffer.BlockCopy(flags, 0, f, 0, f.Length * sizeof(int));
-            for (int c = 0; c < f.Length; c++)
+            for (var c = 0; c < f.Length; c++)
                 f[c] = (uint)flags[c];
             return f;
         }
@@ -199,27 +199,27 @@ internal sealed class Tier1Coding
 
         for (uint compno = 0; compno < tile.numcomps; ++compno)
         {
-            TcdTilecomp tilec = tile.comps[compno];
-            TileCompParams tccp = tcp.tccps[compno];
+            var tilec = tile.comps[compno];
+            var tccp = tcp.tccps[compno];
 
             for (uint resno = 0; resno < tilec.numresolutions; ++resno)
             {
-                TcdResolution res = tilec.resolutions[resno];
+                var res = tilec.resolutions[resno];
 
                 for (uint bandno = 0; bandno < res.numbands; ++bandno)
                 {
-                    TcdBand band = res.bands[bandno];
+                    var band = res.bands[bandno];
 
                     if (band.IsEmpty)
                         continue;
 
                     for (uint precno = 0; precno < res.pw * res.ph; ++precno)
                     {
-                        TcdPrecinct prc = band.precincts[precno];
+                        var prc = band.precincts[precno];
 
                         for (uint cblkno = 0; cblkno < prc.cw * prc.ch; ++cblkno)
                         {
-                            TcdCblkEnc cblk = prc.enc[cblkno];
+                            var cblk = prc.enc[cblkno];
 
                             yield return new T1CBLKEncodeProcessingJob(
                                 compno,
@@ -253,22 +253,21 @@ internal sealed class Tier1Coding
         double[] mct_norms,
         uint mct_numcomps)
     {
-        double cumwmsedec = 0.0;
+        var cumwmsedec = 0.0;
 
-        var mqc = this._mqc;
+        var mqc = _mqc;
             
         uint passno;
-        int nmsedec = 0;
-        T1_TYPE type = T1_TYPE.MQ;
+        var nmsedec = 0;
 
         mqc.lut_ctxno_zc_orient = (int)(orient << 9);
 
-        int max = 0;
+        var max = 0;
         for (uint j = 0, datap = 0; j < _h; j++)
         {
-            for (int i = 0; i < _w; ++i, ++datap)
+            for (var i = 0; i < _w; ++i, ++datap)
             {
-                int tmp = _data[datap];
+                var tmp = _data[datap];
                 if (tmp < 0)
                 {
                     if (tmp == int.MinValue)
@@ -281,7 +280,7 @@ internal sealed class Tier1Coding
                     }
 
                     max = Math.Max(max, -tmp);
-                    uint tmp_unsigned = to_smr(tmp);
+                    var tmp_unsigned = to_smr(tmp);
                     _data[datap] = (int)tmp_unsigned;
                 }
                 else
@@ -289,14 +288,14 @@ internal sealed class Tier1Coding
             }
         }
 
-        cblk.numbps = max != 0 ? (uint)(MyMath.int_floorlog2(max) + 1 - Constants.T1_NMSEDEC_FRACBITS) : 0;
+        cblk.numbps = max != 0 ? (uint)(MyMath.int_floorlog2(max) + 1 - Constants.T1NmsedecFracbits) : 0;
         if (cblk.numbps == 0)
         {
             cblk.totalpasses = 0;
             return cumwmsedec;
         }
 
-        int bpno = (int)(cblk.numbps - 1);
+        var bpno = (int)(cblk.numbps - 1);
         uint passtype = 2;
 
         mqc.ResetStates();
@@ -307,9 +306,9 @@ internal sealed class Tier1Coding
 
         for (passno = 0; bpno >= 0; ++passno)
         {
-            TcdPass pass = cblk.passes[passno];
-            type = bpno < (int)cblk.numbps - 4 && passtype < 2 && 
-                   (cblksty & CCP_CBLKSTY.LAZY) != 0 ? T1_TYPE.RAW : T1_TYPE.MQ;
+            var pass = cblk.passes[passno];
+            var type = bpno < (int)cblk.numbps - 4 && passtype < 2 && 
+                       (cblksty & CCP_CBLKSTY.LAZY) != 0 ? T1_TYPE.RAW : T1_TYPE.MQ;
 
             // If the previous pass was terminating, we need to reset the encoder
             if (passno > 0 && cblk.passes[passno - 1].term != 0)
@@ -337,7 +336,7 @@ internal sealed class Tier1Coding
                     break;
             }
 
-            double tempwmsedec = Getwmsedec(nmsedec, compno, level, orient, bpno, qmfbid, 
+            var tempwmsedec = Getwmsedec(nmsedec, compno, level, orient, bpno, qmfbid, 
                 stepsize, numcomps, mct_norms, mct_numcomps);
             cumwmsedec += tempwmsedec;
             pass.distortiondec = cumwmsedec;
@@ -388,7 +387,7 @@ internal sealed class Tier1Coding
         if (cblk.totalpasses != 0)
         {
             // Make sure that pass rates are increasing
-            uint last_pass_rate = (uint)mqc.NumBytes;
+            var last_pass_rate = (uint)mqc.NumBytes;
             for (passno = cblk.totalpasses; passno > 0;)
             {
                 var pass = cblk.passes[--passno];
@@ -401,7 +400,7 @@ internal sealed class Tier1Coding
 
         for (passno = 0; passno < cblk.totalpasses; passno++)
         {
-            TcdPass pass = cblk.passes[passno];
+            var pass = cblk.passes[passno];
 
             // Prevent generation of FF as last data byte of a pass
             // For terminating passes, the flushing procedure ensured this already
@@ -463,23 +462,23 @@ internal sealed class Tier1Coding
         double[] mct_norms,
         uint mct_numcomps)
     {
-        double w1 = 1, w2, wmsedec;
+        double w1 = 1, w2;
 
         if (mct_norms != null && compno < mct_numcomps)
             w1 = mct_norms[compno];
 
         if (qmfbid == 1)
         {
-            w2 = DWT.Getnorm(level, orient);
+            w2 = Dwt.Getnorm(level, orient);
         }
         else
         {
-            int log2_gain = orient == 0 ? 0 :
+            var log2_gain = orient == 0 ? 0 :
                 orient == 3 ? 2 : 1;
-            w2 = DWT.Getnorm_real(level, orient);
+            w2 = Dwt.Getnorm_real(level, orient);
             stepsize /= 1 << log2_gain;
         }
-        wmsedec = w1 * w2 * stepsize * (1 << bpno);
+        var wmsedec = w1 * w2 * stepsize * (1 << bpno);
         wmsedec *= wmsedec * nmsedec / 8192.0;
 
         return wmsedec;
@@ -491,12 +490,12 @@ internal sealed class Tier1Coding
     /// <remarks>2.5 - opj_t1_enc_refpass</remarks>
     private void EncRefpass(int bpno, ref int nmsedec, T1_TYPE type, CCP_CBLKSTY cblksty)
     {
-        int one = 1 << (bpno + Constants.T1_NMSEDEC_FRACBITS);
-        int f = T1_FLAGS(0, 0); //<-- pointer to this.flags
+        var one = 1 << (bpno + Constants.T1NmsedecFracbits);
+        var f = T1_FLAGS(0, 0); //<-- pointer to this.flags
         const int extra = 2;
         var mqc = _mqc;
         //DOWNLOAD_MQC_VARIABLES <-- Not done by C#
-        int dp = 0; //<-- pointer at this._data
+        var dp = 0; //<-- pointer at this._data
         uint k = 0;
 
         nmsedec = 0;
@@ -504,8 +503,8 @@ internal sealed class Tier1Coding
         {
             for (uint i = 0; i < _w; ++i, f++, dp += 4)
             {
-                T1 flags = this.flags[f];
-                T1 flagsUpdated = flags;
+                var flags = this.flags[f];
+                var flagsUpdated = flags;
 
                 if ((flags & (T1.SIGMA_4 | T1.SIGMA_7 | T1.SIGMA_10 | T1.SIGMA_13)) == 0)
                 {
@@ -524,16 +523,15 @@ internal sealed class Tier1Coding
                 // mqc, curctx, a, c, ct, flags, flagsUpdated, &datap[0], bpno, one, nmsedec, type,  0
                 {
                     const int ci = 0;
-                    bool v;
-                    int datap = dp + ci;
+                    var datap = dp + ci;
                     if ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 
                         (T1)((uint)T1.SIGMA_THIS << (ci * 3)))
                     {
-                        T1 shift_flags = (T1)((uint)flags >> (ci * 3));
+                        var shift_flags = (T1)((uint)flags >> (ci * 3));
                         var ctxt = (T1_CTXNO) T1Luts.Getctxno_mag(shift_flags);
-                        uint abs_data = smr_abs(_data[datap]);
+                        var abs_data = smr_abs(_data[datap]);
                         nmsedec += T1Luts.Getnmsedec_ref(abs_data, bpno);
-                        v = ((int)abs_data & one) != 0;
+                        var v = ((int)abs_data & one) != 0;
                         mqc.Setcurctx(ctxt);
                         if (type == T1_TYPE.RAW)
                             mqc.BypassEnc(v ? 1u : 0u);
@@ -548,16 +546,15 @@ internal sealed class Tier1Coding
                 // mqc, curctx, a, c, ct, flags, flagsUpdated, &datap[1], bpno, one, nmsedec, type,  1
                 {
                     const int ci = 1;
-                    bool v;
-                    int datap = dp + ci;
+                    var datap = dp + ci;
                     if ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) ==
                         (T1)((uint)T1.SIGMA_THIS << (ci * 3)))
                     {
-                        T1 shift_flags = (T1)((uint)flags >> (ci * 3));
+                        var shift_flags = (T1)((uint)flags >> (ci * 3));
                         var ctxt = (T1_CTXNO)T1Luts.Getctxno_mag(shift_flags);
-                        uint abs_data = smr_abs(_data[datap]);
+                        var abs_data = smr_abs(_data[datap]);
                         nmsedec += T1Luts.Getnmsedec_ref(abs_data, bpno);
-                        v = ((int)abs_data & one) != 0;
+                        var v = ((int)abs_data & one) != 0;
                         mqc.Setcurctx(ctxt);
                         if (type == T1_TYPE.RAW)
                             mqc.BypassEnc(v ? 1u : 0u);
@@ -572,16 +569,15 @@ internal sealed class Tier1Coding
                 // mqc, curctx, a, c, ct, flags, flagsUpdated, &datap[2], bpno, one, nmsedec, type,  2
                 {
                     const int ci = 2;
-                    bool v;
-                    int datap = dp + ci;
+                    var datap = dp + ci;
                     if ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) ==
                         (T1)((uint)T1.SIGMA_THIS << (ci * 3)))
                     {
-                        T1 shift_flags = (T1)((uint)flags >> (ci * 3));
+                        var shift_flags = (T1)((uint)flags >> (ci * 3));
                         var ctxt = (T1_CTXNO)T1Luts.Getctxno_mag(shift_flags);
-                        uint abs_data = smr_abs(_data[datap]);
+                        var abs_data = smr_abs(_data[datap]);
                         nmsedec += T1Luts.Getnmsedec_ref(abs_data, bpno);
-                        v = ((int)abs_data & one) != 0;
+                        var v = ((int)abs_data & one) != 0;
                         mqc.Setcurctx(ctxt);
                         if (type == T1_TYPE.RAW)
                             mqc.BypassEnc(v ? 1u : 0u);
@@ -596,16 +592,15 @@ internal sealed class Tier1Coding
                 // mqc, curctx, a, c, ct, flags, flagsUpdated, &datap[3], bpno, one, nmsedec, type,  3
                 {
                     const int ci = 3;
-                    bool v;
-                    int datap = dp + ci;
+                    var datap = dp + ci;
                     if ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) ==
                         (T1)((uint)T1.SIGMA_THIS << (ci * 3)))
                     {
-                        T1 shift_flags = (T1)((uint)flags >> (ci * 3));
+                        var shift_flags = (T1)((uint)flags >> (ci * 3));
                         var ctxt = (T1_CTXNO)T1Luts.Getctxno_mag(shift_flags);
-                        uint abs_data = smr_abs(_data[datap]);
+                        var abs_data = smr_abs(_data[datap]);
                         nmsedec += T1Luts.Getnmsedec_ref(abs_data, bpno);
-                        v = ((int)abs_data & one) != 0;
+                        var v = ((int)abs_data & one) != 0;
                         mqc.Setcurctx(ctxt);
                         if (type == T1_TYPE.RAW)
                             mqc.BypassEnc(v ? 1u : 0u);
@@ -620,7 +615,7 @@ internal sealed class Tier1Coding
 
         if (k < _h)
         {
-            int remaining_lines = (int)(_h - k);
+            var remaining_lines = (int)(_h - k);
 
             for (uint i = 0; i < _w; ++i, ++f)
             {
@@ -630,21 +625,20 @@ internal sealed class Tier1Coding
                     dp += remaining_lines;
                     continue;
                 }
-                for(int j = 0; j < remaining_lines; j++, dp++)
+                for(var j = 0; j < remaining_lines; j++, dp++)
                 {
                     //opj_t1_enc_refpass_step_macro
                     //(mqc, curctx, a, c, ct, flags, flagsUpdated,     datap, bpno, one, nmsedec, type, ci)
                     // mqc, curctx, a, c, ct,    *f,           *f, &datap[0], bpno, one, nmsedec, type,  j
                     {
-                        bool v;
                         if ((flags[f] & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (j * 3))) ==
                             (T1)((uint)T1.SIGMA_THIS << (j * 3)))
                         {
-                            T1 shift_flags = (T1)((uint)flags[f] >> (j * 3));
+                            var shift_flags = (T1)((uint)flags[f] >> (j * 3));
                             var ctxt = (T1_CTXNO)T1Luts.Getctxno_mag(shift_flags);
-                            uint abs_data = smr_abs(_data[dp]);
+                            var abs_data = smr_abs(_data[dp]);
                             nmsedec += T1Luts.Getnmsedec_ref(abs_data, bpno);
-                            v = ((int)abs_data & one) != 0;
+                            var v = ((int)abs_data & one) != 0;
                             mqc.Setcurctx(ctxt);
                             if (type == T1_TYPE.RAW)
                                 mqc.BypassEnc(v ? 1u : 0u);
@@ -667,17 +661,17 @@ internal sealed class Tier1Coding
     private void EncSigpass(int bpno, ref int nmsedec, T1_TYPE type, CCP_CBLKSTY cblksty)
     {
         nmsedec = 0;
-        int one = 1 << (bpno + Constants.T1_NMSEDEC_FRACBITS);
-        int f = T1_FLAGS(0, 0); //Pointer to this.flags
+        var one = 1 << (bpno + Constants.T1NmsedecFracbits);
+        var f = T1_FLAGS(0, 0); //Pointer to this.flags
         const int extra = 2;
         var mqc = _mqc;
         //DOWNLOAD_MQC_VARIABLES //<-- C# we don't inline mqc
-        int datap = 0; //<-- pointer to _data
+        var datap = 0; //<-- pointer to _data
         uint k = 0;
 
         for (; k < (_h & ~3U); k += 4, f += extra)
         {
-            for (int i = 0; i < _w; ++i, ++f, datap += 4)
+            for (var i = 0; i < _w; ++i, ++f, datap += 4)
             {
                 if (flags[f] == 0)
                 {
@@ -689,17 +683,16 @@ internal sealed class Tier1Coding
                 //(mqc, curctx, a, c, ct, flagspIn,   datapIn, bpno, one, nmsedec, type, ciIn,                         vscIn)
                 // mqc, curctx, a, c, ct,        f, &datap[0], bpno, one, nmsedec, type,    0, cblksty & J2K_CCP_CBLKSTY_VSC
                 {
-                    bool v;
                     const int ci = 0;
-                    bool vsc = (cblksty & CCP_CBLKSTY.VSC) != 0;
-                    int l_datap = datap; //<-- pointer to _data
-                    int flagsp = f;
-                    T1 flags = this.flags[flagsp];
+                    var vsc = (cblksty & CCP_CBLKSTY.VSC) != 0;
+                    var l_datap = datap; //<-- pointer to _data
+                    var flagsp = f;
+                    var flags = this.flags[flagsp];
                     if ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0 &&
                         (flags & (T1)((uint)T1.SIGMA_NEIGHBOURS << (ci * 3))) != 0)
                     {
                         var ctxt1 = (T1_CTXNO)mqc.Getctxno_zc((T1)((uint)flags >> (ci * 3)));
-                        v = (smr_abs(_data[l_datap]) & (uint)one) != 0;
+                        var v = (smr_abs(_data[l_datap]) & (uint)one) != 0;
                         mqc.Setcurctx(ctxt1);
                         if (type == T1_TYPE.RAW)
                             mqc.BypassEnc(v ? 1u : 0u);
@@ -708,7 +701,7 @@ internal sealed class Tier1Coding
 
                         if (v)
                         {
-                            T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                            var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                 this.flags[flagsp],
                                 this.flags[flagsp - 1],
                                 this.flags[flagsp + 1],
@@ -722,7 +715,7 @@ internal sealed class Tier1Coding
                                 mqc.BypassEnc(v ? 1u : 0);
                             else
                             {
-                                bool spb = T1Luts.Getspb(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 mqc.Encode(v ^ spb);
                             }
                             UpdateFlags(flagsp, ci, v ? 1u : 0, _w + 2, vsc);
@@ -735,17 +728,16 @@ internal sealed class Tier1Coding
                 //(mqc, curctx, a, c, ct, flagspIn,   datapIn, bpno, one, nmsedec, type, ciIn, vscIn)
                 // mqc, curctx, a, c, ct,        f, &datap[1], bpno, one, nmsedec, type,    1,     0
                 {
-                    bool v;
                     const int ci = 1;
                     const bool vsc = false;
-                    int l_datap = datap + 1; //<-- pointer to _data
-                    int flagsp = f;
-                    T1 flags = this.flags[flagsp];
+                    var l_datap = datap + 1; //<-- pointer to _data
+                    var flagsp = f;
+                    var flags = this.flags[flagsp];
                     if ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0 &&
                         (flags & (T1)((uint)T1.SIGMA_NEIGHBOURS << (ci * 3))) != 0)
                     {
                         var ctxt1 = (T1_CTXNO)mqc.Getctxno_zc((T1)((uint)flags >> (ci * 3)));
-                        v = (smr_abs(_data[l_datap]) & (uint)one) != 0;
+                        var v = (smr_abs(_data[l_datap]) & (uint)one) != 0;
                         mqc.Setcurctx(ctxt1);
                         if (type == T1_TYPE.RAW)
                             mqc.BypassEnc(v ? 1u : 0u);
@@ -754,7 +746,7 @@ internal sealed class Tier1Coding
 
                         if (v)
                         {
-                            T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                            var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                 this.flags[flagsp],
                                 this.flags[flagsp - 1],
                                 this.flags[flagsp + 1],
@@ -768,7 +760,7 @@ internal sealed class Tier1Coding
                                 mqc.BypassEnc(v ? 1u : 0);
                             else
                             {
-                                bool spb = T1Luts.Getspb(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 mqc.Encode(v ^ spb);
                             }
                             UpdateFlags(flagsp, ci, v ? 1u : 0, _w + 2, vsc);
@@ -781,17 +773,16 @@ internal sealed class Tier1Coding
                 //(mqc, curctx, a, c, ct, flagspIn,   datapIn, bpno, one, nmsedec, type, ciIn, vscIn)
                 // mqc, curctx, a, c, ct,        f, &datap[2], bpno, one, nmsedec, type,    2,     0
                 {
-                    bool v;
                     const int ci = 2;
                     const bool vsc = false;
-                    int l_datap = datap + 2; //<-- pointer to _data
-                    int flagsp = f;
-                    T1 flags = this.flags[flagsp];
+                    var l_datap = datap + 2; //<-- pointer to _data
+                    var flagsp = f;
+                    var flags = this.flags[flagsp];
                     if ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0 &&
                         (flags & (T1)((uint)T1.SIGMA_NEIGHBOURS << (ci * 3))) != 0)
                     {
                         var ctxt1 = (T1_CTXNO)mqc.Getctxno_zc((T1)((uint)flags >> (ci * 3)));
-                        v = (smr_abs(_data[l_datap]) & (uint)one) != 0;
+                        var v = (smr_abs(_data[l_datap]) & (uint)one) != 0;
                         mqc.Setcurctx(ctxt1);
                         if (type == T1_TYPE.RAW)
                             mqc.BypassEnc(v ? 1u : 0u);
@@ -800,7 +791,7 @@ internal sealed class Tier1Coding
 
                         if (v)
                         {
-                            T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                            var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                 this.flags[flagsp],
                                 this.flags[flagsp - 1],
                                 this.flags[flagsp + 1],
@@ -814,7 +805,7 @@ internal sealed class Tier1Coding
                                 mqc.BypassEnc(v ? 1u : 0);
                             else
                             {
-                                bool spb = T1Luts.Getspb(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 mqc.Encode(v ^ spb);
                             }
                             UpdateFlags(flagsp, ci, v ? 1u : 0, _w + 2, vsc);
@@ -827,17 +818,16 @@ internal sealed class Tier1Coding
                 //(mqc, curctx, a, c, ct, flagspIn,   datapIn, bpno, one, nmsedec, type, ciIn, vscIn)
                 // mqc, curctx, a, c, ct,        f, &datap[3], bpno, one, nmsedec, type,    3,     0
                 {
-                    bool v;
                     const int ci = 3;
                     const bool vsc = false;
-                    int l_datap = datap + 3; //<-- pointer to _data
-                    int flagsp = f;
-                    T1 flags = this.flags[flagsp];
+                    var l_datap = datap + 3; //<-- pointer to _data
+                    var flagsp = f;
+                    var flags = this.flags[flagsp];
                     if ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0 &&
                         (flags & (T1)((uint)T1.SIGMA_NEIGHBOURS << (ci * 3))) != 0)
                     {
                         var ctxt1 = (T1_CTXNO)mqc.Getctxno_zc((T1)((uint)flags >> (ci * 3)));
-                        v = (smr_abs(_data[l_datap]) & (uint)one) != 0;
+                        var v = (smr_abs(_data[l_datap]) & (uint)one) != 0;
                         mqc.Setcurctx(ctxt1);
                         if (type == T1_TYPE.RAW)
                             mqc.BypassEnc(v ? 1u : 0u);
@@ -846,7 +836,7 @@ internal sealed class Tier1Coding
 
                         if (v)
                         {
-                            T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                            var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                 this.flags[flagsp],
                                 this.flags[flagsp - 1],
                                 this.flags[flagsp + 1],
@@ -860,7 +850,7 @@ internal sealed class Tier1Coding
                                 mqc.BypassEnc(v ? 1u : 0);
                             else
                             {
-                                bool spb = T1Luts.Getspb(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 mqc.Encode(v ^ spb);
                             }
                             UpdateFlags(flagsp, ci, v ? 1u : 0, _w + 2, vsc);
@@ -881,23 +871,22 @@ internal sealed class Tier1Coding
                     datap += (int)(_h - k);
                     continue;
                 }
-                for(uint j = k; j < _h; j++, datap++)
+                for(var j = k; j < _h; j++, datap++)
                 {
                     //opj_t1_enc_sigpass_step_macro
                     //(mqc, curctx, a, c, ct, flagspIn,   datapIn, bpno, one, nmsedec, type, ciIn,                         vscIn)
                     // mqc, curctx, a, c, ct,        f, &datap[0], bpno, one, nmsedec, type, j - k, (J == k && (cblksty & J2K_CCP_CBLKSTY_VSC) != 0
                     {
-                        bool v;
-                        int ci = (int)(j - k);
-                        bool vsc = j == k && (cblksty & CCP_CBLKSTY.VSC) != 0;
-                        int l_datap = datap; //<-- pointer to _data
-                        int flagsp = f;
-                        T1 flags = this.flags[flagsp];
+                        var ci = (int)(j - k);
+                        var vsc = j == k && (cblksty & CCP_CBLKSTY.VSC) != 0;
+                        var l_datap = datap; //<-- pointer to _data
+                        var flagsp = f;
+                        var flags = this.flags[flagsp];
                         if ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0 &&
                             (flags & (T1)((uint)T1.SIGMA_NEIGHBOURS << (ci * 3))) != 0)
                         {
                             var ctxt1 = (T1_CTXNO)mqc.Getctxno_zc((T1)((uint)flags >> (ci * 3)));
-                            v = (smr_abs(_data[l_datap]) & (uint)one) != 0;
+                            var v = (smr_abs(_data[l_datap]) & (uint)one) != 0;
                             mqc.Setcurctx(ctxt1);
                             if (type == T1_TYPE.RAW)
                                 mqc.BypassEnc(v ? 1u : 0u);
@@ -906,7 +895,7 @@ internal sealed class Tier1Coding
 
                             if (v)
                             {
-                                T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                     this.flags[flagsp],
                                     this.flags[flagsp - 1],
                                     this.flags[flagsp + 1],
@@ -920,7 +909,7 @@ internal sealed class Tier1Coding
                                     mqc.BypassEnc(v ? 1u : 0);
                                 else
                                 {
-                                    bool spb = T1Luts.Getspb(lu);
+                                    var spb = T1Luts.Getspb(lu);
                                     mqc.Encode(v ^ spb);
                                 }
                                 UpdateFlags(flagsp, ci, v ? 1u : 0, _w + 2, vsc);
@@ -942,11 +931,11 @@ internal sealed class Tier1Coding
     private void EncClnpass(int bpno, ref int nmsedec, CCP_CBLKSTY cblksty)
     {
         bool v;
-        int one = 1 << (bpno + Constants.T1_NMSEDEC_FRACBITS);
+        var one = 1 << (bpno + Constants.T1NmsedecFracbits);
         var mqc = _mqc;
         //DOWNLOAD_MQC_VARIABLES
-        int datap = 0; //<-- pointer to _data
-        int f = T1_FLAGS(0, 0); //<-- Pointer to this.flags
+        var datap = 0; //<-- pointer to _data
+        var f = T1_FLAGS(0, 0); //<-- Pointer to this.flags
         const int extra = 2;
 
 
@@ -957,7 +946,7 @@ internal sealed class Tier1Coding
             for (uint i = 0; i < _w; ++i, f++)
             {
                 uint runlen;
-                bool agg = flags[f] == 0;
+                var agg = flags[f] == 0;
 
                 if (agg)
                 {
@@ -982,9 +971,9 @@ internal sealed class Tier1Coding
                 // mqc, curctx, a, c, ct,        f,   datap, bpno, one, nmsedec, agg, runlen,  4U, cblksty
                 {
                     const uint lim = 4U;
-                    T1 flagsp = flags[f];
+                    var flagsp = flags[f];
                     const T1 check = T1.SIGMA_4 | T1.SIGMA_7 | T1.SIGMA_10 | T1.SIGMA_13 | T1.PI_0 | T1.PI_1 | T1.PI_2 | T1.PI_3;
-                    int l_datap = datap;
+                    var l_datap = datap;
 
                     if ((flagsp & check) == check)
                     {
@@ -1003,9 +992,9 @@ internal sealed class Tier1Coding
                     }
                     else
                     {
-                        for(int ci = (int)runlen; ci < lim; ci++)
+                        for(var ci = (int)runlen; ci < lim; ci++)
                         {
-                            bool goto_PARTIAL = false;
+                            var goto_PARTIAL = false;
                             if (agg && ci == runlen)
                                 goto_PARTIAL = true;
                             else if ((flagsp & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
@@ -1021,15 +1010,14 @@ internal sealed class Tier1Coding
                             }
                             if (goto_PARTIAL)
                             {
-                                bool vsc;
-                                T1 lu = T1Luts.Getctxtno_sc_or_spb_index(flagsp, flags[f - 1], flags[f + 1], ci);
+                                var lu = T1Luts.Getctxtno_sc_or_spb_index(flagsp, flags[f - 1], flags[f + 1], ci);
                                 nmsedec += T1Luts.Getnmsedec_sig(smr_abs(_data[l_datap]), bpno);
                                 var ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
                                 mqc.Setcurctx(ctxt2);
                                 v = smr_sign(_data[l_datap]);
-                                bool spb = T1Luts.Getspb(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 mqc.Encode(v ^ spb);
-                                vsc = (cblksty & CCP_CBLKSTY.VSC) != 0 && ci == 0;
+                                var vsc = (cblksty & CCP_CBLKSTY.VSC) != 0 && ci == 0;
 
                                 UpdateFlags(f, ci, v ? 1u : 0, _w + 2, vsc);
 
@@ -1062,10 +1050,10 @@ internal sealed class Tier1Coding
                 //(mqc, curctx, a, c, ct, flagspIn, datapIn, bpno, one, nmsedec, agg, runlen, lim,   cblksty)
                 // mqc, curctx, a, c, ct,        f,   datap, bpno, one, nmsedec, agg, runlen, _h - k, cblksty
                 {
-                    uint lim = _h - k;
-                    T1 flagsp = flags[f];
+                    var lim = _h - k;
+                    var flagsp = flags[f];
                     const T1 check = T1.SIGMA_4 | T1.SIGMA_7 | T1.SIGMA_10 | T1.SIGMA_13 | T1.PI_0 | T1.PI_1 | T1.PI_2 | T1.PI_3;
-                    int l_datap = datap;
+                    var l_datap = datap;
 
                     if ((flagsp & check) == check)
                     {
@@ -1078,9 +1066,9 @@ internal sealed class Tier1Coding
                     }
                     else
                     {
-                        for (int ci = (int)runlen; ci < lim; ci++)
+                        for (var ci = (int)runlen; ci < lim; ci++)
                         {
-                            bool goto_PARTIAL = false;
+                            var goto_PARTIAL = false;
                             if (agg && ci == runlen)
                                 goto_PARTIAL = true;
                             else if ((flagsp & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
@@ -1096,15 +1084,14 @@ internal sealed class Tier1Coding
                             }
                             if (goto_PARTIAL)
                             {
-                                bool vsc;
-                                T1 lu = T1Luts.Getctxtno_sc_or_spb_index(flagsp, flags[f - 1], flags[f + 1], ci);
+                                var lu = T1Luts.Getctxtno_sc_or_spb_index(flagsp, flags[f - 1], flags[f + 1], ci);
                                 nmsedec += T1Luts.Getnmsedec_sig(smr_abs(_data[l_datap]), bpno);
                                 var ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
                                 mqc.Setcurctx(ctxt2);
                                 v = smr_sign(_data[l_datap]);
-                                bool spb = T1Luts.Getspb(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 mqc.Encode(v ^ spb);
-                                vsc = (cblksty & CCP_CBLKSTY.VSC) != 0 && ci == 0;
+                                var vsc = (cblksty & CCP_CBLKSTY.VSC) != 0 && ci == 0;
 
                                 UpdateFlags(f, ci, v ? 1u : 0, _w + 2, vsc);
 
@@ -1138,15 +1125,15 @@ internal sealed class Tier1Coding
     {
         for (uint resno = 0; resno < tilec.minimum_num_resolutions; ++resno)
         {
-            TcdResolution res = tilec.resolutions[resno];
+            var res = tilec.resolutions[resno];
 
-            for (int bandno = 0; bandno < res.numbands; ++bandno)
+            for (var bandno = 0; bandno < res.numbands; ++bandno)
             {
-                TcdBand band = res.bands[bandno];
+                var band = res.bands[bandno];
 
-                for (int precno = 0; precno < res.pw * res.ph; ++precno)
+                for (var precno = 0; precno < res.pw * res.ph; ++precno)
                 {
-                    TcdPrecinct precinct = band.precincts[precno];
+                    var precinct = band.precincts[precno];
 
                     if (!tcd.IsSubbandAreaOfInterest(tilec.compno,
                             resno,
@@ -1164,9 +1151,9 @@ internal sealed class Tier1Coding
                         continue;
                     }
 
-                    for (int cblkno = 0; cblkno < precinct.cw * precinct.ch; ++cblkno)
+                    for (var cblkno = 0; cblkno < precinct.cw * precinct.ch; ++cblkno)
                     {
-                        TcdCblkDec cblk = precinct.dec[cblkno];
+                        var cblk = precinct.dec[cblkno];
 
                         if (!tcd.IsSubbandAreaOfInterest(tilec.compno,
                                 resno,
@@ -1185,8 +1172,8 @@ internal sealed class Tier1Coding
                             if (cblk.decoded_data != null)
                                 continue;
 
-                            uint cblk_w = (uint)(cblk.x1 - cblk.x0);
-                            uint cblk_h = (uint)(cblk.y1 - cblk.y0);
+                            var cblk_w = (uint)(cblk.x1 - cblk.x0);
+                            var cblk_h = (uint)(cblk.y1 - cblk.y0);
 
                             if (cblk_w == 0 || cblk_h == 0)
                                 continue;
@@ -1214,19 +1201,19 @@ internal sealed class Tier1Coding
     }
 
 #if DEBUG
-    private static int cblk_count = 0, n_dumps = 0;
+    private static int cblk_count, n_dumps;
     private void DumpData(string txt)
     {
         using (var file = new System.IO.StreamWriter("c:/temp/t1_dump.txt", append: n_dumps++ > 0))
         {
             file.Write(txt+"dumping code block: " + ++cblk_count+"\n");
             file.Write(" -- " + flagssize + " flags\n");
-            for (int c=0; c < flagssize; c++)
+            for (var c=0; c < flagssize; c++)
             {                                        
                 file.Write("{1}: {0}\n", (uint)flags[c], c);
             }
             file.Write(" -- " + datasize + " ints\n");
-            for (int c = 0; c < datasize; c++)
+            for (var c = 0; c < datasize; c++)
             {
                 file.Write("{1}: {0}\n", _data[c], c);
             }
@@ -1244,10 +1231,10 @@ internal sealed class Tier1Coding
         var tilec = job.tilec;
         var tccp = job.tccp;
         var resno = job.resno;
-        uint tile_w = (uint)(tilec.x1 - tilec.x0);
+        var tile_w = (uint)(tilec.x1 - tilec.x0);
 
-        int x = cblk.x0 - band.x0;
-        int y = cblk.y0 - band.y0;
+        var x = cblk.x0 - band.x0;
+        var y = cblk.y0 - band.y0;
 
         if (!job.pret)
             return;
@@ -1259,46 +1246,46 @@ internal sealed class Tier1Coding
 
         if ((band.bandno & 1) != 0)
         {
-            TcdResolution pres = tilec.resolutions[resno - 1];
+            var pres = tilec.resolutions[resno - 1];
             x += pres.x1 - pres.x0;
         }
         if ((band.bandno & 2) != 0)
         {
-            TcdResolution pres = tilec.resolutions[resno - 1];
+            var pres = tilec.resolutions[resno - 1];
             y += pres.y1 - pres.y0;
         }
 
         t1.allocate_buffers(cblk.x1 - cblk.x0, cblk.y1 - cblk.y0);
 
         //These are set by "allocate buffers"
-        uint cblk_w = t1._w;
-        uint cblk_h = t1._h;
+        var cblk_w = t1._w;
+        var cblk_h = t1._h;
 
-        int tiledp = y * (int)tile_w + x; //Tile data pointer
-        int[] tiledp_ar = tilec.data;
+        var tiledp = y * (int)tile_w + x; //Tile data pointer
+        var tiledp_ar = tilec.data;
 
         if (tccp.qmfbid == 1)
         {
             var d1 = t1._data;
-            int t1data = 0;
+            var t1data = 0;
             uint j = 0;
             for (; j < (cblk_h & ~3U); j += 4)
             {
                 for (uint i = 0; i < cblk_w; i++)
                 {
-                    d1[t1data++] = tiledp_ar[tiledp + (j + 0) * tile_w + i] << Constants.T1_NMSEDEC_FRACBITS;
-                    d1[t1data++] = tiledp_ar[tiledp + (j + 1) * tile_w + i] << Constants.T1_NMSEDEC_FRACBITS;
-                    d1[t1data++] = tiledp_ar[tiledp + (j + 2) * tile_w + i] << Constants.T1_NMSEDEC_FRACBITS;
-                    d1[t1data++] = tiledp_ar[tiledp + (j + 3) * tile_w + i] << Constants.T1_NMSEDEC_FRACBITS;
+                    d1[t1data++] = tiledp_ar[tiledp + (j + 0) * tile_w + i] << Constants.T1NmsedecFracbits;
+                    d1[t1data++] = tiledp_ar[tiledp + (j + 1) * tile_w + i] << Constants.T1NmsedecFracbits;
+                    d1[t1data++] = tiledp_ar[tiledp + (j + 2) * tile_w + i] << Constants.T1NmsedecFracbits;
+                    d1[t1data++] = tiledp_ar[tiledp + (j + 3) * tile_w + i] << Constants.T1NmsedecFracbits;
                 }
             }
             if (j < cblk_h)
             {
                 for (uint i = 0; i < cblk_w; i++)
                 {
-                    for(uint k = j; k < cblk_h; k++)
+                    for(var k = j; k < cblk_h; k++)
                     {
-                        d1[t1data++] = tiledp_ar[tiledp + k * tile_w + i] << Constants.T1_NMSEDEC_FRACBITS;
+                        d1[t1data++] = tiledp_ar[tiledp + k * tile_w + i] << Constants.T1NmsedecFracbits;
                     }
                 }
             }
@@ -1306,9 +1293,9 @@ internal sealed class Tier1Coding
         else
         {
             var d1 = t1._data;
-            int t1data = 0;
+            var t1data = 0;
             uint j = 0;
-            IntOrFloat tmp = new IntOrFloat();
+            var tmp = new IntOrFloat();
 
             for (; j < (cblk_h & ~3U); j += 4)
             {
@@ -1317,13 +1304,13 @@ internal sealed class Tier1Coding
 #if TEST_MATH_MODE
                     tmp.I = tiledp_ar[tiledp + (j + 0) * tile_w + i];
                     //lrintf == bankers rounding
-                    d1[t1data++] = (int)(float)Math.Round(tmp.F / band.stepsize * (1 << Constants.T1_NMSEDEC_FRACBITS));
+                    d1[t1data++] = (int)(float)Math.Round(tmp.F / band.stepsize * (1 << Constants.T1NmsedecFracbits));
                     tmp.I = tiledp_ar[tiledp + (j + 1) * tile_w + i];
-                    d1[t1data++] = (int)(float)Math.Round(tmp.F / band.stepsize * (1 << Constants.T1_NMSEDEC_FRACBITS));
+                    d1[t1data++] = (int)(float)Math.Round(tmp.F / band.stepsize * (1 << Constants.T1NmsedecFracbits));
                     tmp.I = tiledp_ar[tiledp + (j + 2) * tile_w + i];
-                    d1[t1data++] = (int)(float)Math.Round(tmp.F / band.stepsize * (1 << Constants.T1_NMSEDEC_FRACBITS));
+                    d1[t1data++] = (int)(float)Math.Round(tmp.F / band.stepsize * (1 << Constants.T1NmsedecFracbits));
                     tmp.I = tiledp_ar[tiledp + (j + 3) * tile_w + i];
-                    d1[t1data++] = (int)(float)Math.Round(tmp.F / band.stepsize * (1 << Constants.T1_NMSEDEC_FRACBITS));
+                    d1[t1data++] = (int)(float)Math.Round(tmp.F / band.stepsize * (1 << Constants.T1NmsedecFracbits));
 #else
                         tmp.I = tiledp_ar[tiledp + (j + 0) * tile_w + i];
                         //lrintf == bankers rounding
@@ -1341,11 +1328,11 @@ internal sealed class Tier1Coding
             {
                 for (uint i = 0; i < cblk_w; i++)
                 {
-                    for (uint k = j; k < cblk_h; k++)
+                    for (var k = j; k < cblk_h; k++)
                     {
 #if TEST_MATH_MODE
                         tmp.I = tiledp_ar[tiledp + k * tile_w + i];
-                        d1[t1data++] = (int)(float)Math.Round(tmp.F / band.stepsize * (1 << Constants.T1_NMSEDEC_FRACBITS));
+                        d1[t1data++] = (int)(float)Math.Round(tmp.F / band.stepsize * (1 << Constants.T1NmsedecFracbits));
 #else
                             tmp.I = tiledp_ar[tiledp + k * tile_w + i];
                             d1[t1data++] = (int)Math.Round((tmp.F / band.stepsize) * (1 << Constants.T1_NMSEDEC_FRACBITS));
@@ -1356,7 +1343,7 @@ internal sealed class Tier1Coding
         }
 
         {
-            double cumwmsedec = t1.EncodeCblk(
+            var cumwmsedec = t1.EncodeCblk(
                 cblk,
                 band.bandno,
                 job.compno,
@@ -1417,13 +1404,14 @@ internal sealed class Tier1Coding
         //generic threadpool. This because you need to remove the
         //stored objects to avoid a memory leak... this needs some
         //thinking
-        var t1 = new Tier1Coding();
-        //Perhaps have a syncronized linked list over threadlocals,
-        //hmm. Can you call threadlocal.remove from antoher thread?
-        //But, I belive there's a low chance I'll see a threadpool
-        //thread again, so this optimalization is probably pointless
-
-        t1.mustuse_cblkdatabuffer = job.mustuse_cblkdatabuffer;
+        var t1 = new Tier1Coding
+        {
+            //Perhaps have a syncronized linked list over threadlocals,
+            //hmm. Can you call threadlocal.remove from antoher thread?
+            //But, I belive there's a low chance I'll see a threadpool
+            //thread again, so this optimalization is probably pointless
+            mustuse_cblkdatabuffer = job.mustuse_cblkdatabuffer
+        };
 
         if ((tccp.cblksty & CCP_CBLKSTY.HT) != 0)
         {
@@ -1458,16 +1446,16 @@ internal sealed class Tier1Coding
         //else
         //    cblk_count++;
 
-        int x = cblk.x0 - band.x0;
-        int y = cblk.y0 - band.y0;
+        var x = cblk.x0 - band.x0;
+        var y = cblk.y0 - band.y0;
         if ((band.bandno & 1) != 0)
         {
-            TcdResolution pres = tilec.resolutions[resno - 1];
+            var pres = tilec.resolutions[resno - 1];
             x += pres.x1 - pres.x0;
         }
         if ((band.bandno & 2) != 0)
         {
-            TcdResolution pres = tilec.resolutions[resno - 1];
+            var pres = tilec.resolutions[resno - 1];
             y += pres.y1 - pres.y0;
         }
 
@@ -1479,9 +1467,9 @@ internal sealed class Tier1Coding
         {
             if (tccp.roishift >= 31)
             {
-                for (int j = 0; j < cblk_h; ++j)
+                for (var j = 0; j < cblk_h; ++j)
                 {
-                    for (int i = 0; i < cblk_w; ++i)
+                    for (var i = 0; i < cblk_w; ++i)
                     {
                         datap[j * cblk_w + i] = 0;
                     }
@@ -1489,13 +1477,13 @@ internal sealed class Tier1Coding
             }
             else
             {
-                uint thresh = 1u << tccp.roishift;
-                for (int j = 0; j < cblk_h; ++j)
+                var thresh = 1u << tccp.roishift;
+                for (var j = 0; j < cblk_h; ++j)
                 {
-                    for (int i = 0; i < cblk_w; ++i)
+                    for (var i = 0; i < cblk_w; ++i)
                     {
-                        int val = datap[j * cblk_w + i];
-                        int mag = Math.Abs(val);
+                        var val = datap[j * cblk_w + i];
+                        var mag = Math.Abs(val);
                         if (mag >= thresh)
                         {
                             mag >>= tccp.roishift;
@@ -1513,21 +1501,21 @@ internal sealed class Tier1Coding
 
         if (cblk.decoded_data != null)
         {
-            uint cblk_size = cblk_w * cblk_h;
+            var cblk_size = cblk_w * cblk_h;
             if (tccp.qmfbid == 1)
             {
-                for (int i = 0; i < cblk_size; ++i)
+                for (var i = 0; i < cblk_size; ++i)
                 {
                     datap[i] /= 2;
                 }
             }
             else
             {
-                float stepsize = 0.5f * band.stepsize;
+                var stepsize = 0.5f * band.stepsize;
                 // SSE2 is possible on .net 5
                 // https://learn.microsoft.com/en-us/dotnet/api/system.runtime.intrinsics.x86.sse2.converttovector128single?view=net-7.0
                 // but for now we're sticking with the old
-                int i = 0;
+                var i = 0;
                 #region SSE2
                 //# ifdef __SSE2__
                 //                    {
@@ -1551,7 +1539,7 @@ internal sealed class Tier1Coding
                 //                }
                 //#endif
                 #endregion
-                IntOrFloat tmp = new IntOrFloat();
+                var tmp = new IntOrFloat();
                 for (; i < cblk_size; ++i)
                 {
                     tmp.F = datap[i] * stepsize;
@@ -1563,17 +1551,17 @@ internal sealed class Tier1Coding
         else if (tccp.qmfbid == 1)
         {
             var tiled = tilec.data;
-            int tiledp = y * (int)tile_w + x;
+            var tiledp = y * (int)tile_w + x;
 
             for (uint j = 0; j < cblk_h; j++)
             {
                 uint i = 0, end = cblk_w & ~3U;
                 for (; i < end; i += 4U)
                 {
-                    int tmp0 = datap[j * cblk_w + i + 0U];
-                    int tmp1 = datap[j * cblk_w + i + 1U];
-                    int tmp2 = datap[j * cblk_w + i + 2U];
-                    int tmp3 = datap[j * cblk_w + i + 3U];
+                    var tmp0 = datap[j * cblk_w + i + 0U];
+                    var tmp1 = datap[j * cblk_w + i + 1U];
+                    var tmp2 = datap[j * cblk_w + i + 2U];
+                    var tmp3 = datap[j * cblk_w + i + 3U];
                     tiled[tiledp + j * tile_w + i + 0U] = tmp0 / 2;
                     tiled[tiledp + j * tile_w + i + 1U] = tmp1 / 2;
                     tiled[tiledp + j * tile_w + i + 2U] = tmp2 / 2;
@@ -1581,21 +1569,21 @@ internal sealed class Tier1Coding
                 }
                 for (; i < cblk_w; ++i)
                 {
-                    int tmp = datap[j * cblk_w + i];
+                    var tmp = datap[j * cblk_w + i];
                     tiled[tiledp + j * tile_w + i] = tmp / 2;
                 }
             }
         }
         else
         {
-            float stepsize = 0.5f * band.stepsize;
+            var stepsize = 0.5f * band.stepsize;
             var tiled = tilec.data;
-            int tiledp = y * (int)tile_w + x;
-            IntOrFloat tmp = new IntOrFloat();
+            var tiledp = y * (int)tile_w + x;
+            var tmp = new IntOrFloat();
             for (uint j = 0, pp = 0; j < cblk_h; j++)
             {
-                int tiledp2 = tiledp;
-                for (int i=0; i < cblk_w; i++)
+                var tiledp2 = tiledp;
+                for (var i=0; i < cblk_w; i++)
                 {
                     tmp.F = datap[pp] * stepsize;
                     tiled[tiledp2] = tmp.I;
@@ -1637,13 +1625,13 @@ internal sealed class Tier1Coding
         uint vlc_val;              // fetched data from VLC bitstream
         byte[] cblkdata;
         int cblkdata_pt;
-        uint[] qinf = new uint[2];
-        bool stripe_causal = (cblksty & CCP_CBLKSTY.VSC) != 0;
+        var qinf = new uint[2];
+        var stripe_causal = (cblksty & CCP_CBLKSTY.VSC) != 0;
         int y;
 
         if (roishift != 0)
         {
-            cinfo.ErrorMT("We do not support decoding HT codeblocks with ROI");
+            cinfo.ErrorMt("We do not support decoding HT codeblocks with ROI");
             return false;
         }
 
@@ -1653,12 +1641,12 @@ internal sealed class Tier1Coding
             return true;
 
         // numbps = Mb + 1 - zero_bplanes, Mb = Kmax, zero_bplanes = missing_msbs
-        uint zero_bplanes = cblk.Mb + 1 - cblk.numbps;
+        var zero_bplanes = cblk.Mb + 1 - cblk.numbps;
 
         //Compute whole codeblock length from chunk lengths
         uint cblk_len = 0;
         {
-            for (int i = 0; i < cblk.numchunks; i++)
+            for (var i = 0; i < cblk.numchunks; i++)
                 cblk_len += (uint)cblk.chunks[i].len;
         }
 
@@ -1679,7 +1667,7 @@ internal sealed class Tier1Coding
             if (cblkdata == null)
                 return false;
             cblk_len = 0;
-            for (int i = 0; i < cblk.numchunks; i++)
+            for (var i = 0; i < cblk.numchunks; i++)
             {
                 Buffer.BlockCopy(cblk.chunk_data, cblk.chunks[i].data_pt, cblkdata, (int)cblk_len, cblk.chunks[i].len);
                 cblk_len += (uint)cblk.chunks[i].len;
@@ -1701,23 +1689,23 @@ internal sealed class Tier1Coding
         }
 
         // Pointer to cblkdata. Is is a pointer to bitstream
-        int coded_data = cblkdata_pt;
+        var coded_data = cblkdata_pt;
         // Pointer to _data. Is a pointer to decoded codeblock data buf.
-        int decoded_data = 0;
+        var decoded_data = 0;
         // num_passes is the number of passes: 1 if CUP only, 2 for
         // CUP+SPP, and 3 for CUP+SPP+MRP
-        uint num_passes = cblk.numsegs > 0 ? cblk.segs[0].real_num_passes : 0;
+        var num_passes = cblk.numsegs > 0 ? cblk.segs[0].real_num_passes : 0;
         num_passes += cblk.numsegs > 1 ? cblk.segs[1].real_num_passes : 0;
         // lengths1 is the length of cleanup pass
-        uint lengths1 = num_passes > 0 ? cblk.segs[0].len : 0;
+        var lengths1 = num_passes > 0 ? cblk.segs[0].len : 0;
         // lengths2 is the length of refinement passes (either SPP only or SPP+MRP)
-        uint lengths2 = num_passes > 1 ? cblk.segs[1].len : 0;
+        var lengths2 = num_passes > 1 ? cblk.segs[1].len : 0;
         // width is the decoded codeblock width
-        int width = cblk.x1 - cblk.x0;
+        var width = cblk.x1 - cblk.x0;
         // height is the decoded codeblock height
-        int height = cblk.y1 - cblk.y0;
+        var height = cblk.y1 - cblk.y0;
         // stride is the decoded codeblock buffer stride
-        int stride = width;
+        var stride = width;
 
         /*  sigma1 and sigma2 contains significant (i.e., non-zero) pixel
          *  locations.  The buffers are used interchangeably, because we need
@@ -1732,20 +1720,20 @@ internal sealed class Tier1Coding
          *  goes outside the structure
          *  To work in OpenJPEG these buffers has been expanded to 132.
          */
-        int pflags = 0; //C# pointer to flags
-        int sigma1 = pflags;
-        int sigma2 = sigma1 + 132;
+        var pflags = 0; //C# pointer to flags
+        var sigma1 = pflags;
+        var sigma2 = sigma1 + 132;
         // mbr arrangement is similar to sigma; mbr contains locations
         // that become significant during significance propagation pass
-        int mbr1 = sigma2 + 132;
-        int mbr2 = mbr1 + 132;
+        var mbr1 = sigma2 + 132;
+        var mbr2 = mbr1 + 132;
         //a pointer to sigma
-        int sip = sigma1;  //pointers to arrays to be used interchangeably
-        int sip_shift = 0; //the amount of shift needed for sigma
+        var sip = sigma1;  //pointers to arrays to be used interchangeably
+        var sip_shift = 0; //the amount of shift needed for sigma
 
         if (num_passes > 1 && lengths2 == 0)
         {
-            cinfo.WarnMT("A malformed codeblock that has " +
+            cinfo.WarnMt("A malformed codeblock that has " +
                          "more than one coding pass, but zero length for " +
                          "2nd and potentially the 3rd pass in an HT codeblock.");
 
@@ -1753,7 +1741,7 @@ internal sealed class Tier1Coding
         }
         else if (num_passes > 3)
         {
-            cinfo.ErrorMT("We do not support more than 3 " +
+            cinfo.ErrorMt("We do not support more than 3 " +
                           "coding passes in an HT codeblock; This codeblocks has " +
                           "{0} passes.", num_passes);
 
@@ -1771,7 +1759,7 @@ internal sealed class Tier1Coding
                bit 0 is for the center of the quantization bin
                Therefore we can only do values of cblk->Mb <= 30
              */
-            cinfo.ErrorMT("32 bits are not enough to " +
+            cinfo.ErrorMt("32 bits are not enough to " +
                           "decode this codeblock, since the number of " +
                           "bitplane, {0}, is larger than 30.", cblk.Mb);
 
@@ -1783,7 +1771,7 @@ internal sealed class Tier1Coding
                in the line "l_cblk->numbps = (OPJ_UINT32)l_band->numbps + 1 - i;"
                where i is the zero bitplanes, and should be no larger than cblk->Mb
                We cannot have more zero bitplanes than there are planes. */
-            cinfo.ErrorMT("Malformed HT codeblock. " +
+            cinfo.ErrorMt("Malformed HT codeblock. " +
                           "Decoding this codeblock is stopped. There are " +
                           "{0} zero bitplanes in {1} bitplanes.", zero_bplanes, cblk.Mb);
 
@@ -1800,7 +1788,7 @@ internal sealed class Tier1Coding
                 if (ht_dec.only_cleanup_pass_is_decoded == false)
                 {
                     ht_dec.only_cleanup_pass_is_decoded = true;
-                    cinfo.WarnMT("Malformed HT codeblock. " +
+                    cinfo.WarnMt("Malformed HT codeblock. " +
                                  "When the number of zero planes bitplanes is " +
                                  "equal to the number of bitplanes, only the cleanup " +
                                  "pass makes sense, but we have {0} passes in this " +
@@ -1812,26 +1800,26 @@ internal sealed class Tier1Coding
             num_passes = 1;
         }
 
-        uint p = cblk.numbps;
+        var p = cblk.numbps;
 
         // zero planes plus 1
-        uint zero_bplanes_p1 = zero_bplanes + 1;
+        var zero_bplanes_p1 = zero_bplanes + 1;
 
         if (lengths1 < 2 || lengths1 > cblk_len ||
             lengths1 + lengths2 > cblk_len)
         {
-            cinfo.ErrorMT("Malformed HT codeblock. " +
+            cinfo.ErrorMt("Malformed HT codeblock. " +
                           "Invalid codeblock length values.");
             return false;
         }
         // read scup and fix the bytes there
-        int lcup = (int)lengths1;  // length of CUP
+        var lcup = (int)lengths1;  // length of CUP
         //scup is the length of MEL + VLC
-        int scup = (cblkdata[coded_data + lcup - 1] << 4) + (cblkdata[coded_data + lcup - 2] & 0xF);
+        var scup = (cblkdata[coded_data + lcup - 1] << 4) + (cblkdata[coded_data + lcup - 2] & 0xF);
         if (scup < 2 || scup > lcup || scup > 4079)
         { //something is wrong
             // The standard stipulates 2 <= Scup <= min(Lcup, 4079)
-            cinfo.ErrorMT("Malformed HT codeblock. " +
+            cinfo.ErrorMt("Malformed HT codeblock. " +
                           "One of the following condition is not met: " +
                           "2 <= Scup <= min(Lcup, 4079)");
             return false;
@@ -1840,11 +1828,10 @@ internal sealed class Tier1Coding
         // init structures
         ht_dec.frwd_struct sigprop = null; //C# if converting to a struct, simply drop this null
         ht_dec.rev_struct magref = null; //C# if converting to a struct, simply drop this null
-        bool fail;
-        var mel = new ht_dec.dec_mel(cblkdata, coded_data, lcup, scup, out fail);
+        var mel = new ht_dec.dec_mel(cblkdata, coded_data, lcup, scup, out var fail);
         if (fail) 
         {
-            cinfo.ErrorMT("Malformed HT codeblock. " +
+            cinfo.ErrorMt("Malformed HT codeblock. " +
                           "Incorrect MEL segment sequence.\n");
             return false;
         }
@@ -1867,28 +1854,25 @@ internal sealed class Tier1Coding
 
         // 514 is enough for a block width of 1024, +2 extra
         // here expanded to 528
-        int line_state = (mbr2 + 132) * 4; // C# byte pointer to uint flags, that's wy we mul with 4
+        var line_state = (mbr2 + 132) * 4; // C# byte pointer to uint flags, that's wy we mul with 4
 
         //initial 2 lines
         /////////////////
-        int lsp = line_state;   // uint pointer to "uint" flags
+        var lsp = line_state;   // uint pointer to "uint" flags
         set_byte_flag(lsp, 0);  // for initial row of quad, we set to 0
-        int run = mel.get_run();// decode runs of events from MEL bitstrm
+        var run = mel.get_run();// decode runs of events from MEL bitstrm
         // data represented as runs of 0 events
         // See mel_decode description
         qinf[0] = qinf[1] = 0;  // quad info decoded from VLC bitstream
         uint c_q = 0;           // context for quad q
-        int sp = decoded_data;  // uint pointer to the int _data array
+        var sp = decoded_data;  // uint pointer to the int _data array
         // vlc_val;             // fetched data from VLC bitstream
 
-        for (int x = 0; x < width; x += 4)
+        for (var x = 0; x < width; x += 4)
         { // one iteration per quad pair
-            uint[] U_q = new uint[2]; // u values for the quad pair
-            uint uvlc_mode;
-            uint consumed_bits;
+            var U_q = new uint[2]; // u values for the quad pair
             uint m_n, v_n;
             uint ms_val;
-            uint locs;
 
             // decode VLC
             /////////////
@@ -1988,12 +1972,10 @@ internal sealed class Tier1Coding
 
             sip += (x & 0x7) != 0 ? 1 : 0; // move sigma pointer to next entry
             sip_shift ^= 0x10;        // increment/decrement sip_shift by 16
-
             // retrieve u
             /////////////
-
             // uvlc_mode is made up of u_offset bits from the quad pair
-            uvlc_mode = ((qinf[0] & 0x8) >> 3) | ((qinf[1] & 0x8) >> 2);
+            var uvlc_mode = ((qinf[0] & 0x8) >> 3) | ((qinf[1] & 0x8) >> 2);
             if (uvlc_mode == 3)
             { // if both u_offset are set, get an event from
                 // the MEL run of events
@@ -2004,12 +1986,13 @@ internal sealed class Tier1Coding
                     run = mel.get_run();
                 }
             }
+
             //decode uvlc_mode to get u for both quads
-            consumed_bits = ht_dec.decode_init_uvlc(vlc_val, uvlc_mode, U_q);
+            var consumed_bits = ht_dec.decode_init_uvlc(vlc_val, uvlc_mode, U_q);
             if (U_q[0] > zero_bplanes_p1 || U_q[1] > zero_bplanes_p1)
             {
 
-                cinfo.ErrorMT("Malformed HT codeblock. Decoding "+
+                cinfo.ErrorMt("Malformed HT codeblock. Decoding "+
                               "this codeblock is stopped. U_q is larger than zero "+
                               "bitplanes + 1");
                 return false;
@@ -2017,12 +2000,10 @@ internal sealed class Tier1Coding
 
             //consume u bits in the VLC code
             vlc_val = vlc.advance((int)consumed_bits);
-
             //decode magsgn and update line_state
             /////////////////////////////////////
-
             //We obtain a mask for the samples locations that needs evaluation
-            locs = 0xFF;
+            uint locs = 0xFF;
             if (x + 4 > width)
             {
                 locs >>= (x + 4 - width) << 1;    // limits width
@@ -2032,7 +2013,7 @@ internal sealed class Tier1Coding
             if (((((qinf[0] & 0xF0) >> 4) | (qinf[1] & 0xF0)) & ~locs) != 0)
             {
 
-                cinfo.ErrorMT("Malformed HT codeblock. "+
+                cinfo.ErrorMt("Malformed HT codeblock. "+
                               "VLC code produces significant samples outside "+
                               "the codeblock area.");
 
@@ -2042,13 +2023,12 @@ internal sealed class Tier1Coding
             //first quad, starting at first sample in quad and moving on
             if ((qinf[0] & 0x10) != 0)
             { //is it significant? (sigma_n)
-                uint val;
 
                 ms_val = magsgn.fetch();                    //get 32 bits of magsgn data
                 m_n = U_q[0] - ((qinf[0] >> 12) & 1);       //evaluate m_n (number of bits
                 // to read from bitstream), using EMB e_k
                 magsgn.advance((int) m_n);                  //consume m_n
-                val = ms_val << 31;                         //get sign bit
+                var val = ms_val << 31; //get sign bit
                 v_n = ms_val & ((1U << (int)m_n) - 1);      //keep only m_n bits
                 v_n |= ((qinf[0] & 0x100) >> 8) << (int)m_n;//add EMB e_1 as MSB
                 v_n |= 1;                                   //add center of bin
@@ -2063,12 +2043,11 @@ internal sealed class Tier1Coding
 
             if ((qinf[0] & 0x20) != 0)
             { //sigma_n
-                uint val, t;
 
                 ms_val = magsgn.fetch();                     //get 32 bits
                 m_n = U_q[0] - ((qinf[0] >> 13) & 1);        //m_n, uses EMB e_k
                 magsgn.advance((int)m_n);                    //consume m_n
-                val = ms_val << 31;                          //get sign bit
+                var val = ms_val << 31; //get sign bit
                 v_n = ms_val & ((1U << (int)m_n) - 1);       //keep only m_n bits
                 v_n |= ((qinf[0] & 0x200) >> 9) << (int)m_n; //add EMB e_1
                 v_n |= 1;                                    //bin center
@@ -2077,7 +2056,7 @@ internal sealed class Tier1Coding
                 _data[sp + stride] = (int)(val | ((v_n + 2) << (int) (p - 1)));
 
                 //update line_state: bit 7 (\sigma^N), and E^N
-                t = (uint)get_byte_flag(lsp) & 0x7F;       // keep E^NW
+                var t = (uint)get_byte_flag(lsp) & 0x7F; // keep E^NW
                 v_n = 32 - ht_dec.count_leading_zeros(v_n);
                 set_byte_flag(lsp, (byte)(0x80 | (t > v_n ? t : v_n))); //max(E^NW, E^N) | s
             }
@@ -2092,12 +2071,10 @@ internal sealed class Tier1Coding
             //this is similar to the above two samples
             if ((qinf[0] & 0x40) != 0)
             {
-                uint val;
-
                 ms_val = magsgn.fetch();
                 m_n = U_q[0] - ((qinf[0] >> 14) & 1);
                 magsgn.advance((int)m_n);
-                val = ms_val << 31;
+                var val = ms_val << 31;
                 v_n = ms_val & ((1U << (int)m_n) - 1);
                 v_n |= ((qinf[0] & 0x400) >> 10) << (int)m_n;
                 v_n |= 1;
@@ -2111,11 +2088,10 @@ internal sealed class Tier1Coding
             set_byte_flag(lsp, 0);
             if ((qinf[0] & 0x80) != 0)
             {
-                uint val;
                 ms_val = magsgn.fetch();
                 m_n = U_q[0] - ((qinf[0] >> 15) & 1); //m_n
                 magsgn.advance((int)m_n);
-                val = ms_val << 31;
+                var val = ms_val << 31;
                 v_n = ms_val & ((1U << (int)m_n) - 1);
                 v_n |= ((qinf[0] & 0x800) >> 11) << (int)m_n;
                 v_n |= 1; //center of bin
@@ -2134,12 +2110,10 @@ internal sealed class Tier1Coding
             //second quad
             if ((qinf[1] & 0x10) != 0)
             {
-                uint val;
-
                 ms_val = magsgn.fetch();
                 m_n = U_q[1] - ((qinf[1] >> 12) & 1); //m_n
                 magsgn.advance((int)m_n);
-                val = ms_val << 31;
+                var val = ms_val << 31;
                 v_n = ms_val & ((1U << (int)m_n) - 1);
                 v_n |= ((qinf[1] & 0x100) >> 8) << (int)m_n;
                 v_n |= 1;
@@ -2152,19 +2126,17 @@ internal sealed class Tier1Coding
 
             if ((qinf[1] & 0x20) != 0)
             {
-                uint val, t;
-
                 ms_val = magsgn.fetch();
                 m_n = U_q[1] - ((qinf[1] >> 13) & 1); //m_n
                 magsgn.advance((int)m_n);
-                val = ms_val << 31;
+                var val = ms_val << 31;
                 v_n = ms_val & ((1U << (int)m_n) - 1);
                 v_n |= ((qinf[1] & 0x200) >> 9) << (int)m_n;
                 v_n |= 1;
                 _data[sp + stride] = (int)(val | ((v_n + 2) << (int)(p - 1)));
 
                 //update line_state: bit 7 (\sigma^N), and E^N
-                t = (uint)get_byte_flag(lsp) & 0x7F;            //E^NW
+                var t = (uint)get_byte_flag(lsp) & 0x7F; //E^NW
                 v_n = 32 - ht_dec.count_leading_zeros(v_n);     //E^N
                 set_byte_flag(lsp, (byte)(0x80 | (t > v_n ? t : v_n))); //max(E^NW, E^N) | s
             }
@@ -2178,12 +2150,10 @@ internal sealed class Tier1Coding
 
             if ((qinf[1] & 0x40) != 0)
             {
-                uint val;
-
                 ms_val = magsgn.fetch();
                 m_n = U_q[1] - ((qinf[1] >> 14) & 1); //m_n
                 magsgn.advance((int)m_n);
-                val = ms_val << 31;
+                var val = ms_val << 31;
                 v_n = ms_val & ((1U << (int)m_n) - 1);
                 v_n |= ((qinf[1] & 0x400) >> 10) << (int)m_n;
                 v_n |= 1;
@@ -2197,12 +2167,10 @@ internal sealed class Tier1Coding
             set_byte_flag(lsp, 0);
             if ((qinf[1] & 0x80) != 0)
             {
-                uint val;
-
                 ms_val = magsgn.fetch();
                 m_n = U_q[1] - ((qinf[1] >> 15) & 1); //m_n
                 magsgn.advance((int)m_n);
-                val = ms_val << 31;
+                var val = ms_val << 31;
                 v_n = ms_val & ((1U << (int)m_n) - 1);
                 v_n |= ((qinf[1] & 0x800) >> 11) << (int)m_n;
                 v_n |= 1; //center of bin
@@ -2223,24 +2191,20 @@ internal sealed class Tier1Coding
         //////////////////////////
         for (y = 2; y < height; /*done at the end of loop*/)
         {
-            byte ls0;
-
             sip_shift ^= 0x2;  // shift sigma to the upper half od the nibble
             sip_shift &= unchecked((int)0xFFFFFFEF); //move back to 0 (it might have been at 0x10)
             sip = (y & 0x4) != 0 ? sigma2 : sigma1; //choose sigma array
 
             lsp = line_state;
-            ls0 = (byte)get_byte_flag(lsp);        // read the line state value
+            var ls0 = (byte)get_byte_flag(lsp); // read the line state value
             set_byte_flag(lsp, 0);                 // and set it to zero
             sp = decoded_data + y * stride; // generated samples
             c_q = 0;                        // context
-            for (int x = 0; x < width; x += 4)
+            for (var x = 0; x < width; x += 4)
             {
-                uint[] U_q = new uint[2];
-                uint uvlc_mode, consumed_bits;
+                var U_q = new uint[2];
                 uint m_n, v_n;
                 uint ms_val;
-                uint locs;
 
                 // decode vlc
                 /////////////
@@ -2311,14 +2275,14 @@ internal sealed class Tier1Coding
 
                 //retrieve u
                 ////////////
-                uvlc_mode = ((qinf[0] & 0x8) >> 3) | ((qinf[1] & 0x8) >> 2);
-                consumed_bits = ht_dec.decode_noninit_uvlc(vlc_val, uvlc_mode, U_q);
+                var uvlc_mode = ((qinf[0] & 0x8) >> 3) | ((qinf[1] & 0x8) >> 2);
+                var consumed_bits = ht_dec.decode_noninit_uvlc(vlc_val, uvlc_mode, U_q);
                 vlc_val = vlc.advance((int)consumed_bits);
 
                 //calculate E^max and add it to U_q, eqns 5 and 6 in ITU T.814
                 if ((qinf[0] & 0xF0 & ((qinf[0] & 0xF0) - 1)) != 0)
                 { // is \gamma_q 1?
-                    uint E = ls0 & 0x7Fu;
+                    var E = ls0 & 0x7Fu;
                     E = E > ((uint)get_byte_flag(lsp + 1) & 0x7Fu) ? E : (uint)get_byte_flag(lsp + 1) & 0x7Fu; //max(E, E^NE, E^NF)
                     //since U_q already has u_q + 1, we subtract 2 instead of 1
                     U_q[0] += E > 2 ? E - 2 : 0;
@@ -2326,7 +2290,7 @@ internal sealed class Tier1Coding
 
                 if ((qinf[1] & 0xF0 & ((qinf[1] & 0xF0) - 1)) != 0)
                 { //is \gamma_q 1?
-                    uint E = (uint)get_byte_flag(lsp + 1) & 0x7Fu;
+                    var E = (uint)get_byte_flag(lsp + 1) & 0x7Fu;
                     E = E > ((uint)get_byte_flag(lsp + 2) & 0x7Fu) ? E : (uint)get_byte_flag(lsp + 2) & 0x7Fu; //max(E, E^NE, E^NF)
                     //since U_q already has u_q + 1, we subtract 2 instead of 1
                     U_q[1] += E > 2 ? E - 2 : 0;
@@ -2334,7 +2298,7 @@ internal sealed class Tier1Coding
 
                 if (U_q[0] > zero_bplanes_p1 || U_q[1] > zero_bplanes_p1)
                 {
-                    cinfo.ErrorMT("Malformed HT codeblock. "+
+                    cinfo.ErrorMt("Malformed HT codeblock. "+
                                   "Decoding this codeblock is stopped. U_q is"+        
                                   "larger than bitplanes + 1");
 
@@ -2344,12 +2308,10 @@ internal sealed class Tier1Coding
                 ls0 = (byte)get_byte_flag(lsp + 2); //for next double quad
                 set_byte_flag(lsp + 1, 0);
                 set_byte_flag(lsp + 2, 0);
-
                 //decode magsgn and update line_state
                 /////////////////////////////////////
-
                 //locations where samples need update
-                locs = 0xFF;
+                uint locs = 0xFF;
                 if (x + 4 > width)
                 {
                     locs >>= (x + 4 - width) << 1;
@@ -2358,7 +2320,7 @@ internal sealed class Tier1Coding
 
                 if (((((qinf[0] & 0xF0) >> 4) | (qinf[1] & 0xF0)) & ~locs) != 0)
                 {
-                    cinfo.ErrorMT("Malformed HT codeblock. "+
+                    cinfo.ErrorMt("Malformed HT codeblock. "+
                                   "VLC code produces significant samples outside "+
                                   "the codeblock area.");
 
@@ -2367,12 +2329,11 @@ internal sealed class Tier1Coding
 
                 if ((qinf[0] & 0x10) != 0)
                 { //sigma_n
-                    uint val;
 
                     ms_val = magsgn.fetch();
                     m_n = U_q[0] - ((qinf[0] >> 12) & 1); //m_n
                     magsgn.advance((int)m_n);
-                    val = ms_val << 31;
+                    var val = ms_val << 31;
                     v_n = ms_val & ((1U << (int)m_n) - 1);
                     v_n |= ((qinf[0] & 0x100) >> 8) << (int)m_n;
                     v_n |= 1; //center of bin
@@ -2385,19 +2346,18 @@ internal sealed class Tier1Coding
 
                 if ((qinf[0] & 0x20) != 0)
                 { //sigma_n
-                    uint val, t;
 
                     ms_val = magsgn.fetch();
                     m_n = U_q[0] - ((qinf[0] >> 13) & 1); //m_n
                     magsgn.advance((int)m_n);
-                    val = ms_val << 31;
+                    var val = ms_val << 31;
                     v_n = ms_val & ((1U << (int)m_n) - 1);
                     v_n |= ((qinf[0] & 0x200) >> 9) << (int)m_n;
                     v_n |= 1; //center of bin
                     _data[sp + stride] = (int)(val | ((v_n + 2) << (int)(p - 1)));
 
                     //update line_state: bit 7 (\sigma^N), and E^N
-                    t = (uint)get_byte_flag(lsp) & 0x7F;          //E^NW
+                    var t = (uint)get_byte_flag(lsp) & 0x7F; //E^NW
                     v_n = 32 - ht_dec.count_leading_zeros(v_n);
                     set_byte_flag(lsp, (byte)(0x80 | (t > v_n ? t : v_n)));
                 }
@@ -2411,12 +2371,11 @@ internal sealed class Tier1Coding
 
                 if ((qinf[0] & 0x40) != 0)
                 { //sigma_n
-                    uint val;
 
                     ms_val = magsgn.fetch();
                     m_n = U_q[0] - ((qinf[0] >> 14) & 1); //m_n
                     magsgn.advance((int)m_n);
-                    val = ms_val << 31;
+                    var val = ms_val << 31;
                     v_n = ms_val & ((1U << (int)m_n) - 1);
                     v_n |= ((qinf[0] & 0x400) >> 10) << (int)m_n;
                     v_n |= 1;                            //center of bin
@@ -2429,12 +2388,11 @@ internal sealed class Tier1Coding
 
                 if ((qinf[0] & 0x80) != 0)
                 { //sigma_n
-                    uint val;
 
                     ms_val = magsgn.fetch();
                     m_n = U_q[0] - ((qinf[0] >> 15) & 1); //m_n
                     magsgn.advance((int)m_n);
-                    val = ms_val << 31;
+                    var val = ms_val << 31;
                     v_n = ms_val & ((1U << (int)m_n) - 1);
                     v_n |= ((qinf[0] & 0x800) >> 11) << (int)m_n;
                     v_n |= 1; //center of bin
@@ -2452,12 +2410,11 @@ internal sealed class Tier1Coding
 
                 if ((qinf[1] & 0x10) != 0)
                 { //sigma_n
-                    uint val;
 
                     ms_val = magsgn.fetch();
                     m_n = U_q[1] - ((qinf[1] >> 12) & 1); //m_n
                     magsgn.advance((int)m_n);
-                    val = ms_val << 31;
+                    var val = ms_val << 31;
                     v_n = ms_val & ((1U << (int)m_n) - 1);
                     v_n |= ((qinf[1] & 0x100) >> 8) << (int)m_n;
                     v_n |= 1;                            //center of bin
@@ -2470,19 +2427,18 @@ internal sealed class Tier1Coding
 
                 if ((qinf[1] & 0x20) != 0)
                 { //sigma_n
-                    uint val, t;
 
                     ms_val = magsgn.fetch();
                     m_n = U_q[1] - ((qinf[1] >> 13) & 1); //m_n
                     magsgn.advance((int)m_n);
-                    val = ms_val << 31;
+                    var val = ms_val << 31;
                     v_n = ms_val & ((1U << (int)m_n) - 1);
                     v_n |= ((qinf[1] & 0x200) >> 9) << (int)m_n;
                     v_n |= 1; //center of bin
                     _data[sp + stride] = (int)(val | ((v_n + 2) << (int)(p - 1)));
 
                     //update line_state: bit 7 (\sigma^N), and E^N
-                    t = (uint)get_byte_flag(lsp) & 0x7F;          //E^NW
+                    var t = (uint)get_byte_flag(lsp) & 0x7F; //E^NW
                     v_n = 32 - ht_dec.count_leading_zeros(v_n);
                     set_byte_flag(lsp, (byte)(0x80 | (t > v_n ? t : v_n)));
                 }
@@ -2496,12 +2452,11 @@ internal sealed class Tier1Coding
 
                 if ((qinf[1] & 0x40) != 0)
                 { //sigma_n
-                    uint val;
 
                     ms_val = magsgn.fetch();
                     m_n = U_q[1] - ((qinf[1] >> 14) & 1); //m_n
                     magsgn.advance((int)m_n);
-                    val = ms_val << 31;
+                    var val = ms_val << 31;
                     v_n = ms_val & ((1U << (int)m_n) - 1);
                     v_n |= ((qinf[1] & 0x400) >> 10) << (int)m_n;
                     v_n |= 1;                            //center of bin
@@ -2514,12 +2469,11 @@ internal sealed class Tier1Coding
 
                 if ((qinf[1] & 0x80) != 0)
                 { //sigma_n
-                    uint val;
 
                     ms_val = magsgn.fetch();
                     m_n = U_q[1] - ((qinf[1] >> 15) & 1); //m_n
                     magsgn.advance((int)m_n);
-                    val = ms_val << 31;
+                    var val = ms_val << 31;
                     v_n = ms_val & ((1U << (int)m_n) - 1);
                     v_n |= ((qinf[1] & 0x800) >> 11) << (int)m_n;
                     v_n |= 1; //center of bin
@@ -2544,48 +2498,46 @@ internal sealed class Tier1Coding
                 if (num_passes > 2)
                 { //do MRP
                     // select the current stripe
-                    int cur_sig = (y & 0x4) != 0 ? sigma1 : sigma2;
+                    var cur_sig = (y & 0x4) != 0 ? sigma1 : sigma2;
                     // the address of the data that needs updating
-                    int dpp = decoded_data + (y - 4) * stride;
-                    uint half = 1u << (int)(p - 2); // half the center of the bin
-                    int i;
-                    for (i = 0; i < width; i += 8)
+                    var dpp = decoded_data + (y - 4) * stride;
+                    var half = 1u << (int)(p - 2); // half the center of the bin
+                    for (var i = 0; i < width; i += 8)
                     {
                         //Process one entry from sigma array at a time
                         // Each nibble (4 bits) in the sigma array represents 4 rows,
                         // and the 32 bits contain 8 columns
-                        uint cwd = magref.fetch_mrp(); // get 32 bit data
-                        uint sig = (uint)flags[cur_sig++]; // 32 bit that will be processed now
-                        uint col_mask = 0xFu;  // a mask for a column in sig
-                        int dp = dpp + i;    // next column in decode samples
+                        var cwd = magref.fetch_mrp(); // get 32 bit data
+                        var sig = (uint)flags[cur_sig++]; // 32 bit that will be processed now
+                        var col_mask = 0xFu; // a mask for a column in sig
+                        var dp = dpp + i; // next column in decode samples
                         if (sig != 0)
-                        { // if any of the 32 bits are set
-                            int j;
-                            for (j = 0; j < 8; ++j, dp++)
-                            { //one column at a time
+                        {
+                            // if any of the 32 bits are set
+                            for (var j = 0; j < 8; ++j, dp++)
+                            {
+                                //one column at a time
                                 if ((sig & col_mask) != 0)
-                                { // lowest nibble
-                                    uint sample_mask = 0x11111111u & col_mask; //LSB
+                                {
+                                    // lowest nibble
+                                    var sample_mask = 0x11111111u & col_mask; //LSB
 
                                     if ((sig & sample_mask) != 0)
-                                    { //if LSB is set
-                                        uint sym;
-
+                                    {
+                                        //if LSB is set
                                         Debug.Assert(_data[dp] != 0); // decoded value cannot be zero
-                                        sym = cwd & 1; // get it value
+                                        var sym = cwd & 1; // get it value
                                         // remove center of bin if sym is 0
                                         _data[dp] ^= (int)((1 - sym) << (int)(p - 1));
-                                        _data[dp] |= (int)half;      // put half the center of bin
-                                        cwd >>= 1;          //consume word
+                                        _data[dp] |= (int)half; // put half the center of bin
+                                        cwd >>= 1; //consume word
                                     }
                                     sample_mask += sample_mask; //next row
 
                                     if ((sig & sample_mask) != 0)
                                     {
-                                        uint sym;
-
                                         Debug.Assert(_data[dp + stride] != 0);
-                                        sym = cwd & 1;
+                                        var sym = cwd & 1;
                                         _data[dp + stride] ^= (int)((1 - sym) << (int)(p - 1));
                                         _data[dp + stride] |= (int)half;
                                         cwd >>= 1;
@@ -2594,10 +2546,8 @@ internal sealed class Tier1Coding
 
                                     if ((sig & sample_mask) != 0)
                                     {
-                                        uint sym;
-
                                         Debug.Assert(_data[dp + 2 * stride] != 0);
-                                        sym = cwd & 1;
+                                        var sym = cwd & 1;
                                         _data[dp + 2 * stride] ^= (int)((1 - sym) << (int)(p - 1));
                                         _data[dp + 2 * stride] |= (int)half;
                                         cwd >>= 1;
@@ -2606,10 +2556,8 @@ internal sealed class Tier1Coding
 
                                     if ((sig & sample_mask) != 0)
                                     {
-                                        uint sym;
-
                                         Debug.Assert(_data[dp + 3 * stride] != 0);
-                                        sym = cwd & 1;
+                                        var sym = cwd & 1;
                                         _data[dp + 3 * stride] ^= (int)((1 - sym) << (int)(p - 1));
                                         _data[dp + 3 * stride] |= (int)half;
                                         cwd >>= 1;
@@ -2619,6 +2567,7 @@ internal sealed class Tier1Coding
                                 col_mask <<= 4; //next column
                             }
                         }
+
                         // consume data according to the number of bits set
                         magref.advance_mrp((int) ht_dec.population_count(sig));
                     }
@@ -2627,29 +2576,26 @@ internal sealed class Tier1Coding
                 if (y >= 4)
                 { // update mbr array at the end of each stripe
                     //generate mbr corresponding to a stripe
-                    int sig = (y & 0x4) != 0 ? sigma1 : sigma2;
-                    int mbr = (y & 0x4) != 0 ? mbr1 : mbr2;
+                    var sig = (y & 0x4) != 0 ? sigma1 : sigma2;
+                    var mbr = (y & 0x4) != 0 ? mbr1 : mbr2;
 
                     //data is processed in patches of 8 columns, each
                     // each 32 bits in sigma1 or mbr1 represent 4 rows
 
                     //integrate horizontally
                     uint prev = 0; // previous columns
-                    int i;
-                    for (i = 0; i < width; i += 8, mbr++, sig++)
+                    for (var i = 0; i < width; i += 8, mbr++, sig++)
                     {
-                        uint t, z;
-
-                        flags[mbr] = flags[sig];         //start with significant samples
-                        flags[mbr] |= (T1) (prev >> 28);    //for first column, left neighbors
-                        flags[mbr] |= (T1)((uint)flags[sig] << 4);   //left neighbors
-                        flags[mbr] |= (T1)((uint)flags[sig] >> 4);   //right neighbors
-                        flags[mbr] |= (T1)((uint)flags[sig + 1] << 28);  //for last column, right neighbors
-                        prev = (uint)flags[sig];           // for next group of columns
+                        flags[mbr] = flags[sig]; //start with significant samples
+                        flags[mbr] |= (T1) (prev >> 28); //for first column, left neighbors
+                        flags[mbr] |= (T1)((uint)flags[sig] << 4); //left neighbors
+                        flags[mbr] |= (T1)((uint)flags[sig] >> 4); //right neighbors
+                        flags[mbr] |= (T1)((uint)flags[sig + 1] << 28); //for last column, right neighbors
+                        prev = (uint)flags[sig]; // for next group of columns
 
                         //integrate vertically
-                        t = (uint)flags[mbr];
-                        z = (uint)flags[mbr];
+                        var t = (uint)flags[mbr];
+                        var z = (uint)flags[mbr];
                         z |= (t & 0x77777777) << 1; //above neighbors
                         z |= (t & 0xEEEEEEEE) >> 1; //below neighbors
                         flags[mbr] = (T1)(z & ~(uint)flags[sig]); //remove already significance samples
@@ -2658,19 +2604,16 @@ internal sealed class Tier1Coding
 
                 if (y >= 8)
                 { //wait until 8 rows has been processed
-                    int cur_sig, cur_mbr, nxt_sig, nxt_mbr;
-                    uint prev;
-                    uint val;
                     int i;
 
                     // add membership from the next stripe, obtained above
-                    cur_sig = (y & 0x4) != 0 ? sigma2 : sigma1;
-                    cur_mbr = (y & 0x4) != 0 ? mbr2 : mbr1;
-                    nxt_sig = (y & 0x4) != 0 ? sigma1 : sigma2;  //future samples
-                    prev = 0; // the columns before these group of 8 columns
+                    var cur_sig = (y & 0x4) != 0 ? sigma2 : sigma1;
+                    var cur_mbr = (y & 0x4) != 0 ? mbr2 : mbr1;
+                    var nxt_sig = (y & 0x4) != 0 ? sigma1 : sigma2; //future samples
+                    uint prev = 0; // the columns before these group of 8 columns
                     for (i = 0; i < width; i += 8, cur_mbr++, cur_sig++, nxt_sig++)
                     {
-                        uint t = (uint)flags[nxt_sig];
+                        var t = (uint)flags[nxt_sig];
                         t |= prev >> 28;        //for first column, left neighbors
                         t |= (uint)flags[nxt_sig] << 4;   //left neighbors
                         t |= (uint)flags[nxt_sig] >> 4;   //right neighbors
@@ -2688,58 +2631,52 @@ internal sealed class Tier1Coding
                     cur_sig = (y & 0x4) != 0 ? sigma2 : sigma1;
                     cur_mbr = (y & 0x4) != 0 ? mbr2 : mbr1;
                     nxt_sig = (y & 0x4) != 0 ? sigma1 : sigma2; //future samples
-                    nxt_mbr = (y & 0x4) != 0 ? mbr1 : mbr2;     //future samples
-                    val = 3u << (int)(p - 2); // sample values for newly discovered
+                    var nxt_mbr = (y & 0x4) != 0 ? mbr1 : mbr2; //future samples
+                    var val = 3u << (int)(p - 2); // sample values for newly discovered
                     // significant samples including the bin center
                     for (i = 0; i < width;
                          i += 8, cur_sig++, cur_mbr++, nxt_sig++, nxt_mbr++)
                     {
-                        uint ux, tx;
-                        uint mbr = (uint)flags[cur_mbr];
+                        var mbr = (uint)flags[cur_mbr];
                         uint new_sig = 0;
                         if (mbr != 0)
                         { //are there any samples that might be significant
-                            int n;
-                            for (n = 0; n < 8; n += 4)
+                            for (var n = 0; n < 8; n += 4)
                             {
-                                uint col_mask;
-                                uint inv_sig;
-                                int end;
                                 int j;
 
-                                uint cwd = sigprop.fetch(); //get 32 bits
+                                var cwd = sigprop.fetch(); //get 32 bits
                                 uint cnt = 0;
 
-                                int dp = decoded_data + (y - 8) * stride;
+                                var dp = decoded_data + (y - 8) * stride;
                                 dp += i + n; //address for decoded samples
 
-                                col_mask = 0xFu << (4 * n); //a mask to select a column
+                                var col_mask = 0xFu << (4 * n); //a mask to select a column
 
-                                inv_sig = ~(uint)flags[cur_sig]; // insignificant samples
+                                var inv_sig = ~(uint)flags[cur_sig]; // insignificant samples
 
                                 //find the last sample we operate on
-                                end = n + 4 + i < width ? n + 4 : width - i;
+                                var end = n + 4 + i < width ? n + 4 : width - i;
 
                                 for (j = n; j < end; ++j, ++dp, col_mask <<= 4)
                                 {
-                                    uint sample_mask;
-
                                     if ((col_mask & mbr) == 0)
-                                    { //no samples need checking
+                                    {
+                                        //no samples need checking
                                         continue;
                                     }
 
                                     //scan mbr to find a new significant sample
-                                    sample_mask = 0x11111111u & col_mask; // LSB
+                                    var sample_mask = 0x11111111u & col_mask; // LSB
                                     if ((mbr & sample_mask) != 0)
                                     {
                                         Debug.Assert(_data[dp] == 0); // the sample must have been 0
                                         if ((cwd & 1) != 0)
-                                        { //if this sample has become significant
+                                        {
+                                            //if this sample has become significant
                                             // must propagate it to nearby samples
-                                            uint t;
-                                            new_sig |= sample_mask;  // new significant samples
-                                            t = 0x32u << (j * 4);// propagation to neighbors
+                                            new_sig |= sample_mask; // new significant samples
+                                            var t = 0x32u << (j * 4); // propagation to neighbors
                                             mbr |= t & inv_sig; //remove already significant samples
                                         }
                                         cwd >>= 1;
@@ -2747,15 +2684,14 @@ internal sealed class Tier1Coding
                                         //consumed bits
                                     }
 
-                                    sample_mask += sample_mask;  // next row
+                                    sample_mask += sample_mask; // next row
                                     if ((mbr & sample_mask) != 0)
                                     {
                                         Debug.Assert(_data[dp + stride] == 0);
                                         if ((cwd & 1) != 0)
                                         {
-                                            uint t;
                                             new_sig |= sample_mask;
-                                            t = 0x74u << (j * 4);
+                                            var t = 0x74u << (j * 4);
                                             mbr |= t & inv_sig;
                                         }
                                         cwd >>= 1;
@@ -2768,9 +2704,8 @@ internal sealed class Tier1Coding
                                         Debug.Assert(_data[dp + 2 * stride] == 0);
                                         if ((cwd & 1) != 0)
                                         {
-                                            uint t;
                                             new_sig |= sample_mask;
-                                            t = 0xE8u << (j * 4);
+                                            var t = 0xE8u << (j * 4);
                                             mbr |= t & inv_sig;
                                         }
                                         cwd >>= 1;
@@ -2783,9 +2718,8 @@ internal sealed class Tier1Coding
                                         Debug.Assert(_data[dp + 3 * stride] == 0);
                                         if ((cwd & 1) != 0)
                                         {
-                                            uint t;
                                             new_sig |= sample_mask;
-                                            t = 0xC0u << (j * 4);
+                                            var t = 0xC0u << (j * 4);
                                             mbr |= t & inv_sig;
                                         }
                                         cwd >>= 1;
@@ -2795,22 +2729,22 @@ internal sealed class Tier1Coding
 
                                 //obtain signs here
                                 if ((new_sig & (0xFFFFu << (4 * n))) != 0)
-                                { //if any
+                                {
+                                    //if any
                                     dp = decoded_data + (y - 8) * stride;
                                     dp += i + n; // decoded samples address
                                     col_mask = 0xFu << (4 * n); //mask to select a column
 
                                     for (j = n; j < end; ++j, ++dp, col_mask <<= 4)
                                     {
-                                        uint sample_mask;
-
                                         if ((col_mask & new_sig) == 0)
-                                        { //if non is significant
+                                        {
+                                            //if non is significant
                                             continue;
                                         }
 
                                         //scan 4 signs
-                                        sample_mask = 0x11111111u & col_mask;
+                                        var sample_mask = 0x11111111u & col_mask;
                                         if ((new_sig & sample_mask) != 0)
                                         {
                                             Debug.Assert(_data[dp] == 0);
@@ -2856,7 +2790,7 @@ internal sealed class Tier1Coding
                                 if (n == 4)
                                 {
                                     //horizontally
-                                    uint t = new_sig >> 28;
+                                    var t = new_sig >> 28;
                                     t |= ((t & 0xE) >> 1) | ((t & 7) << 1);
                                     flags[cur_mbr + 1] |= (T1) (t & ~(uint)flags[cur_sig + 1]);
                                 }
@@ -2864,8 +2798,8 @@ internal sealed class Tier1Coding
                         }
                         //update the next stripe (vertically propagation)
                         new_sig |= (uint)flags[cur_sig];
-                        ux = (new_sig & 0x88888888) >> 3;
-                        tx = ux | (ux << 4) | (ux >> 4); //left and right neighbors
+                        var ux = (new_sig & 0x88888888) >> 3;
+                        var tx = ux | (ux << 4) | (ux >> 4); //left and right neighbors
                         if (i > 0)
                         {
                             flags[nxt_mbr - 1] |= (T1) ((ux << 28) & ~(uint)flags[nxt_sig -1]);
@@ -2885,35 +2819,30 @@ internal sealed class Tier1Coding
         //terminating
         if (num_passes > 1)
         {
-            int st;
-
             if (num_passes > 2 && ((height & 3) == 1 || (height & 3) == 2))
             {
                 //do magref
-                int cur_sig = (height & 0x4) != 0 ? sigma2 : sigma1; //reversed
-                int dpp = decoded_data + (height & 0xFFFFFC) * stride;
-                uint half = 1u << (int)(p - 2);
-                int i;
-                for (i = 0; i < width; i += 8)
+                var cur_sig = (height & 0x4) != 0 ? sigma2 : sigma1; //reversed
+                var dpp = decoded_data + (height & 0xFFFFFC) * stride;
+                var half = 1u << (int)(p - 2);
+                for (var i = 0; i < width; i += 8)
                 {
-                    uint cwd = magref.fetch_mrp();
-                    uint sig = (uint)flags[cur_sig++];
+                    var cwd = magref.fetch_mrp();
+                    var sig = (uint)flags[cur_sig++];
                     uint col_mask = 0xF;
-                    int dp = dpp + i;
+                    var dp = dpp + i;
                     if (sig != 0)
                     {
-                        int j;
-                        for (j = 0; j < 8; ++j, dp++)
+                        for (var j = 0; j < 8; ++j, dp++)
                         {
                             if ((sig & col_mask) != 0)
                             {
-                                uint sample_mask = 0x11111111 & col_mask;
+                                var sample_mask = 0x11111111 & col_mask;
 
                                 if ((sig & sample_mask) != 0)
                                 {
-                                    uint sym;
                                     Debug.Assert(_data[dp] != 0);
-                                    sym = cwd & 1;
+                                    var sym = cwd & 1;
                                     _data[dp] ^= (int)((1 - sym) << (int)(p - 1));
                                     _data[dp] |= (int)half;
                                     cwd >>= 1;
@@ -2922,9 +2851,8 @@ internal sealed class Tier1Coding
 
                                 if ((sig & sample_mask) != 0)
                                 {
-                                    uint sym;
                                     Debug.Assert(_data[dp + stride] != 0);
-                                    sym = cwd & 1;
+                                    var sym = cwd & 1;
                                     _data[dp + stride] ^= (int)((1 - sym) << (int)(p - 1));
                                     _data[dp + stride] |= (int)half;
                                     cwd >>= 1;
@@ -2933,9 +2861,8 @@ internal sealed class Tier1Coding
 
                                 if ((sig & sample_mask) != 0)
                                 {
-                                    uint sym;
                                     Debug.Assert(_data[dp + 2 * stride] != 0);
-                                    sym = cwd & 1;
+                                    var sym = cwd & 1;
                                     _data[dp + 2 * stride] ^= (int)((1 - sym) << (int)(p - 1));
                                     _data[dp + 2 * stride] |= (int)half;
                                     cwd >>= 1;
@@ -2944,9 +2871,8 @@ internal sealed class Tier1Coding
 
                                 if ((sig & sample_mask) != 0)
                                 {
-                                    uint sym;
                                     Debug.Assert(_data[dp + 3 * stride] != 0);
-                                    sym = cwd & 1;
+                                    var sym = cwd & 1;
                                     _data[dp + 3 * stride] ^= (int)((1 - sym) << (int)(p - 1));
                                     _data[dp + 3 * stride] |= (int)half;
                                     cwd >>= 1;
@@ -2966,39 +2892,35 @@ internal sealed class Tier1Coding
             if ((height & 3) == 1 || (height & 3) == 2)
             {
                 //generate mbr of first stripe
-                int sig = (height & 0x4) != 0 ? sigma2 : sigma1;
-                int mbr = (height & 0x4) != 0 ? mbr2 : mbr1;
+                var sig = (height & 0x4) != 0 ? sigma2 : sigma1;
+                var mbr = (height & 0x4) != 0 ? mbr2 : mbr1;
                 //integrate horizontally
                 uint prev = 0;
-                int i;
-                for (i = 0; i < width; i += 8, mbr++, sig++)
+                for (var i = 0; i < width; i += 8, mbr++, sig++)
                 {
-                    uint t, z;
-
                     flags[mbr] = flags[sig];
-                    flags[mbr] |= (T1)(prev >> 28);    //for first column, left neighbors
-                    flags[mbr] |= (T1)((uint)flags[sig] << 4);   //left neighbors
-                    flags[mbr] |= (T1)((uint)flags[sig] >> 4);   //left neighbors
-                    flags[mbr] |= (T1)((uint)flags[sig + 1] << 28);  //for last column, right neighbors
+                    flags[mbr] |= (T1)(prev >> 28); //for first column, left neighbors
+                    flags[mbr] |= (T1)((uint)flags[sig] << 4); //left neighbors
+                    flags[mbr] |= (T1)((uint)flags[sig] >> 4); //left neighbors
+                    flags[mbr] |= (T1)((uint)flags[sig + 1] << 28); //for last column, right neighbors
                     prev = (uint)flags[sig];
 
                     //integrate vertically
-                    t = (uint)flags[mbr];
-                    z = (uint)flags[mbr];
+                    var t = (uint)flags[mbr];
+                    var z = (uint)flags[mbr];
                     z |= (t & 0x77777777) << 1; //above neighbors
                     z |= (t & 0xEEEEEEEE) >> 1; //below neighbors
                     flags[mbr] = (T1)(z & ~(uint)flags[sig]); //remove already significance samples
                 }
             }
 
-            st = height;
+            var st = height;
             st -= height > 6 ? ((height + 1) & 3) + 3 : height;
             for (y = st; y < height; y += 4)
             {
-                int cur_sig, cur_mbr, nxt_sig, nxt_mbr;
-                uint val;
+                int cur_sig, cur_mbr, nxt_sig;
 
-                uint pattern = 0xFFFFFFFFu; // a pattern needed samples
+                var pattern = 0xFFFFFFFFu; // a pattern needed samples
                 if (height - y == 3)
                 {
                     pattern = 0x77777777u;
@@ -3020,9 +2942,9 @@ internal sealed class Tier1Coding
                     cur_sig = (y & 0x4) != 0 ? sigma2 : sigma1;
                     cur_mbr = (y & 0x4) != 0 ? mbr2 : mbr1;
                     nxt_sig = (y & 0x4) != 0 ? sigma1 : sigma2;
-                    for (int i = 0; i < width; i += 8, cur_mbr++, cur_sig++, nxt_sig++)
+                    for (var i = 0; i < width; i += 8, cur_mbr++, cur_sig++, nxt_sig++)
                     {
-                        uint t = (uint)flags[nxt_sig];
+                        var t = (uint)flags[nxt_sig];
                         t |= prev >> 28;     //for first column, left neighbors
                         t |= (uint)flags[nxt_sig] << 4;   //left neighbors
                         t |= (uint)flags[nxt_sig] >> 4;   //left neighbors
@@ -3042,54 +2964,46 @@ internal sealed class Tier1Coding
                 cur_sig = (y & 0x4) != 0 ? sigma2 : sigma1;
                 cur_mbr = (y & 0x4) != 0 ? mbr2 : mbr1;
                 nxt_sig = (y & 0x4) != 0 ? sigma1 : sigma2;
-                nxt_mbr = (y & 0x4) != 0 ? mbr1 : mbr2;
-                val = 3u << (int)(p - 2);
-                for (int i = 0; i < width; i += 8,
+                var nxt_mbr = (y & 0x4) != 0 ? mbr1 : mbr2;
+                var val = 3u << (int)(p - 2);
+                for (var i = 0; i < width; i += 8,
                      cur_sig++, cur_mbr++, nxt_sig++, nxt_mbr++)
                 {
-                    uint mbr = (uint)flags[cur_mbr] & pattern; //skip unneeded samples
+                    var mbr = (uint)flags[cur_mbr] & pattern; //skip unneeded samples
                     uint new_sig = 0;
-                    uint ux, tx;
                     if (mbr != 0)
                     {
-                        int n;
-                        for (n = 0; n < 8; n += 4)
+                        for (var n = 0; n < 8; n += 4)
                         {
-                            uint col_mask;
-                            uint inv_sig;
-                            int end;
                             int j;
 
-                            uint cwd = sigprop.fetch();
+                            var cwd = sigprop.fetch();
                             uint cnt = 0;
 
-                            int dp = decoded_data + y * stride;
+                            var dp = decoded_data + y * stride;
                             dp += i + n;
 
-                            col_mask = 0xFu << (4 * n);
+                            var col_mask = 0xFu << (4 * n);
 
-                            inv_sig = ~(uint)flags[cur_sig] & pattern;
+                            var inv_sig = ~(uint)flags[cur_sig] & pattern;
 
-                            end = n + 4 + i < width ? n + 4 : width - i;
+                            var end = n + 4 + i < width ? n + 4 : width - i;
                             for (j = n; j < end; ++j, ++dp, col_mask <<= 4)
                             {
-                                uint sample_mask;
-
                                 if ((col_mask & mbr) == 0)
                                 {
                                     continue;
                                 }
 
                                 //scan 4 mbr
-                                sample_mask = 0x11111111u & col_mask;
+                                var sample_mask = 0x11111111u & col_mask;
                                 if ((mbr & sample_mask) != 0)
                                 {
                                     Debug.Assert(_data[dp] == 0);
                                     if ((cwd & 1) != 0)
                                     {
-                                        uint t;
                                         new_sig |= sample_mask;
-                                        t = 0x32u << (j * 4);
+                                        var t = 0x32u << (j * 4);
                                         mbr |= t & inv_sig;
                                     }
                                     cwd >>= 1;
@@ -3102,9 +3016,8 @@ internal sealed class Tier1Coding
                                     Debug.Assert(_data[dp + stride] == 0);
                                     if ((cwd & 1) != 0)
                                     {
-                                        uint t;
                                         new_sig |= sample_mask;
-                                        t = 0x74u << (j * 4);
+                                        var t = 0x74u << (j * 4);
                                         mbr |= t & inv_sig;
                                     }
                                     cwd >>= 1;
@@ -3117,9 +3030,8 @@ internal sealed class Tier1Coding
                                     Debug.Assert(_data[dp + 2 * stride] == 0);
                                     if ((cwd & 1) != 0)
                                     {
-                                        uint t;
                                         new_sig |= sample_mask;
-                                        t = 0xE8u << (j * 4);
+                                        var t = 0xE8u << (j * 4);
                                         mbr |= t & inv_sig;
                                     }
                                     cwd >>= 1;
@@ -3132,9 +3044,8 @@ internal sealed class Tier1Coding
                                     Debug.Assert(_data[dp + 3 * stride] == 0);
                                     if ((cwd & 1) != 0)
                                     {
-                                        uint t;
                                         new_sig |= sample_mask;
-                                        t = 0xC0u << (j * 4);
+                                        var t = 0xC0u << (j * 4);
                                         mbr |= t & inv_sig;
                                     }
                                     cwd >>= 1;
@@ -3151,14 +3062,13 @@ internal sealed class Tier1Coding
 
                                 for (j = n; j < end; ++j, ++dp, col_mask <<= 4)
                                 {
-                                    uint sample_mask;
                                     if ((col_mask & new_sig) == 0)
                                     {
                                         continue;
                                     }
 
                                     //scan 4 signs
-                                    sample_mask = 0x11111111u & col_mask;
+                                    var sample_mask = 0x11111111u & col_mask;
                                     if ((new_sig & sample_mask) != 0)
                                     {
                                         Debug.Assert(_data[dp] == 0);
@@ -3203,7 +3113,7 @@ internal sealed class Tier1Coding
                             if (n == 4)
                             {
                                 //horizontally
-                                uint t = new_sig >> 28;
+                                var t = new_sig >> 28;
                                 t |= ((t & 0xE) >> 1) | ((t & 7) << 1);
                                 flags[cur_mbr + 1] |= (T1)(t & ~(uint)flags[cur_sig + 1]);
                             }
@@ -3211,8 +3121,8 @@ internal sealed class Tier1Coding
                     }
                     //propagate down (vertically propagation)
                     new_sig |= (uint)flags[cur_sig];
-                    ux = (new_sig & 0x88888888) >> 3;
-                    tx = ux | (ux << 4) | (ux >> 4);
+                    var ux = (new_sig & 0x88888888) >> 3;
+                    var tx = ux | (ux << 4) | (ux >> 4);
                     if (i > 0)
                     {
                         flags[nxt_mbr - 1] |= (T1)((ux << 28) & ~(uint)flags[nxt_sig - 1]);
@@ -3227,9 +3137,9 @@ internal sealed class Tier1Coding
             for (y = 0; y < height; ++y)
             {
                 sp = decoded_data + y * stride;
-                for (int x = 0; x < width; ++x, ++sp)
+                for (var x = 0; x < width; ++x, ++sp)
                 {
-                    int val = _data[sp] & 0x7FFFFFFF;
+                    var val = _data[sp] & 0x7FFFFFFF;
                     _data[sp] = ((uint)_data[sp] & 0x80000000) != 0 ? -val : val;
                 }
             }
@@ -3249,7 +3159,6 @@ internal sealed class Tier1Coding
         byte[] cblkdata;
         uint cblkdataindex;
         //uint cblkdata_pt; //<-- No need for both pointer and index
-        T1_TYPE type;
         int[] original_t1_data = null;
 
         //C# Sets a pointer to the T1Luts.cs lut_ctxno_zc table
@@ -3257,10 +3166,10 @@ internal sealed class Tier1Coding
 
         allocate_buffers(cblk.x1 - cblk.x0, cblk.y1 - cblk.y0);
 
-        int bpno_plus_one = (int)(roishift + cblk.numbps);
+        var bpno_plus_one = (int)(roishift + cblk.numbps);
         if (bpno_plus_one >= 31)
         {
-            cinfo.ErrorMT("opj_t1_decode_cblk(): unsupported bpno_plus_one = {0} >= 31",
+            cinfo.ErrorMt("opj_t1_decode_cblk(): unsupported bpno_plus_one = {0} >= 31",
                 bpno_plus_one);
             return false;
         }
@@ -3285,16 +3194,16 @@ internal sealed class Tier1Coding
             //Compute whole codeblock length from chunk lengths
             uint cblk_len = 0;
             {
-                for (int i = 0; i < cblk.numchunks; i++)
+                for (var i = 0; i < cblk.numchunks; i++)
                     cblk_len += (uint)cblk.chunks[i].len;
             }
 
             /* Allocate temporary memory if needed */
-            if (cblk_len + Constants.COMMON_CBLK_DATA_EXTRA > cblkdatabuffersize)
+            if (cblk_len + Constants.CommonCblkDataExtra > cblkdatabuffersize)
             {
                 //Array.Resize is probably slower, since it retains the old data.
                 //if (cblkdatabuffer == null)
-                cblkdatabuffer = new byte[cblk_len + Constants.COMMON_CBLK_DATA_EXTRA];
+                cblkdatabuffer = new byte[cblk_len + Constants.CommonCblkDataExtra];
                 //else
                 //    Array.Resize(ref cblkdatabuffer, (int)cblk_len);
             }
@@ -3302,7 +3211,7 @@ internal sealed class Tier1Coding
             // Concatenate all chunks
             cblkdata = cblkdatabuffer;
             cblk_len = 0;
-            for (int i = 0; i < cblk.numchunks; i++)
+            for (var i = 0; i < cblk.numchunks; i++)
             {
                 Buffer.BlockCopy(cblk.chunk_data, cblk.chunks[i].data_pt, cblkdata, (int)cblk_len, cblk.chunks[i].len);
                 cblk_len += (uint)cblk.chunks[i].len;
@@ -3334,22 +3243,22 @@ internal sealed class Tier1Coding
             _data = cblk.decoded_data;
         }
 
-        for (int segno = 0; segno < cblk.real_num_segs; ++segno)
+        for (var segno = 0; segno < cblk.real_num_segs; ++segno)
         {
-            TcdSeg seg = cblk.segs[segno];
+            var seg = cblk.segs[segno];
 
             // BYPASS mode. Note the (int)cblk.numbps, this is to prevent a wraparound when numbps < 4
-            type = bpno_plus_one <= (int)cblk.numbps - 4 && passtype < 2 &&
-                   (cblksty & CCP_CBLKSTY.LAZY) == CCP_CBLKSTY.LAZY
+            var type = bpno_plus_one <= (int)cblk.numbps - 4 && passtype < 2 &&
+                       (cblksty & CCP_CBLKSTY.LAZY) == CCP_CBLKSTY.LAZY
                 ? T1_TYPE.RAW : T1_TYPE.MQ;
 
             if (type == T1_TYPE.RAW)
-                _mqc.InitRawDec(cblkdata, /*cblkdata_pt +*/ cblkdataindex, seg.len, Constants.COMMON_CBLK_DATA_EXTRA);
+                _mqc.InitRawDec(cblkdata, /*cblkdata_pt +*/ cblkdataindex, seg.len, Constants.CommonCblkDataExtra);
             else
-                _mqc.InitDec(cblkdata, /*cblkdata_pt +*/ cblkdataindex, seg.len, Constants.COMMON_CBLK_DATA_EXTRA);
+                _mqc.InitDec(cblkdata, /*cblkdata_pt +*/ cblkdataindex, seg.len, Constants.CommonCblkDataExtra);
             cblkdataindex += seg.len;
 
-            for (int passno = 0; passno < seg.real_num_passes && bpno_plus_one >= 1; ++passno)
+            for (var passno = 0; passno < seg.real_num_passes && bpno_plus_one >= 1; ++passno)
             {
                 //if (cblk_count == 18)
                 //{
@@ -3411,19 +3320,19 @@ internal sealed class Tier1Coding
     //2.5 - opj_t1_dec_sigpass_raw
     private void DecSigpassRaw(int bpno, CCP_CBLKSTY cblksty)
     {
-        int data = 0; //<- pointer to _data
-        int flagsp = T1_FLAGS(0, 0); //<- pointer to flags
-        int w = (int)_w;
-        int one = 1 << bpno;
-        int half = one >> 1;
-        int oneplushalf = one | half;
+        var data = 0; //<- pointer to _data
+        var flagsp = T1_FLAGS(0, 0); //<- pointer to flags
+        var w = (int)_w;
+        var one = 1 << bpno;
+        var half = one >> 1;
+        var oneplushalf = one | half;
         uint k;
 
         for (k = 0; k < (_h & ~3U); k+= 4, flagsp +=2, data += 3 * w)
         {
-            for (int i = 0; i < w; i++, flagsp++, data++)
+            for (var i = 0; i < w; i++, flagsp++, data++)
             {
-                if (this.flags[flagsp] != T1.NONE)
+                if (flags[flagsp] != T1.NONE)
                 {
                     DecSigpassStepRaw(flagsp, data, oneplushalf, (cblksty & CCP_CBLKSTY.VSC) != 0, 0);
                     DecSigpassStepRaw(flagsp, data + w, oneplushalf, false, 1);
@@ -3434,9 +3343,9 @@ internal sealed class Tier1Coding
         }
         if (k < _h)
         {
-            for (int i = 0; i < w; i++, flagsp++, data++)
+            for (var i = 0; i < w; i++, flagsp++, data++)
             {
-                for (int j = 0; j < _h - k; j++)
+                for (var j = 0; j < _h - k; j++)
                 {
                     DecSigpassStepRaw(flagsp, data + j * w, oneplushalf, (cblksty & CCP_CBLKSTY.VSC) != 0, j);
                 }
@@ -3480,10 +3389,9 @@ internal sealed class Tier1Coding
     {
         if ((cblksty & CCP_CBLKSTY.SEGSYM) != 0)
         {
-            uint v, v2;
             _mqc.Setcurctx(T1_CTXNO.UNI);
-            v = _mqc.Decode() ? 1u : 0u;
-            v2 = _mqc.Decode() ? 1u : 0u;
+            var v = _mqc.Decode() ? 1u : 0u;
+            var v2 = _mqc.Decode() ? 1u : 0u;
             v = (v << 1) | v2;
             v2 = _mqc.Decode() ? 1u : 0u;
             v = (v << 1) | v2;
@@ -3506,31 +3414,29 @@ internal sealed class Tier1Coding
         const int w = 64;
         const uint h = 64;
         const int flags_stride = 66;
-        int one, half, oneplushalf;
-        uint runlen;
-        uint k; int i, j;
-        int data = 0; //Pointer to this._data
-        int flagsp = flags_stride + 1; //Pointer to this.flags
+        uint k; int i;
+        var data = 0; //Pointer to this._data
+        var flagsp = flags_stride + 1; //Pointer to this.flags
         //DOWNLOAD_MQC_VARIABLES
         //^ C# we don't inline mqc.
         bool v;
-        one = 1 << bpno;
-        half = one >> 1;
-        oneplushalf = one | half;
+        var one = 1 << bpno;
+        var half = one >> 1;
+        var oneplushalf = one | half;
         for (k = 0; k < (h & ~3u); k += 4, data += 3 * w, flagsp += 2)
         {
             for (i = 0; i < w; ++i, ++data, ++flagsp)
             {
-                T1 flags = this.flags[flagsp];
+                var flags = this.flags[flagsp];
                 if (flags == 0)
                 {
-                    bool partial = true;
+                    var partial = true;
                     _mqc.Setcurctx(T1_CTXNO.AGG); //opj_t1_setcurctx macro
                     v = _mqc.Decode(); //opj_mqc_decode_macro
                     if (!v)
                         continue;
                     _mqc.Setcurctx(T1_CTXNO.UNI); //opj_t1_setcurctx macro
-                    runlen = _mqc.Decode() ? 1u : 0u;
+                    var runlen = _mqc.Decode() ? 1u : 0u;
                     v = _mqc.Decode();
                     runlen = (runlen << 1) | (v ? 1u : 0u);
                     switch(runlen)
@@ -3558,7 +3464,7 @@ internal sealed class Tier1Coding
 #pragma warning restore CS0162 // Unreachable code detected
                                     }
                                     {
-                                        T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                        var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -3592,7 +3498,7 @@ internal sealed class Tier1Coding
                                             break;
                                     }
                                     {
-                                        T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                        var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -3626,7 +3532,7 @@ internal sealed class Tier1Coding
                                             break;
                                     }
                                     {
-                                        T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                        var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -3660,7 +3566,7 @@ internal sealed class Tier1Coding
                                             break;
                                     }
                                     {
-                                        T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                        var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -3696,7 +3602,7 @@ internal sealed class Tier1Coding
                                         break;
                                 }
                                 {
-                                    T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                    var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -3727,7 +3633,7 @@ internal sealed class Tier1Coding
                                         break;
                                 }
                                 {
-                                    T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                    var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -3758,7 +3664,7 @@ internal sealed class Tier1Coding
                                         break;
                                 }
                                 {
-                                    T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                    var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -3789,7 +3695,7 @@ internal sealed class Tier1Coding
                                         break;
                                 }
                                 {
-                                    T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                    var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -3809,7 +3715,7 @@ internal sealed class Tier1Coding
         {
             for (i = 0; i < w; ++i, ++flagsp, ++data)
             {
-                for (j = 0; j < h - k; ++j)
+                for (var j = 0; j < h - k; ++j)
                 {
                     DecClnpassStep(flagsp, data + j * w, oneplushalf, j, vsc);
                 }
@@ -3829,34 +3735,32 @@ internal sealed class Tier1Coding
         //(t1, bpno,      vsc,  w,  h, flags_stride)
         // t1, bpno, OPJ_TRUE, _w, :h, _w + 2
         const bool vsc = true;
-        int w = (int)_w;
-        uint h = _h;
-        int flags_stride = w + 2;
-        int one, half, oneplushalf;
-        uint runlen;
-        uint k; int i, j;
-        int data = 0; //Pointer to this._data
-        int flagsp = flags_stride + 1; //Pointer to this.flags
+        var w = (int)_w;
+        var h = _h;
+        var flags_stride = w + 2;
+        uint k; int i;
+        var data = 0; //Pointer to this._data
+        var flagsp = flags_stride + 1; //Pointer to this.flags
         //DOWNLOAD_MQC_VARIABLES
         //^ C# we don't inline mqc.
         bool v;
-        one = 1 << bpno;
-        half = one >> 1;
-        oneplushalf = one | half;
+        var one = 1 << bpno;
+        var half = one >> 1;
+        var oneplushalf = one | half;
         for (k = 0; k < (h & ~3u); k += 4, data += 3 * w, flagsp += 2)
         {
             for (i = 0; i < w; ++i, ++data, ++flagsp)
             {
-                T1 flags = this.flags[flagsp];
+                var flags = this.flags[flagsp];
                 if (flags == 0)
                 {
-                    bool partial = true;
+                    var partial = true;
                     _mqc.Setcurctx(T1_CTXNO.AGG); //opj_t1_setcurctx macro
                     v = _mqc.Decode(); //opj_mqc_decode_macro
                     if (!v)
                         continue;
                     _mqc.Setcurctx(T1_CTXNO.UNI); //opj_t1_setcurctx macro
-                    runlen = _mqc.Decode() ? 1u : 0u;
+                    var runlen = _mqc.Decode() ? 1u : 0u;
                     v = _mqc.Decode();
                     runlen = (runlen << 1) | (v ? 1u : 0u);
                     switch (runlen)
@@ -3867,7 +3771,7 @@ internal sealed class Tier1Coding
                             //   OPJ_FALSE, OPJ_TRUE, flags, flagsp, flags_stride, data,         l_w,  0, mqc, curctx, v, a, c, ct, oneplushalf, vsc
                         {
                             const bool check_flags = false;
-                            int data_stride = w;
+                            var data_stride = w;
                             const int ci = 0;
                             if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
@@ -3884,7 +3788,7 @@ internal sealed class Tier1Coding
 #pragma warning restore CS0162 // Unreachable code detected
                                     }
                                     {
-                                        T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                        var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -3903,7 +3807,7 @@ internal sealed class Tier1Coding
                             //   OPJ_FALSE, OPJ_TRUE, flags, flagsp, flags_stride, data,         l_w,  1, mqc, curctx, v, a, c, ct, oneplushalf, false
                         {
                             const bool check_flags = false;
-                            int data_stride = w;
+                            var data_stride = w;
                             const int ci = 1;
                             if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
@@ -3918,7 +3822,7 @@ internal sealed class Tier1Coding
                                             break;
                                     }
                                     {
-                                        T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                        var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -3937,7 +3841,7 @@ internal sealed class Tier1Coding
                             //   OPJ_FALSE, OPJ_TRUE, flags, flagsp, flags_stride, data,         l_w,  2, mqc, curctx, v, a, c, ct, oneplushalf, false
                         {
                             const bool check_flags = false;
-                            int data_stride = w;
+                            var data_stride = w;
                             const int ci = 2;
                             if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
@@ -3952,7 +3856,7 @@ internal sealed class Tier1Coding
                                             break;
                                     }
                                     {
-                                        T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                        var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -3971,7 +3875,7 @@ internal sealed class Tier1Coding
                             //   OPJ_FALSE, OPJ_TRUE, flags, flagsp, flags_stride, data,         l_w,  3, mqc, curctx, v, a, c, ct, oneplushalf, false
                         {
                             const bool check_flags = false;
-                            int data_stride = w;
+                            var data_stride = w;
                             const int ci = 3;
                             if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
@@ -3986,7 +3890,7 @@ internal sealed class Tier1Coding
                                             break;
                                     }
                                     {
-                                        T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                        var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4007,7 +3911,7 @@ internal sealed class Tier1Coding
                     //   OPJ_TRUE, OPJ_FALSE, flags, flagsp, flags_stride, data,         l_w,  0, mqc, curctx, v, a, c, ct, oneplushalf, vsc
                     {
                         const bool check_flags = true;
-                        int data_stride = w;
+                        var data_stride = w;
                         const int ci = 0;
                         if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                         {
@@ -4022,7 +3926,7 @@ internal sealed class Tier1Coding
                                         break;
                                 }
                                 {
-                                    T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                    var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4038,7 +3942,7 @@ internal sealed class Tier1Coding
                     //   OPJ_TRUE, OPJ_FALSE, flags, flagsp, flags_stride, data,         l_w,  1, mqc, curctx, v, a, c, ct, oneplushalf, false
                     {
                         const bool check_flags = true;
-                        int data_stride = w;
+                        var data_stride = w;
                         const int ci = 1;
                         if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                         {
@@ -4053,7 +3957,7 @@ internal sealed class Tier1Coding
                                         break;
                                 }
                                 {
-                                    T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                    var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4069,7 +3973,7 @@ internal sealed class Tier1Coding
                     //   OPJ_TRUE, OPJ_FALSE, flags, flagsp, flags_stride, data,         l_w,  2, mqc, curctx, v, a, c, ct, oneplushalf, false
                     {
                         const bool check_flags = true;
-                        int data_stride = w;
+                        var data_stride = w;
                         const int ci = 2;
                         if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                         {
@@ -4084,7 +3988,7 @@ internal sealed class Tier1Coding
                                         break;
                                 }
                                 {
-                                    T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                    var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4100,7 +4004,7 @@ internal sealed class Tier1Coding
                     //   OPJ_TRUE, OPJ_FALSE, flags, flagsp, flags_stride, data,         l_w,  3, mqc, curctx, v, a, c, ct, oneplushalf, false
                     {
                         const bool check_flags = true;
-                        int data_stride = w;
+                        var data_stride = w;
                         const int ci = 3;
                         if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                         {
@@ -4115,7 +4019,7 @@ internal sealed class Tier1Coding
                                         break;
                                 }
                                 {
-                                    T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                    var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4135,7 +4039,7 @@ internal sealed class Tier1Coding
         {
             for (i = 0; i < w; ++i, ++flagsp, ++data)
             {
-                for (j = 0; j < h - k; ++j)
+                for (var j = 0; j < h - k; ++j)
                 {
                     DecClnpassStep(flagsp, data + j * w, oneplushalf, j, vsc);
                 }
@@ -4158,31 +4062,29 @@ internal sealed class Tier1Coding
         const int w = 64;
         const uint h = 64;
         const int flags_stride = 66;
-        int one, half, oneplushalf;
-        uint runlen;
-        uint k; int i, j;
-        int data = 0; //Pointer to this._data
-        int flagsp = flags_stride + 1; //Pointer to this.flags
+        uint k; int i;
+        var data = 0; //Pointer to this._data
+        var flagsp = flags_stride + 1; //Pointer to this.flags
         //DOWNLOAD_MQC_VARIABLES
         //^ C# we don't inline mqc.
         bool v;
-        one = 1 << bpno;
-        half = one >> 1;
-        oneplushalf = one | half;
+        var one = 1 << bpno;
+        var half = one >> 1;
+        var oneplushalf = one | half;
         for (k = 0; k < (h & ~3u); k += 4, data += 3 * w, flagsp += 2)
         {
             for (i = 0; i < w; ++i, ++data, ++flagsp)
             {
-                T1 flags = this.flags[flagsp];
+                var flags = this.flags[flagsp];
                 if (flags == 0)
                 {
-                    bool partial = true;
+                    var partial = true;
                     _mqc.Setcurctx(T1_CTXNO.AGG); //opj_t1_setcurctx macro
                     v = _mqc.Decode(); //opj_mqc_decode_macro
                     if (!v)
                         continue;
                     _mqc.Setcurctx(T1_CTXNO.UNI); //opj_t1_setcurctx macro
-                    runlen = _mqc.Decode() ? 1u : 0u;
+                    var runlen = _mqc.Decode() ? 1u : 0u;
                     v = _mqc.Decode();
                     runlen = (runlen << 1) | (v ? 1u : 0u);
                     switch (runlen)
@@ -4210,7 +4112,7 @@ internal sealed class Tier1Coding
 #pragma warning restore CS0162 // Unreachable code detected
                                     }
                                     {
-                                        T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                        var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4244,7 +4146,7 @@ internal sealed class Tier1Coding
                                             break;
                                     }
                                     {
-                                        T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                        var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4278,7 +4180,7 @@ internal sealed class Tier1Coding
                                             break;
                                     }
                                     {
-                                        T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                        var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4312,7 +4214,7 @@ internal sealed class Tier1Coding
                                             break;
                                     }
                                     {
-                                        T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                        var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4348,7 +4250,7 @@ internal sealed class Tier1Coding
                                         break;
                                 }
                                 {
-                                    T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                    var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4379,7 +4281,7 @@ internal sealed class Tier1Coding
                                         break;
                                 }
                                 {
-                                    T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                    var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4410,7 +4312,7 @@ internal sealed class Tier1Coding
                                         break;
                                 }
                                 {
-                                    T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                    var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4441,7 +4343,7 @@ internal sealed class Tier1Coding
                                         break;
                                 }
                                 {
-                                    T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                    var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4461,7 +4363,7 @@ internal sealed class Tier1Coding
         {
             for (i = 0; i < w; ++i, ++flagsp, ++data)
             {
-                for (j = 0; j < h - k; ++j)
+                for (var j = 0; j < h - k; ++j)
                 {
                     DecClnpassStep(flagsp, data + j * w, oneplushalf, j, vsc);
                 }
@@ -4481,34 +4383,32 @@ internal sealed class Tier1Coding
         //(t1, bpno,      vsc,  w,  h, flags_stride)
         // t1, bpno, OPJ_FALSE,_w, :h, _w + 2
         const bool vsc = false;
-        int w = (int)_w;
-        uint h = _h;
-        int flags_stride = w + 2;
-        int one, half, oneplushalf;
-        uint runlen;
-        uint k; int i, j;
-        int data = 0; //Pointer to this._data
-        int flagsp = flags_stride + 1; //Pointer to this.flags
+        var w = (int)_w;
+        var h = _h;
+        var flags_stride = w + 2;
+        uint k; int i;
+        var data = 0; //Pointer to this._data
+        var flagsp = flags_stride + 1; //Pointer to this.flags
         //DOWNLOAD_MQC_VARIABLES
         //^ C# we don't inline mqc.
         bool v;
-        one = 1 << bpno;
-        half = one >> 1;
-        oneplushalf = one | half;
+        var one = 1 << bpno;
+        var half = one >> 1;
+        var oneplushalf = one | half;
         for (k = 0; k < (h & ~3u); k += 4, data += 3 * w, flagsp += 2)
         {
             for (i = 0; i < w; ++i, ++data, ++flagsp)
             {
-                T1 flags = this.flags[flagsp];
+                var flags = this.flags[flagsp];
                 if (flags == 0)
                 {
-                    bool partial = true;
+                    var partial = true;
                     _mqc.Setcurctx(T1_CTXNO.AGG); //opj_t1_setcurctx macro
                     v = _mqc.Decode(); //opj_mqc_decode_macro
                     if (!v)
                         continue;
                     _mqc.Setcurctx(T1_CTXNO.UNI); //opj_t1_setcurctx macro
-                    runlen = _mqc.Decode() ? 1u : 0u;
+                    var runlen = _mqc.Decode() ? 1u : 0u;
                     v = _mqc.Decode();
                     runlen = (runlen << 1) | (v ? 1u : 0u);
                     switch (runlen)
@@ -4519,7 +4419,7 @@ internal sealed class Tier1Coding
                             //   OPJ_FALSE, OPJ_TRUE, flags, flagsp, flags_stride, data,         l_w,  0, mqc, curctx, v, a, c, ct, oneplushalf, vsc
                         {
                             const bool check_flags = false;
-                            int data_stride = w;
+                            var data_stride = w;
                             const int ci = 0;
                             if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
@@ -4536,7 +4436,7 @@ internal sealed class Tier1Coding
 #pragma warning restore CS0162 // Unreachable code detected
                                     }
                                     {
-                                        T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                        var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4555,7 +4455,7 @@ internal sealed class Tier1Coding
                             //   OPJ_FALSE, OPJ_TRUE, flags, flagsp, flags_stride, data,         l_w,  1, mqc, curctx, v, a, c, ct, oneplushalf, false
                         {
                             const bool check_flags = false;
-                            int data_stride = w;
+                            var data_stride = w;
                             const int ci = 1;
                             if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
@@ -4570,7 +4470,7 @@ internal sealed class Tier1Coding
                                             break;
                                     }
                                     {
-                                        T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                        var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4589,7 +4489,7 @@ internal sealed class Tier1Coding
                             //   OPJ_FALSE, OPJ_TRUE, flags, flagsp, flags_stride, data,         l_w,  2, mqc, curctx, v, a, c, ct, oneplushalf, false
                         {
                             const bool check_flags = false;
-                            int data_stride = w;
+                            var data_stride = w;
                             const int ci = 2;
                             if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
@@ -4604,7 +4504,7 @@ internal sealed class Tier1Coding
                                             break;
                                     }
                                     {
-                                        T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                        var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4623,7 +4523,7 @@ internal sealed class Tier1Coding
                             //   OPJ_FALSE, OPJ_TRUE, flags, flagsp, flags_stride, data,         l_w,  3, mqc, curctx, v, a, c, ct, oneplushalf, false
                         {
                             const bool check_flags = false;
-                            int data_stride = w;
+                            var data_stride = w;
                             const int ci = 3;
                             if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                             {
@@ -4638,7 +4538,7 @@ internal sealed class Tier1Coding
                                             break;
                                     }
                                     {
-                                        T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                        var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4659,7 +4559,7 @@ internal sealed class Tier1Coding
                     //   OPJ_TRUE, OPJ_FALSE, flags, flagsp, flags_stride, data,         l_w,  0, mqc, curctx, v, a, c, ct, oneplushalf, vsc
                     {
                         const bool check_flags = true;
-                        int data_stride = w;
+                        var data_stride = w;
                         const int ci = 0;
                         if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                         {
@@ -4674,7 +4574,7 @@ internal sealed class Tier1Coding
                                         break;
                                 }
                                 {
-                                    T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                    var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4690,7 +4590,7 @@ internal sealed class Tier1Coding
                     //   OPJ_TRUE, OPJ_FALSE, flags, flagsp, flags_stride, data,         l_w,  1, mqc, curctx, v, a, c, ct, oneplushalf, false
                     {
                         const bool check_flags = true;
-                        int data_stride = w;
+                        var data_stride = w;
                         const int ci = 1;
                         if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                         {
@@ -4705,7 +4605,7 @@ internal sealed class Tier1Coding
                                         break;
                                 }
                                 {
-                                    T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                    var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4721,7 +4621,7 @@ internal sealed class Tier1Coding
                     //   OPJ_TRUE, OPJ_FALSE, flags, flagsp, flags_stride, data,         l_w,  2, mqc, curctx, v, a, c, ct, oneplushalf, false
                     {
                         const bool check_flags = true;
-                        int data_stride = w;
+                        var data_stride = w;
                         const int ci = 2;
                         if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                         {
@@ -4736,7 +4636,7 @@ internal sealed class Tier1Coding
                                         break;
                                 }
                                 {
-                                    T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                    var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4752,7 +4652,7 @@ internal sealed class Tier1Coding
                     //   OPJ_TRUE, OPJ_FALSE, flags, flagsp, flags_stride, data,         l_w,  3, mqc, curctx, v, a, c, ct, oneplushalf, false
                     {
                         const bool check_flags = true;
-                        int data_stride = w;
+                        var data_stride = w;
                         const int ci = 3;
                         if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
                         {
@@ -4767,7 +4667,7 @@ internal sealed class Tier1Coding
                                         break;
                                 }
                                 {
-                                    T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                    var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
@@ -4787,7 +4687,7 @@ internal sealed class Tier1Coding
         {
             for (i = 0; i < w; ++i, ++flagsp, ++data)
             {
-                for (j = 0; j < h - k; ++j)
+                for (var j = 0; j < h - k; ++j)
                 {
                     DecClnpassStep(flagsp, data + j * w, oneplushalf, j, vsc);
                 }
@@ -4799,18 +4699,17 @@ internal sealed class Tier1Coding
     //2.5 - opj_t1_dec_refpass_raw
     private void DecRefpassRaw(int bpno)
     {
-        int one, poshalf;
-        int i, j, k;
-        int data = 0; //Pointer to this._data
-        int flagsp = T1_FLAGS(0, 0); //Pointer to this.flags
-        int w = (int)_w;
-        one = 1 << bpno;
-        poshalf = one >> 1;
+        int i, k;
+        var data = 0; //Pointer to this._data
+        var flagsp = T1_FLAGS(0, 0); //Pointer to this.flags
+        var w = (int)_w;
+        var one = 1 << bpno;
+        var poshalf = one >> 1;
         for (k = 0; k < (_h & ~3U); k += 4, flagsp += 2, data += 3 * w)
         {
             for (i = 0; i < w; ++i, ++flagsp, ++data)
             {
-                T1 flags = this.flags[flagsp];
+                var flags = this.flags[flagsp];
                 if (flags != 0)
                 {
                     DecRefpassStepRaw(flagsp, data, poshalf, 0);
@@ -4824,7 +4723,7 @@ internal sealed class Tier1Coding
         {
             for (i = 0; i < w; ++i, ++flagsp, ++data)
             {
-                for (j = 0; j < _h - k; ++j)
+                for (var j = 0; j < _h - k; ++j)
                 {
                     DecRefpassStepRaw(flagsp, data + j * w, poshalf, j);
                 }
@@ -4854,20 +4753,19 @@ internal sealed class Tier1Coding
         const int w = 64;
         const uint h = 64;
         const int flags_stride = 66;
-        int one, poshalf;
-        uint k; int i, j;
-        int data = 0; //Pointer to this._data
-        int flagsp = flags_stride + 1; //Pointer to this.flags
+        uint k; int i;
+        var data = 0; //Pointer to this._data
+        var flagsp = flags_stride + 1; //Pointer to this.flags
         //DOWNLOAD_MQC_VARIABLES
         //^ C# We don't inline the MQC functions.
         bool v;
-        one = 1 << bpno;
-        poshalf = one >> 1;
+        var one = 1 << bpno;
+        var poshalf = one >> 1;
         for (k = 0; k < (h & ~3u); k += 4, data += 3 * w, flagsp += 2)
         {
             for (i = 0; i < w; ++i, ++data, ++flagsp)
             {
-                T1 flags = this.flags[flagsp];
+                var flags = this.flags[flagsp];
                 if (flags != 0)
                 {
                     //opj_t1_dec_refpass_step_mqc_macro
@@ -4879,7 +4777,7 @@ internal sealed class Tier1Coding
                         if ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) ==
                             (T1)((uint)T1.SIGMA_THIS << (ci * 3)))
                         {
-                            uint ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
+                            var ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
                             _mqc.Setcurctx((T1_CTXNO)ctxt); //<-- opj_t1_setcurctx macro
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             _data[data + ci * data_stride] += v ^ (_data[data + ci * data_stride] < 0) ? poshalf : -poshalf;
@@ -4895,7 +4793,7 @@ internal sealed class Tier1Coding
                         if ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) ==
                             (T1)((uint)T1.SIGMA_THIS << (ci * 3)))
                         {
-                            uint ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
+                            var ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
                             _mqc.Setcurctx((T1_CTXNO)ctxt); //<-- opj_t1_setcurctx macro
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             _data[data + ci * data_stride] += v ^ (_data[data + ci * data_stride] < 0) ? poshalf : -poshalf;
@@ -4911,7 +4809,7 @@ internal sealed class Tier1Coding
                         if ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) ==
                             (T1)((uint)T1.SIGMA_THIS << (ci * 3)))
                         {
-                            uint ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
+                            var ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
                             _mqc.Setcurctx((T1_CTXNO)ctxt); //<-- opj_t1_setcurctx macro
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             _data[data + ci * data_stride] += v ^ (_data[data + ci * data_stride] < 0) ? poshalf : -poshalf;
@@ -4927,7 +4825,7 @@ internal sealed class Tier1Coding
                         if ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) ==
                             (T1)((uint)T1.SIGMA_THIS << (ci * 3)))
                         {
-                            uint ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
+                            var ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
                             _mqc.Setcurctx((T1_CTXNO)ctxt); //<-- opj_t1_setcurctx macro
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             _data[data + ci * data_stride] += v ^ (_data[data + ci * data_stride] < 0) ? poshalf : -poshalf;
@@ -4943,7 +4841,7 @@ internal sealed class Tier1Coding
         {
             for (i = 0; i < w; ++i, ++data, ++flagsp)
             {
-                for (j = 0; j < h - k; ++j)
+                for (var j = 0; j < h - k; ++j)
                 {
                     DecRefpassStepMqc(flagsp, data + j * w, poshalf, j);
                 }
@@ -4961,23 +4859,22 @@ internal sealed class Tier1Coding
         //opj_t1_dec_refpass_mqc_internal
         //(t1, bpno,     w,     h, flags_stride)
         // t1, bpno, t1->w, t1->h, t1->w + 2U
-        int w = (int)_w;
-        uint h = _h;
-        int flags_stride = w + 2;
-        int one, poshalf;
-        uint k; int i, j;
-        int data = 0; //Pointer to this._data
-        int flagsp = flags_stride + 1; //Pointer to this.flags
+        var w = (int)_w;
+        var h = _h;
+        var flags_stride = w + 2;
+        uint k; int i;
+        var data = 0; //Pointer to this._data
+        var flagsp = flags_stride + 1; //Pointer to this.flags
         //DOWNLOAD_MQC_VARIABLES
         //^ C# We don't inline the MQC functions.
         bool v;
-        one = 1 << bpno;
-        poshalf = one >> 1;
+        var one = 1 << bpno;
+        var poshalf = one >> 1;
         for (k = 0; k < (h & ~3u); k += 4, data += 3 * w, flagsp += 2)
         {
             for (i = 0; i < w; ++i, ++data, ++flagsp)
             {
-                T1 flags = this.flags[flagsp];
+                var flags = this.flags[flagsp];
                 if (flags != 0)
                 {
                     //opj_t1_dec_refpass_step_mqc_macro
@@ -4985,11 +4882,11 @@ internal sealed class Tier1Coding
                     // flags, data,         l_w,  0, mqc, curctx, v, a, c, ct, poshalf
                     {
                         const int ci = 0;
-                        int data_stride = w;
+                        var data_stride = w;
                         if ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) ==
                             (T1)((uint)T1.SIGMA_THIS << (ci * 3)))
                         {
-                            uint ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
+                            var ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
                             _mqc.Setcurctx((T1_CTXNO)ctxt); //<-- opj_t1_setcurctx macro
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             _data[data + ci * data_stride] += v ^ (_data[data + ci * data_stride] < 0) ? poshalf : -poshalf;
@@ -5001,11 +4898,11 @@ internal sealed class Tier1Coding
                     // flags, data,         l_w,  1, mqc, curctx, v, a, c, ct, poshalf
                     {
                         const int ci = 1;
-                        int data_stride = w;
+                        var data_stride = w;
                         if ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) ==
                             (T1)((uint)T1.SIGMA_THIS << (ci * 3)))
                         {
-                            uint ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
+                            var ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
                             _mqc.Setcurctx((T1_CTXNO)ctxt); //<-- opj_t1_setcurctx macro
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             _data[data + ci * data_stride] += v ^ (_data[data + ci * data_stride] < 0) ? poshalf : -poshalf;
@@ -5017,11 +4914,11 @@ internal sealed class Tier1Coding
                     // flags, data,         l_w,  2, mqc, curctx, v, a, c, ct, poshalf
                     {
                         const int ci = 2;
-                        int data_stride = w;
+                        var data_stride = w;
                         if ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) ==
                             (T1)((uint)T1.SIGMA_THIS << (ci * 3)))
                         {
-                            uint ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
+                            var ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
                             _mqc.Setcurctx((T1_CTXNO)ctxt); //<-- opj_t1_setcurctx macro
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             _data[data + ci * data_stride] += v ^ (_data[data + ci * data_stride] < 0) ? poshalf : -poshalf;
@@ -5033,11 +4930,11 @@ internal sealed class Tier1Coding
                     // flags, data,         l_w,  3, mqc, curctx, v, a, c, ct, poshalf
                     {
                         const int ci = 3;
-                        int data_stride = w;
+                        var data_stride = w;
                         if ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) ==
                             (T1)((uint)T1.SIGMA_THIS << (ci * 3)))
                         {
-                            uint ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
+                            var ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
                             _mqc.Setcurctx((T1_CTXNO)ctxt); //<-- opj_t1_setcurctx macro
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             _data[data + ci * data_stride] += v ^ (_data[data + ci * data_stride] < 0) ? poshalf : -poshalf;
@@ -5053,7 +4950,7 @@ internal sealed class Tier1Coding
         {
             for (i = 0; i < w; ++i, ++data, ++flagsp)
             {
-                for (j = 0; j < h - k; ++j)
+                for (var j = 0; j < h - k; ++j)
                 {
                     DecRefpassStepMqc(flagsp, data + j * w, poshalf, j);
                 }
@@ -5095,10 +4992,9 @@ internal sealed class Tier1Coding
         //opj_t1_dec_sigpass_mqc_internal
         //(bpno,      vsc,     w,     h,  flags_stride)
         // bpno, OPJ_TRUE, width, height, flags_stride
-        int one, half, oneplushalf;
-        uint i, j, k;
-        int data = 0; // Pointer to _data
-        int flagsp = flags_stride + 1;
+        uint i, k;
+        var data = 0; // Pointer to _data
+        var flagsp = flags_stride + 1;
         const int w = width;
         const uint h = height;
         //DOWNLOAD_MQC_VARIABLES
@@ -5106,14 +5002,14 @@ internal sealed class Tier1Coding
         //   OpenJpeg 2.1 functions.
         bool v;
 
-        one = 1 << bpno;
-        half = one >> 1;
-        oneplushalf = one | half;
+        var one = 1 << bpno;
+        var half = one >> 1;
+        var oneplushalf = one | half;
         for (k = 0; k < (h & ~3u); k += 4, data += 3 * w, flagsp += 2)
         {
             for (i = 0; i < w; ++i, ++data, ++flagsp)
             {
-                T1 flags = this.flags[flagsp];
+                var flags = this.flags[flagsp];
                 if (flags != 0)
                 {
                     //Macro: opj_t1_dec_sigpass_step_mqc_macro
@@ -5129,13 +5025,13 @@ internal sealed class Tier1Coding
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             if (v)
                             {
-                                T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                     flags,
                                     this.flags[flagsp - 1],
                                     this.flags[flagsp + 1],
                                     ci);
-                                T1_CTXNO ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
-                                bool spb = T1Luts.Getspb(lu);
+                                var ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                                 v = v ^ spb;
@@ -5158,13 +5054,13 @@ internal sealed class Tier1Coding
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             if (v)
                             {
-                                T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                     flags,
                                     this.flags[flagsp - 1],
                                     this.flags[flagsp + 1],
                                     ci);
-                                T1_CTXNO ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
-                                bool spb = T1Luts.Getspb(lu);
+                                var ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                                 v = v ^ spb;
@@ -5187,13 +5083,13 @@ internal sealed class Tier1Coding
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             if (v)
                             {
-                                T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                     flags,
                                     this.flags[flagsp - 1],
                                     this.flags[flagsp + 1],
                                     ci);
-                                T1_CTXNO ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
-                                bool spb = T1Luts.Getspb(lu);
+                                var ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                                 v = v ^ spb;
@@ -5216,13 +5112,13 @@ internal sealed class Tier1Coding
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             if (v)
                             {
-                                T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                     flags,
                                     this.flags[flagsp - 1],
                                     this.flags[flagsp + 1],
                                     ci);
-                                T1_CTXNO ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
-                                bool spb = T1Luts.Getspb(lu);
+                                var ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                                 v = v ^ spb;
@@ -5241,7 +5137,7 @@ internal sealed class Tier1Coding
         {
             for (i = 0; i < w; ++i, ++data, ++flagsp)
             {
-                for (j = 0; j < h - k; ++j)
+                for (uint j = 0; j < h - k; ++j)
                 {
                     DecSigpassStepMqc(flagsp, data + (int)j * w, oneplushalf, (int)j, flags_stride, vsc);
                 }
@@ -5256,31 +5152,30 @@ internal sealed class Tier1Coding
     /// </remarks>
     private void DecSigpassMqcGeneric_vsc(int bpno)
     {
-        uint flags_stride = _w + 2u;
+        var flags_stride = _w + 2u;
         const bool vsc = true;
 
         //opj_t1_dec_sigpass_mqc_internal
         //(bpno,      vsc,     w,     h,  flags_stride)
         // bpno, OPJ_TRUE, width, height, flags_stride
-        int one, half, oneplushalf;
-        uint i, j, k;
-        int data = 0; // Pointer to _data
-        int flagsp = (int)flags_stride + 1;
-        int w = (int)_w;
-        uint h = _h;
+        uint i, k;
+        var data = 0; // Pointer to _data
+        var flagsp = (int)flags_stride + 1;
+        var w = (int)_w;
+        var h = _h;
         //DOWNLOAD_MQC_VARIABLES
         //C# Org impl does the MQC using inline macros. We'll instead use the
         //   OpenJpeg 2.1 functions.
         bool v;
 
-        one = 1 << bpno;
-        half = one >> 1;
-        oneplushalf = one | half;
+        var one = 1 << bpno;
+        var half = one >> 1;
+        var oneplushalf = one | half;
         for (k = 0; k < (h & ~3u); k += 4, data += 3 * w, flagsp += 2)
         {
             for (i = 0; i < w; ++i, ++data, ++flagsp)
             {
-                T1 flags = this.flags[flagsp];
+                var flags = this.flags[flagsp];
                 if (flags != 0)
                 {
                     //Macro: opj_t1_dec_sigpass_step_mqc_macro
@@ -5296,13 +5191,13 @@ internal sealed class Tier1Coding
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             if (v)
                             {
-                                T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                     flags,
                                     this.flags[flagsp - 1],
                                     this.flags[flagsp + 1],
                                     ci);
-                                T1_CTXNO ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
-                                bool spb = T1Luts.Getspb(lu);
+                                var ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                                 v = v ^ spb;
@@ -5325,13 +5220,13 @@ internal sealed class Tier1Coding
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             if (v)
                             {
-                                T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                     flags,
                                     this.flags[flagsp - 1],
                                     this.flags[flagsp + 1],
                                     ci);
-                                T1_CTXNO ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
-                                bool spb = T1Luts.Getspb(lu);
+                                var ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                                 v = v ^ spb;
@@ -5354,13 +5249,13 @@ internal sealed class Tier1Coding
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             if (v)
                             {
-                                T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                     flags,
                                     this.flags[flagsp - 1],
                                     this.flags[flagsp + 1],
                                     ci);
-                                T1_CTXNO ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
-                                bool spb = T1Luts.Getspb(lu);
+                                var ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                                 v = v ^ spb;
@@ -5383,13 +5278,13 @@ internal sealed class Tier1Coding
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             if (v)
                             {
-                                T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                     flags,
                                     this.flags[flagsp - 1],
                                     this.flags[flagsp + 1],
                                     ci);
-                                T1_CTXNO ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
-                                bool spb = T1Luts.Getspb(lu);
+                                var ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                                 v = v ^ spb;
@@ -5408,7 +5303,7 @@ internal sealed class Tier1Coding
         {
             for (i = 0; i < w; ++i, ++data, ++flagsp)
             {
-                for (j = 0; j < h - k; ++j)
+                for (uint j = 0; j < h - k; ++j)
                 {
                     DecSigpassStepMqc(flagsp, data + (int)j * w, oneplushalf, (int)j, flags_stride, vsc);
                 }
@@ -5431,10 +5326,9 @@ internal sealed class Tier1Coding
         //opj_t1_dec_sigpass_mqc_internal
         //(bpno,      vsc,     w,     h,  flags_stride)
         // bpno, OPJ_TRUE, width, height, flags_stride
-        int one, half, oneplushalf;
-        uint i, j, k;
-        int data = 0; // Pointer to _data
-        int flagsp = flags_stride + 1;
+        uint i, k;
+        var data = 0; // Pointer to _data
+        var flagsp = flags_stride + 1;
         const int w = width;
         const uint h = height;
         //DOWNLOAD_MQC_VARIABLES
@@ -5442,14 +5336,14 @@ internal sealed class Tier1Coding
         //   OpenJpeg 2.1 functions.
         bool v;
 
-        one = 1 << bpno;
-        half = one >> 1;
-        oneplushalf = one | half;
+        var one = 1 << bpno;
+        var half = one >> 1;
+        var oneplushalf = one | half;
         for (k = 0; k < (h & ~3u); k += 4, data += 3 * w, flagsp += 2)
         {
             for (i = 0; i < w; ++i, ++data, ++flagsp)
             {
-                T1 flags = this.flags[flagsp];
+                var flags = this.flags[flagsp];
                 if (flags != 0)
                 {
                     //Macro: opj_t1_dec_sigpass_step_mqc_macro
@@ -5465,13 +5359,13 @@ internal sealed class Tier1Coding
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             if (v)
                             {
-                                T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                     flags,
                                     this.flags[flagsp - 1],
                                     this.flags[flagsp + 1],
                                     ci);
-                                T1_CTXNO ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
-                                bool spb = T1Luts.Getspb(lu);
+                                var ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                                 v = v ^ spb;
@@ -5494,13 +5388,13 @@ internal sealed class Tier1Coding
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             if (v)
                             {
-                                T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                     flags,
                                     this.flags[flagsp - 1],
                                     this.flags[flagsp + 1],
                                     ci);
-                                T1_CTXNO ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
-                                bool spb = T1Luts.Getspb(lu);
+                                var ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                                 v = v ^ spb;
@@ -5523,13 +5417,13 @@ internal sealed class Tier1Coding
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             if (v)
                             {
-                                T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                     flags,
                                     this.flags[flagsp - 1],
                                     this.flags[flagsp + 1],
                                     ci);
-                                T1_CTXNO ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
-                                bool spb = T1Luts.Getspb(lu);
+                                var ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                                 v = v ^ spb;
@@ -5552,13 +5446,13 @@ internal sealed class Tier1Coding
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             if (v)
                             {
-                                T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                     flags,
                                     this.flags[flagsp - 1],
                                     this.flags[flagsp + 1],
                                     ci);
-                                T1_CTXNO ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
-                                bool spb = T1Luts.Getspb(lu);
+                                var ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                                 v = v ^ spb;
@@ -5577,7 +5471,7 @@ internal sealed class Tier1Coding
         {
             for (i = 0; i < w; ++i, ++data, ++flagsp)
             {
-                for (j = 0; j < h - k; ++j)
+                for (uint j = 0; j < h - k; ++j)
                 {
                     DecSigpassStepMqc(flagsp, data + (int)j * w, oneplushalf, (int)j, flags_stride, vsc);
                 }
@@ -5592,31 +5486,30 @@ internal sealed class Tier1Coding
     /// </remarks>
     private void DecSigpassMqcGeneric_novsc(int bpno)
     {
-        uint flags_stride = _w + 2u;
+        var flags_stride = _w + 2u;
         const bool vsc = false;
 
         //opj_t1_dec_sigpass_mqc_internal
         //(bpno,      vsc,     w,     h,  flags_stride)
         // bpno, OPJ_TRUE, width, height, flags_stride
-        int one, half, oneplushalf;
-        uint i, j, k;
-        int data = 0; // Pointer to _data
-        int flagsp = (int)flags_stride + 1;
-        int w = (int)_w;
-        uint h = _h;
+        uint i, k;
+        var data = 0; // Pointer to _data
+        var flagsp = (int)flags_stride + 1;
+        var w = (int)_w;
+        var h = _h;
         //DOWNLOAD_MQC_VARIABLES
         //C# Org impl does the MQC using inline macros. We'll instead use the
         //   OpenJpeg 2.1 functions.
         bool v;
 
-        one = 1 << bpno;
-        half = one >> 1;
-        oneplushalf = one | half;
+        var one = 1 << bpno;
+        var half = one >> 1;
+        var oneplushalf = one | half;
         for (k = 0; k < (h & ~3u); k += 4, data += 3 * w, flagsp += 2)
         {
             for (i = 0; i < w; ++i, ++data, ++flagsp)
             {
-                T1 flags = this.flags[flagsp];
+                var flags = this.flags[flagsp];
                 if (flags != 0)
                 {
                     //Macro: opj_t1_dec_sigpass_step_mqc_macro
@@ -5632,13 +5525,13 @@ internal sealed class Tier1Coding
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             if (v)
                             {
-                                T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                     flags,
                                     this.flags[flagsp - 1],
                                     this.flags[flagsp + 1],
                                     ci);
-                                T1_CTXNO ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
-                                bool spb = T1Luts.Getspb(lu);
+                                var ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                                 v = v ^ spb;
@@ -5661,13 +5554,13 @@ internal sealed class Tier1Coding
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             if (v)
                             {
-                                T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                     flags,
                                     this.flags[flagsp - 1],
                                     this.flags[flagsp + 1],
                                     ci);
-                                T1_CTXNO ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
-                                bool spb = T1Luts.Getspb(lu);
+                                var ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                                 v = v ^ spb;
@@ -5690,13 +5583,13 @@ internal sealed class Tier1Coding
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             if (v)
                             {
-                                T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                     flags,
                                     this.flags[flagsp - 1],
                                     this.flags[flagsp + 1],
                                     ci);
-                                T1_CTXNO ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
-                                bool spb = T1Luts.Getspb(lu);
+                                var ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                                 v = v ^ spb;
@@ -5719,13 +5612,13 @@ internal sealed class Tier1Coding
                             v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                             if (v)
                             {
-                                T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                                var lu = T1Luts.Getctxtno_sc_or_spb_index(
                                     flags,
                                     this.flags[flagsp - 1],
                                     this.flags[flagsp + 1],
                                     ci);
-                                T1_CTXNO ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
-                                bool spb = T1Luts.Getspb(lu);
+                                var ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
+                                var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                                 v = v ^ spb;
@@ -5744,7 +5637,7 @@ internal sealed class Tier1Coding
         {
             for (i = 0; i < w; ++i, ++data, ++flagsp)
             {
-                for (j = 0; j < h - k; ++j)
+                for (uint j = 0; j < h - k; ++j)
                 {
                     DecSigpassStepMqc(flagsp, data + (int)j * w, oneplushalf, (int)j, flags_stride, vsc);
                 }
@@ -5763,22 +5656,22 @@ internal sealed class Tier1Coding
         //(flags,  flagsp, flags_stride,  data, data_stride, ci, mqc,      curctx, v,      a,      c,      ct, oneplushalf, vsc)
         //*flagsp, flagsp, flags_stride, datap,           0, ci, mqc, mqc->curctx, v, mqc->a, mqc->c, mqc->ct, oneplushalf, vsc
         const int data_stride = 0;
-        T1 flags = this.flags[flagsp];
+        var flags = this.flags[flagsp];
         if ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0U &&
             (flags & (T1)((uint)T1.SIGMA_NEIGHBOURS << (ci * 3))) != 0U)
         {
             uint ctxt1 = _mqc.Getctxno_zc((T1)((uint)flags >> (ci * 3)));
             _mqc.curctx = _mqc.ctxs[ctxt1]; //<-- opj_t1_setcurctx
-            bool v = _mqc.Decode(); //<-- opj_mqc_decode_macro
+            var v = _mqc.Decode(); //<-- opj_mqc_decode_macro
             if (v)
             {
-                T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                var lu = T1Luts.Getctxtno_sc_or_spb_index(
                     flags,
                     this.flags[flagsp - 1],
                     this.flags[flagsp + 1],
                     ci);
-                T1_CTXNO ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
-                bool spb = T1Luts.Getspb(lu);
+                var ctxt2 = (T1_CTXNO)T1Luts.Getctxno_sc(lu);
+                var spb = T1Luts.Getspb(lu);
                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                 v = v ^ spb;
@@ -5792,7 +5685,7 @@ internal sealed class Tier1Coding
     //2.5 - opj_t1_dec_refpass_step_mqc
     private void DecRefpassStepMqc(int flagsp, int datap, int poshalf, int ci)
     {
-        T1 flags = this.flags[flagsp];
+        var flags = this.flags[flagsp];
         //opj_t1_dec_refpass_step_mqc_macro
         //(  flags,  data, data_stride, ci, mqc, curctx, v, a, c, ct, poshalf)
         // *flagsp, datap,           0, ci, mqc, curctx, v, a, c, ct, poshalf
@@ -5801,9 +5694,9 @@ internal sealed class Tier1Coding
             if ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) ==
                 (T1)((uint)T1.SIGMA_THIS << (ci * 3)))
             {
-                uint ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
+                var ctxt = T1Luts.Getctxno_mag((T1)((uint)flags >> (ci * 3)));
                 _mqc.Setcurctx((T1_CTXNO)ctxt); //<-- opj_t1_setcurctx macro
-                bool v = _mqc.Decode(); //<-- opj_mqc_decode_macro
+                var v = _mqc.Decode(); //<-- opj_mqc_decode_macro
                 _data[datap + ci * data_stride] += v ^ (_data[datap + ci * data_stride] < 0) ? poshalf : -poshalf;
                 this.flags[flagsp] |= (T1)((uint)T1.MU_THIS << (ci * 3));
             }
@@ -5813,11 +5706,11 @@ internal sealed class Tier1Coding
     //2.5 - opj_t1_dec_refpass_step_raw
     private void DecRefpassStepRaw(int flagsp, int datap, int poshalf, int ci)
     {
-        T1 flag = flags[flagsp];
+        var flag = flags[flagsp];
         if ((flag & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) ==
             (T1)((uint)T1.SIGMA_THIS << (ci * 3)))
         {
-            bool v = _mqc.RawDecode();
+            var v = _mqc.RawDecode();
             _data[datap] += v ^ (_data[datap] < 0) ? poshalf : -poshalf;
             flags[flagsp] |= (T1)((uint)T1.MU_THIS << (ci * 3));
         }
@@ -5826,7 +5719,7 @@ internal sealed class Tier1Coding
     //2.1
     private void DecRefpassStepRaw(int flag_pos, int data_pos, int poshalf, int neghalf, bool vsc)
     {
-        T1 flag = vsc ? flags[flag_pos] & ~(T1.SIG_S | T1.SIG_SE | T1.SIG_SW | T1.SGN_S) : flags[flag_pos];
+        var flag = vsc ? flags[flag_pos] & ~(T1.SIG_S | T1.SIG_SE | T1.SIG_SW | T1.SGN_S) : flags[flag_pos];
         if ((flag & (T1.SIG | T1.VISIT)) == T1.SIG)
         {
             throw new NotImplementedException();
@@ -5840,14 +5733,14 @@ internal sealed class Tier1Coding
     //2.5 - opj_t1_dec_sigpass_step_raw
     private void DecSigpassStepRaw(int flagsp, int datap, int oneplushalf, bool vsc, int ci)
     {
-        T1 flags = this.flags[flagsp];
+        var flags = this.flags[flagsp];
 
         if ((flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == T1.NONE &&
             (flags & (T1)((uint)T1.SIGMA_NEIGHBOURS << (ci * 3))) != T1.NONE)
         {
             if (_mqc.RawDecode())
             {
-                bool v = _mqc.RawDecode();
+                var v = _mqc.RawDecode();
                 _data[datap] = v ? -oneplushalf : oneplushalf;
                 UpdateFlags(flagsp, ci, v ? 1u : 0u, _w + 2, vsc);
             }
@@ -5862,14 +5755,14 @@ internal sealed class Tier1Coding
     /// </remarks>
     private void DecClnpassStep(int flagsp, int datap, int oneplushalf, int ci, bool vsc)
     {
-        T1 flags = this.flags[flagsp];
+        var flags = this.flags[flagsp];
         //opj_t1_dec_clnpass_step_macro
         //(check_flags,  partial,   flags, flagsp, flags_stride,  data, data_stride, ci, mqc,      curctx, ..., oneplushalf, vsc)
         //   OPJ_TRUE, OPJ_FALSE, *flagsp, flagsp,   t1->w + 2U, datap,           0, ci, mqc, mqc->curctx, ..., oneplushalf, vsc
         {
             const bool check_flags = true;
             const int data_stride = 0;
-            uint flags_stride = _w + 2u;
+            var flags_stride = _w + 2u;
             if (!check_flags || (flags & (T1)((uint)(T1.SIGMA_THIS | T1.PI_THIS) << (ci * 3))) == 0)
             {
                 do
@@ -5878,15 +5771,15 @@ internal sealed class Tier1Coding
                     {
                         var ctxt1 = (T1_CTXNO)_mqc.Getctxno_zc((T1)((uint)flags >> (ci * 3)));
                         _mqc.Setcurctx(ctxt1); //<- opj_t1_setcurctx macro
-                        bool v = _mqc.Decode(); //<- opj_mqc_decode_macro
+                        var v = _mqc.Decode(); //<- opj_mqc_decode_macro
                         if (!v)
                             break;
                     }
                     {
-                        T1 lu = T1Luts.Getctxtno_sc_or_spb_index(
+                        var lu = T1Luts.Getctxtno_sc_or_spb_index(
                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
-                        bool v = _mqc.Decode(); //<- opj_mqc_decode_macro
+                        var v = _mqc.Decode(); //<- opj_mqc_decode_macro
                         v = v ^ T1Luts.Getspb(lu);
                         _data[datap + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                         UpdateFlagsMacro(ref this.flags[flagsp], flagsp, ci, v ? 1u : 0u, flags_stride, vsc);
@@ -5921,7 +5814,7 @@ internal sealed class Tier1Coding
         // North-west, north, north-east
         if (ci == 0 && !vsc)
         {
-            int north = flagsp - (int)stride;
+            var north = flagsp - (int)stride;
             this.flags[north] |= (T1)(s << (int)T1.CHI_5_I) | T1.SIGMA_16;
             this.flags[north - 1] |= T1.SIGMA_17;
             this.flags[north + 1] |= T1.SIGMA_15;
@@ -5930,7 +5823,7 @@ internal sealed class Tier1Coding
         // South-west, south, south-east
         if (ci == 3)
         {
-            int south = flagsp + (int)stride;
+            var south = flagsp + (int)stride;
             this.flags[south] |= (T1)(s << (int)T1.CHI_0_I) | T1.SIGMA_1;
             this.flags[south - 1] |= T1.SIGMA_2;
             this.flags[south + 1] |= T1.SIGMA_0;
@@ -5952,7 +5845,7 @@ internal sealed class Tier1Coding
         //w * h can at most be 4096
 
         {
-            int new_datasize = w * h;
+            var new_datasize = w * h;
 
             if (new_datasize > datasize || _data == null)
             {
@@ -5969,7 +5862,7 @@ internal sealed class Tier1Coding
         // We expand these buffers to multiples of 16 bytes.
         // We need 4 buffers of 129 integers each, expanded to 132 integers each
         // We also need 514 bytes of buffer, expanded to 528 bytes
-        int new_flagsize = 132 * /* sizeof(uint) * */ 4;
+        var new_flagsize = 132 * /* sizeof(uint) * */ 4;
         new_flagsize += 528 / 4; // 514 expanded to multiples of 16
 
         if (new_flagsize > flagssize || flags == null)
@@ -5999,7 +5892,7 @@ internal sealed class Tier1Coding
         //w * h can at most be 4096
 
         {
-            int new_datasize = w * h;
+            var new_datasize = w * h;
 
             if (new_datasize > datasize || _data == null)
             {
@@ -6013,13 +5906,13 @@ internal sealed class Tier1Coding
             }
         }
 
-        int flags_stride = w + 2;
+        var flags_stride = w + 2;
 
-        int flagssize = (h + 3) / 4 + 2;
+        var flagssize = (h + 3) / 4 + 2;
 
         flagssize *= flags_stride;
         {
-            int flags_height = (h + 3) / 4;
+            var flags_height = (h + 3) / 4;
 
             if (flagssize > this.flagssize || flags == null)
                 flags = new T1[flagssize];
@@ -6036,7 +5929,7 @@ internal sealed class Tier1Coding
 
             if (h % 4 != 0)
             {
-                T1 v = T1.NONE;
+                var v = T1.NONE;
                 if (h % 4 == 1)
                 {
                     v |= T1.PI_1 | T1.PI_2 | T1.PI_3;

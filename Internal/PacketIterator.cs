@@ -144,16 +144,12 @@ internal sealed class PacketIterator
     internal static void UpdateEncodingParameters(JPXImage image, CodingParameters cp, uint tile_no)
     {
         /* encoding parameters to set */
-        uint l_max_res;
-        uint l_max_prec;
-        uint l_tx0, l_tx1, l_ty0, l_ty1;
-        uint l_dx_min, l_dy_min;
 
         /* preconditions */
         Debug.Assert(tile_no < (int) (cp.tw * cp.th));
 
         /* get encoding parameters */
-        GetEncodingParameters(image, cp, tile_no, out l_tx0, out l_tx1, out l_ty0, out l_ty1, out l_dx_min, out l_dy_min, out l_max_prec, out l_max_res);
+        GetEncodingParameters(image, cp, tile_no, out var l_tx0, out var l_tx1, out var l_ty0, out var l_ty1, out var l_dx_min, out var l_dy_min, out var l_max_prec, out var l_max_res);
 
         var tcp = cp.tcps[tile_no];
 
@@ -181,23 +177,21 @@ internal sealed class PacketIterator
         uint p_dy_min)
     {
         /* loop*/
-        uint pino;
 
         /* number of pocs*/
-        uint l_poc_bound;
 
         /* initializations*/
         var l_tcp = cp.tcps;
         var tcp = l_tcp[p_tileno];
 
         /* number of iterations in the loop */
-        l_poc_bound = tcp.numpocs + 1;
+        var l_poc_bound = tcp.numpocs + 1;
 
-        for (pino = 0; pino < l_poc_bound; ++pino)
+        for (uint pino = 0; pino < l_poc_bound; ++pino)
         {
             var current_poc = tcp.pocs[pino];
             current_poc.compS = 0;
-            current_poc.compE = p_num_comps;/*p_image.numcomps;*/
+            current_poc.compE = p_num_comps; /*p_image.numcomps;*/
             current_poc.resS = 0;
             current_poc.resE = p_max_res;
             current_poc.layS = 0;
@@ -227,10 +221,8 @@ internal sealed class PacketIterator
         uint p_dy_min)
     {
         /* loop*/
-        uint pino;
 
         /* number of pocs*/
-        uint l_poc_bound;
 
         //Avoids compiler warning
         //OPJ_ARG_NOT_USED(p_max_res);
@@ -239,7 +231,7 @@ internal sealed class PacketIterator
         var l_tcp = cp.tcps;
         var tcp = l_tcp[p_tileno];
         /* number of iterations in the loop */
-        l_poc_bound = tcp.numpocs + 1;
+        var l_poc_bound = tcp.numpocs + 1;
 
         /* start at first element, and to make sure the compiler will not make a calculation each time in the loop
            store a pointer to the current element to modify rather than l_tcp->pocs[i]*/
@@ -264,7 +256,7 @@ internal sealed class PacketIterator
         current_poc.dx = p_dx_min;
         current_poc.dy = p_dy_min;
 
-        for (pino = 1; pino < l_poc_bound; ++pino)
+        for (uint pino = 1; pino < l_poc_bound; ++pino)
         {
             current_poc = tcp.pocs[pino];
             current_poc.compS = current_poc.compno0;
@@ -290,13 +282,10 @@ internal sealed class PacketIterator
     //2.5 - opj_get_encoding_packet_count
     internal static uint GetEncodingPacketCount(JPXImage image, CodingParameters cp, uint tile_no)
     {
-        OPJ_UINT32 max_res;
-        OPJ_UINT32 max_prec;
-
         // get encoding parameters
         GetAllEncodingParameters(image, cp, tile_no, out _, out _,
             out _, out _, out _, out _, 
-            out max_prec, out max_res, null);
+            out var max_prec, out var max_res, null);
 
         return cp.tcps[tile_no].numlayers * max_prec * image.numcomps * max_res;
     }
@@ -315,20 +304,18 @@ internal sealed class PacketIterator
         out uint p_max_res)
     {
         /* loop */
-        int  compno, resno;
 
         /* position in x and y of tile */
-        uint p, q;
 
         /* initializations */
         var tcp = cp.tcps[tileno];
         var l_img_comp = image.comps;
         var l_tccp = tcp.tccps;
-        int l_tccp_ptr = 0;
+        var l_tccp_ptr = 0;
 
         /* here calculation of tx0, tx1, ty0, ty1, maxprec, dx and dy */
-        p = tileno % cp.tw;
-        q = tileno / cp.tw;
+        var p = tileno % cp.tw;
+        var q = tileno / cp.tw;
 
         /* find extent of tile */
         var tx0 = cp.tx0 + p * cp.tdx;
@@ -346,21 +333,14 @@ internal sealed class PacketIterator
         p_dx_min = 0x7fffffff;
         p_dy_min  = 0x7fffffff;
 
-        for (compno = 0; compno < image.numcomps; ++compno) {
+        for (var compno = 0; compno < image.numcomps; ++compno) {
             /* arithmetic variables to calculate */
-            uint l_level_no;
-            uint l_rx0, l_ry0, l_rx1, l_ry1;
-            uint l_px0, l_py0, l_px1, py1;
-            uint l_pdx, l_pdy;
-            uint l_pw, l_ph;
-            uint l_product;
-            uint l_tcx0, l_tcy0, l_tcx1, l_tcy1;
             var img_comp = l_img_comp[compno];
 
-            l_tcx0 = MyMath.uint_ceildiv(p_tx0, img_comp.dx);
-            l_tcy0 = MyMath.uint_ceildiv(p_ty0, img_comp.dy);
-            l_tcx1 = MyMath.uint_ceildiv(p_tx1, img_comp.dx);
-            l_tcy1 = MyMath.uint_ceildiv(p_ty1, img_comp.dy);
+            var l_tcx0 = MyMath.uint_ceildiv(p_tx0, img_comp.dx);
+            var l_tcy0 = MyMath.uint_ceildiv(p_ty0, img_comp.dy);
+            var l_tcx1 = MyMath.uint_ceildiv(p_tx1, img_comp.dx);
+            var l_tcy1 = MyMath.uint_ceildiv(p_ty1, img_comp.dy);
 
             var tccp = l_tccp[l_tccp_ptr];
             if (tccp.numresolutions > p_max_res) {
@@ -368,16 +348,14 @@ internal sealed class PacketIterator
             }
 
             /* use custom size for precincts */
-            for (resno = 0; resno < tccp.numresolutions; ++resno)
+            for (var resno = 0; resno < tccp.numresolutions; ++resno)
             {
-                ulong l_dx, l_dy;
-
                 /* precinct width and height */
-                l_pdx = tccp.prcw[resno];
-                l_pdy = tccp.prch[resno];
+                var l_pdx = tccp.prcw[resno];
+                var l_pdy = tccp.prch[resno];
 
-                l_dx = img_comp.dx * (1ul << (int) (l_pdx + tccp.numresolutions - 1 - resno));
-                l_dy = img_comp.dy * (1ul << (int) (l_pdy + tccp.numresolutions - 1 - resno));
+                var l_dx = img_comp.dx * (1ul << (int) (l_pdx + tccp.numresolutions - 1 - resno));
+                var l_dy = img_comp.dy * (1ul << (int) (l_pdy + tccp.numresolutions - 1 - resno));
 
                 /* take the minimum size for dx for each comp and resolution */
                 if (l_dx <= uint.MaxValue)
@@ -386,23 +364,23 @@ internal sealed class PacketIterator
                     p_dy_min = Math.Min(p_dy_min, (uint) l_dy);
 
                 /* various calculations of extents */
-                l_level_no = (uint) (tccp.numresolutions - 1 - resno);
+                var l_level_no = (uint) (tccp.numresolutions - 1 - resno);
 
-                l_rx0 = MyMath.uint_ceildivpow2(l_tcx0, (int)l_level_no);
-                l_ry0 = MyMath.uint_ceildivpow2(l_tcy0, (int)l_level_no);
-                l_rx1 = MyMath.uint_ceildivpow2(l_tcx1, (int)l_level_no);
-                l_ry1 = MyMath.uint_ceildivpow2(l_tcy1, (int)l_level_no);
+                var l_rx0 = MyMath.uint_ceildivpow2(l_tcx0, (int)l_level_no);
+                var l_ry0 = MyMath.uint_ceildivpow2(l_tcy0, (int)l_level_no);
+                var l_rx1 = MyMath.uint_ceildivpow2(l_tcx1, (int)l_level_no);
+                var l_ry1 = MyMath.uint_ceildivpow2(l_tcy1, (int)l_level_no);
 
-                l_px0 = MyMath.uint_floordivpow2(l_rx0, (int)l_pdx) << (int)l_pdx;
-                l_py0 = MyMath.uint_floordivpow2(l_ry0, (int)l_pdy) << (int)l_pdy;
-                l_px1 = MyMath.uint_ceildivpow2(l_rx1, (int)l_pdx) << (int)l_pdx;
+                var l_px0 = MyMath.uint_floordivpow2(l_rx0, (int)l_pdx) << (int)l_pdx;
+                var l_py0 = MyMath.uint_floordivpow2(l_ry0, (int)l_pdy) << (int)l_pdy;
+                var l_px1 = MyMath.uint_ceildivpow2(l_rx1, (int)l_pdx) << (int)l_pdx;
 
-                py1 = MyMath.uint_ceildivpow2(l_ry1, (int)l_pdy) << (int) l_pdy;
+                var py1 = MyMath.uint_ceildivpow2(l_ry1, (int)l_pdy) << (int) l_pdy;
 
-                l_pw = l_rx0==l_rx1 ? 0 : (l_px1 - l_px0) >> (int) l_pdx;
-                l_ph = l_ry0==l_ry1 ? 0 : (py1 - l_py0) >> (int) l_pdy;
+                var l_pw = l_rx0==l_rx1 ? 0 : (l_px1 - l_px0) >> (int) l_pdx;
+                var l_ph = l_ry0==l_ry1 ? 0 : (py1 - l_py0) >> (int) l_pdy;
 
-                l_product = l_pw * l_ph;
+                var l_product = l_pw * l_ph;
 
                 /* update precision */
                 if (l_product > p_max_prec) {
@@ -428,23 +406,18 @@ internal sealed class PacketIterator
         uint[][] resolutions)
     {
         /* loop */
-        int compno, resno;
-
-        uint[] lResolution;
-        int lResolutionPtr;
 
         /* position in x and y of tile */
-        uint p, q;
 
         /* initializations */
         var tcp = cp.tcps[tileno];
         var l_img_comp = image.comps;
         var l_tccp = tcp.tccps;
-        int l_tccp_ptr = 0;
+        var l_tccp_ptr = 0;
 
         /* here calculation of tx0, tx1, ty0, ty1, maxprec, dx and dy */
-        p = tileno % cp.tw;
-        q = tileno / cp.tw;
+        var p = tileno % cp.tw;
+        var q = tileno / cp.tw;
 
         /* find extent of tile */
         var tx0 = cp.tx0 + p * cp.tdx;
@@ -462,25 +435,18 @@ internal sealed class PacketIterator
         p_dx_min = 0x7fffffff;
         p_dy_min = 0x7fffffff;
 
-        for (compno = 0; compno < image.numcomps; ++compno)
+        for (var compno = 0; compno < image.numcomps; ++compno)
         {
             /* arithmetic variables to calculate */
-            uint l_level_no;
-            uint l_rx0, l_ry0, l_rx1, l_ry1;
-            uint l_px0, l_py0, l_px1, py1;
-            uint l_pdx, l_pdy;
-            uint l_pw, l_ph;
-            uint l_product;
-            uint l_tcx0, l_tcy0, l_tcx1, l_tcy1;
             var img_comp = l_img_comp[compno];
 
-            lResolution = resolutions != null ? resolutions[compno] : null;
-            lResolutionPtr = 0;
+            var lResolution = resolutions != null ? resolutions[compno] : null;
+            var lResolutionPtr = 0;
 
-            l_tcx0 = MyMath.uint_ceildiv(p_tx0, img_comp.dx);
-            l_tcy0 = MyMath.uint_ceildiv(p_ty0, img_comp.dy);
-            l_tcx1 = MyMath.uint_ceildiv(p_tx1, img_comp.dx);
-            l_tcy1 = MyMath.uint_ceildiv(p_ty1, img_comp.dy);
+            var l_tcx0 = MyMath.uint_ceildiv(p_tx0, img_comp.dx);
+            var l_tcy0 = MyMath.uint_ceildiv(p_ty0, img_comp.dy);
+            var l_tcx1 = MyMath.uint_ceildiv(p_tx1, img_comp.dx);
+            var l_tcy1 = MyMath.uint_ceildiv(p_ty1, img_comp.dy);
 
             var tccp = l_tccp[l_tccp_ptr];
             if (tccp.numresolutions > p_max_res)
@@ -489,16 +455,14 @@ internal sealed class PacketIterator
             }
 
             /* use custom size for precincts */
-            l_level_no = tccp.numresolutions;
-            for (resno = 0; resno < tccp.numresolutions; ++resno)
+            var l_level_no = tccp.numresolutions;
+            for (var resno = 0; resno < tccp.numresolutions; ++resno)
             {
-                uint l_dx, l_dy;
-
                 --l_level_no;
 
                 /* precinct width and height */
-                l_pdx = tccp.prcw[resno];
-                l_pdy = tccp.prch[resno];
+                var l_pdx = tccp.prcw[resno];
+                var l_pdy = tccp.prch[resno];
                 if (lResolution != null)
                 {
                     lResolution[lResolutionPtr++] = l_pdx;
@@ -507,7 +471,7 @@ internal sealed class PacketIterator
                 if (l_pdx + l_level_no < 32 &&
                     img_comp.dx <= uint.MaxValue / (1u << (int)(l_pdx + l_level_no)))
                 {
-                    l_dx = img_comp.dx * (1u << (int)(l_pdx + l_level_no));
+                    var l_dx = img_comp.dx * (1u << (int)(l_pdx + l_level_no));
 
                     /* take the minimum size for dx for each comp and resolution */
                     p_dx_min = Math.Min(p_dx_min, l_dx);
@@ -515,27 +479,27 @@ internal sealed class PacketIterator
                 if (l_pdy + l_level_no < 32 &&
                     img_comp.dy <= uint.MaxValue / (1u << (int)(l_pdy + l_level_no)))
                 {
-                    l_dy = img_comp.dy * (1u << (int)(l_pdy + l_level_no));
+                    var l_dy = img_comp.dy * (1u << (int)(l_pdy + l_level_no));
 
                     /* take the minimum size for dx for each comp and resolution */
                     p_dy_min = Math.Min(p_dy_min, l_dy);
                 }                    
                     
-                l_rx0 = MyMath.uint_ceildivpow2(l_tcx0, (int)l_level_no);
-                l_ry0 = MyMath.uint_ceildivpow2(l_tcy0, (int)l_level_no);
-                l_rx1 = MyMath.uint_ceildivpow2(l_tcx1, (int)l_level_no);
-                l_ry1 = MyMath.uint_ceildivpow2(l_tcy1, (int)l_level_no);
+                var l_rx0 = MyMath.uint_ceildivpow2(l_tcx0, (int)l_level_no);
+                var l_ry0 = MyMath.uint_ceildivpow2(l_tcy0, (int)l_level_no);
+                var l_rx1 = MyMath.uint_ceildivpow2(l_tcx1, (int)l_level_no);
+                var l_ry1 = MyMath.uint_ceildivpow2(l_tcy1, (int)l_level_no);
 
-                l_px0 = MyMath.uint_floordivpow2(l_rx0, (int)l_pdx) << (int)l_pdx;
-                l_py0 = MyMath.uint_floordivpow2(l_ry0, (int)l_pdy) << (int)l_pdy;
-                l_px1 = MyMath.uint_ceildivpow2(l_rx1, (int)l_pdx) << (int)l_pdx;
+                var l_px0 = MyMath.uint_floordivpow2(l_rx0, (int)l_pdx) << (int)l_pdx;
+                var l_py0 = MyMath.uint_floordivpow2(l_ry0, (int)l_pdy) << (int)l_pdy;
+                var l_px1 = MyMath.uint_ceildivpow2(l_rx1, (int)l_pdx) << (int)l_pdx;
 
-                py1 = MyMath.uint_ceildivpow2(l_ry1, (int)l_pdy) << (int)l_pdy;
+                var py1 = MyMath.uint_ceildivpow2(l_ry1, (int)l_pdy) << (int)l_pdy;
 
-                l_pw = l_rx0 == l_rx1 ? 0 : (l_px1 - l_px0) >> (int)l_pdx;
-                l_ph = l_ry0 == l_ry1 ? 0 : (py1 - l_py0) >> (int)l_pdy;
+                var l_pw = l_rx0 == l_rx1 ? 0 : (l_px1 - l_px0) >> (int)l_pdx;
+                var l_ph = l_ry0 == l_ry1 ? 0 : (py1 - l_py0) >> (int)l_pdy;
 
-                l_product = l_pw * l_ph;
+                var l_product = l_pw * l_ph;
 
                 /* update precision */
                 if (l_product > p_max_prec)
@@ -561,10 +525,10 @@ internal sealed class PacketIterator
     internal static void CreateEncode(PacketIterator[] pi, CodingParameters cp, uint tileno, uint pino, uint tpnum, int tppos, T2_MODE t2_mode)
     {
         int incr_top = 1, resetX = 0;
-        TileCodingParams tcps = cp.tcps[tileno];
-        ProgOrdChang tcp = tcps.pocs[pino];
+        var tcps = cp.tcps[tileno];
+        var tcp = tcps.pocs[pino];
 
-        string prog = J2K.ConvertProgressionOrder(tcp.prg);
+        var prog = J2K.ConvertProgressionOrder(tcp.prg);
 
         pi[pino].first = true;
         pi[pino].poc.prg = tcp.prg;
@@ -588,7 +552,7 @@ internal sealed class PacketIterator
         }
         else
         {
-            for (int i = tppos + 1; i < 4; i++)
+            for (var i = tppos + 1; i < 4; i++)
             {
                 switch (prog[i])
                 {
@@ -625,7 +589,7 @@ internal sealed class PacketIterator
 
             if (tpnum == 0)
             {
-                for (int i = tppos; i >= 0; i--)
+                for (var i = tppos; i >= 0; i--)
                 {
                     switch (prog[i])
                     {
@@ -675,7 +639,7 @@ internal sealed class PacketIterator
             }
             else
             {
-                for (int i = tppos; i >= 0; i--)
+                for (var i = tppos; i >= 0; i--)
                 {
                     switch (prog[i])
                     {
@@ -871,7 +835,7 @@ internal sealed class PacketIterator
 
         if(pos>=0)
         {
-            for(int i=pos;pos>=0;i--)
+            for(var i=pos;pos>=0;i--)
             {
                 switch(prog[i])
                 {
@@ -932,37 +896,32 @@ internal sealed class PacketIterator
     internal static PacketIterator[] InitialiseEncode(JPXImage image, 
         CodingParameters cp, uint tileno, T2_MODE t2_mode, CompressionInfo cinfo)
     {
-        uint numcomps = image.numcomps;
+        var numcomps = image.numcomps;
 
         // Encoding prameters to set
-        OPJ_UINT32 max_res;
-        OPJ_UINT32 max_prec;
-        OPJ_UINT32 tx0, tx1, ty0, ty1;
-        OPJ_UINT32 dx_min, dy_min;
-        OPJ_UINT32 step_p, step_c, step_r, step_l;
 
-        TileCodingParams tcp = cp.tcps[tileno];
+        var tcp = cp.tcps[tileno];
         //uint bound = tcp.numpocs + 1; //<-- using pi_ar.Length instead
 
         //to store w, h, dx and dy for all components and resolutions
-        const int data_stride = 4 * Constants.J2K_MAXRLVLS;
-        OPJ_UINT32[] tmp_data = new OPJ_UINT32[image.numcomps * data_stride];
-        OPJ_UINT32[] tmp_ptr = new OPJ_UINT32[image.numcomps];
+        const int data_stride = 4 * Constants.J2KMaxrlvls;
+        var tmp_data = new OPJ_UINT32[image.numcomps * data_stride];
+        var tmp_ptr = new OPJ_UINT32[image.numcomps];
 
         // Memory allocation for pi
-        PacketIterator[] pi_ar = Create(image, cp, tileno, cinfo);
+        var pi_ar = Create(image, cp, tileno, cinfo);
 
         // Updates pointer array
         for (uint compno = 1; compno < tmp_ptr.Length; compno++)
             tmp_ptr[compno] = compno * data_stride;
 
-        GetAllEncodingParameters(image, cp, tileno, out tx0, out tx1, out ty0, out ty1, out dx_min, out dy_min, out max_prec, out max_res, tmp_ptr, ref tmp_data);
+        GetAllEncodingParameters(image, cp, tileno, out var tx0, out var tx1, out var ty0, out var ty1, out var dx_min, out var dy_min, out var max_prec, out var max_res, tmp_ptr, ref tmp_data);
 
         // Step calculations
-        step_p = 1;
-        step_c = max_prec * step_p;
-        step_r = image.numcomps * step_c;
-        step_l = max_res * step_r;
+        OPJ_UINT32 step_p = 1;
+        var step_c = max_prec * step_p;
+        var step_r = image.numcomps * step_c;
+        var step_l = max_res * step_r;
 
         // set values on the first packet iterator
         var current_pi = pi_ar[0];
@@ -970,7 +929,7 @@ internal sealed class PacketIterator
         current_pi.include = new bool[tcp.numlayers * step_l];
 
         // Special treatment for the first packet iterator
-        PIComp[] current_comps = current_pi.comps;
+        var current_comps = current_pi.comps;
         var img_comps = image.comps;
         //var tccps = tcp.tccps; //<-- C# Not used of anything
         current_pi.tx0 = tx0;
@@ -985,21 +944,21 @@ internal sealed class PacketIterator
         current_pi.step_l = step_l;
 
         // Allocation for components and number of components has already been calculated by opj_pi_create
-        for (int compno = 0; compno < numcomps; ++compno)
+        for (var compno = 0; compno < numcomps; ++compno)
         {
-            PIComp current_comp = current_comps[compno];
-            ImageComp img_comp = img_comps[compno];
+            var current_comp = current_comps[compno];
+            var img_comp = img_comps[compno];
 
-            PIResolution[] res_ar = current_comp.resolutions;
-            int encoding_value_ptr = (int)tmp_ptr[compno];
+            var res_ar = current_comp.resolutions;
+            var encoding_value_ptr = (int)tmp_ptr[compno];
 
             current_comp.dx = img_comp.dx;
             current_comp.dy = img_comp.dy;
 
             /* resolutions have already been initialized */
-            for (int resno = 0; resno < current_comp.numresolutions; resno++)
+            for (var resno = 0; resno < current_comp.numresolutions; resno++)
             {
-                PIResolution res = res_ar[resno];
+                var res = res_ar[resno];
                 res.pdx = tmp_data[encoding_value_ptr++];
                 res.pdy = tmp_data[encoding_value_ptr++];
                 res.pw = tmp_data[encoding_value_ptr++];
@@ -1007,7 +966,7 @@ internal sealed class PacketIterator
             }
         }
 
-        for (int pino = 1; pino < pi_ar.Length; ++pino)
+        for (var pino = 1; pino < pi_ar.Length; ++pino)
         {
             current_pi = pi_ar[pino];
             current_comps = current_pi.comps;
@@ -1025,20 +984,20 @@ internal sealed class PacketIterator
             current_pi.step_l = step_l;
 
             // Allocation for components and number of components has already been calculated by opj_pi_create
-            for (int compno = 0; compno < numcomps; ++compno)
+            for (var compno = 0; compno < numcomps; ++compno)
             {
-                PIComp current_comp = current_comps[compno];
-                ImageComp img_comp = img_comps[compno];
+                var current_comp = current_comps[compno];
+                var img_comp = img_comps[compno];
 
-                PIResolution[] res_ar = current_comp.resolutions;
-                int encoding_value_ptr = (int)tmp_ptr[compno];
+                var res_ar = current_comp.resolutions;
+                var encoding_value_ptr = (int)tmp_ptr[compno];
 
                 current_comp.dx = img_comp.dx;
                 current_comp.dy = img_comp.dy;
                 /* resolutions have already been initialized */
-                for (int resno = 0; resno < current_comp.numresolutions; resno++)
+                for (var resno = 0; resno < current_comp.numresolutions; resno++)
                 {
-                    PIResolution l_res = res_ar[resno];
+                    var l_res = res_ar[resno];
                     l_res.pdx = tmp_data[encoding_value_ptr++];
                     l_res.pdy = tmp_data[encoding_value_ptr++];
                     l_res.pw = tmp_data[encoding_value_ptr++];
@@ -1079,7 +1038,7 @@ internal sealed class PacketIterator
         Debug.Assert(tileno < cp.tw * cp.th);
 
         // initializations
-        TileCodingParams tcp = cp.tcps[tileno];
+        var tcp = cp.tcps[tileno];
 
         /* start at first element, and to make sure the compiler will not make a calculation each time in the loop
            store a pointer to the current element to modify rather than l_tcp.pocs[i]*/
@@ -1104,7 +1063,7 @@ internal sealed class PacketIterator
         current_poc.dx = dx_min;
         current_poc.dy = dy_min;
 
-        for (int pino = 1; pino < tcp.pocs.Length; ++pino)
+        for (var pino = 1; pino < tcp.pocs.Length; ++pino)
         {
             current_poc = tcp.pocs[pino];
 
@@ -1161,13 +1120,13 @@ internal sealed class PacketIterator
         Debug.Assert(tileno < cp.tw * cp.th);
 
         /* initializations*/
-        TileCodingParams tcp = cp.tcps[tileno];
+        var tcp = cp.tcps[tileno];
 
         //poc_bound = l_tcp->numpocs + 1; //<-- useing tcp.pocs.Length instead
 
-        for (int pino = 0; pino < tcp.pocs.Length; ++pino)
+        for (var pino = 0; pino < tcp.pocs.Length; ++pino)
         {
-            ProgOrdChang current_poc = tcp.pocs[pino];
+            var current_poc = tcp.pocs[pino];
 
             current_poc.compS = 0;
             current_poc.compE = num_comps;/*p_image.numcomps;*/
@@ -1215,10 +1174,8 @@ internal sealed class PacketIterator
             throw new NotImplementedException("Null argument for resolution_ptrs");
             
         // loop
-        OPJ_UINT32 compno, resno;
 
         // to store l_dx, l_dy, w and h for each resolution and component.
-        OPJ_UINT32 resolution_ptr;
 
         // preconditions in debug
         Debug.Assert(cp != null);
@@ -1226,20 +1183,20 @@ internal sealed class PacketIterator
         Debug.Assert(tileno < cp.tw * cp.th);
 
         // initializations
-        TileCodingParams tcp = cp.tcps[tileno];
-        TileCompParams[] tccps = tcp.tccps;
-        ImageComp[] img_comps = image.comps;
+        var tcp = cp.tcps[tileno];
+        var tccps = tcp.tccps;
+        var img_comps = image.comps;
 
         // position in x and y of tile
-        OPJ_UINT32 p = tileno % cp.tw;
-        OPJ_UINT32 q = tileno / cp.tw;
+        var p = tileno % cp.tw;
+        var q = tileno / cp.tw;
 
         // here calculation of tx0, tx1, ty0, ty1 
         {
-            uint l_tx0 = cp.tx0 + p * cp.tdx;
+            var l_tx0 = cp.tx0 + p * cp.tdx;
             tx0 = Math.Max(l_tx0, image.x0);
             tx1 = Math.Min(MyMath.uint_adds(l_tx0, cp.tdx), image.x1);
-            uint l_ty0 = cp.ty0 + q * cp.tdy;
+            var l_ty0 = cp.ty0 + q * cp.tdy;
             ty0 = Math.Max(l_ty0, image.y0);
             ty1 = Math.Min(MyMath.uint_adds(l_ty0, cp.tdy), image.y1);
         }
@@ -1252,72 +1209,64 @@ internal sealed class PacketIterator
         dx_min = 0x7fffffff;
         dy_min = 0x7fffffff;
 
-        for (compno = 0; compno < image.numcomps; ++compno) 
+        for (OPJ_UINT32 compno = 0; compno < image.numcomps; ++compno) 
         {
             // aritmetic variables to calculate
-            OPJ_UINT32 level_no;
-            OPJ_UINT32 rx0, ry0, rx1, ry1;
-            OPJ_UINT32 px0, py0, px1, py1;
-            OPJ_UINT32 product;
-            OPJ_UINT32 tcx0, tcy0, tcx1, tcy1;
-            OPJ_UINT32 pdx, pdy, pw, ph;
 
-            resolution_ptr = resolution_ptrs[compno];
+            var resolution_ptr = resolution_ptrs[compno];
 
             //C# Sets the "pointers"
             var img_comp = img_comps[compno];
             var tccp = tccps[compno];
 
-            tcx0 = MyMath.uint_ceildiv(tx0, img_comp.dx);
-            tcy0 = MyMath.uint_ceildiv(ty0, img_comp.dy);
-            tcx1 = MyMath.uint_ceildiv(tx1, img_comp.dx);
-            tcy1 = MyMath.uint_ceildiv(ty1, img_comp.dy);
+            var tcx0 = MyMath.uint_ceildiv(tx0, img_comp.dx);
+            var tcy0 = MyMath.uint_ceildiv(ty0, img_comp.dy);
+            var tcx1 = MyMath.uint_ceildiv(tx1, img_comp.dx);
+            var tcy1 = MyMath.uint_ceildiv(ty1, img_comp.dy);
 
             if (tccp.numresolutions > max_res)
                 max_res = tccp.numresolutions;
 
             // use custom size for precincts
-            level_no = tccp.numresolutions;
-            for (resno = 0; resno < tccp.numresolutions; ++resno) 
+            var level_no = tccp.numresolutions;
+            for (OPJ_UINT32 resno = 0; resno < tccp.numresolutions; ++resno) 
             {
-                OPJ_UINT32 dx, dy;
-
                 --level_no;
 
                 // precinct width and height
-                pdx = tccp.prcw[resno];
-                pdy = tccp.prch[resno];
+                var pdx = tccp.prcw[resno];
+                var pdy = tccp.prch[resno];
                 resolutions[resolution_ptr++] = pdx;
                 resolutions[resolution_ptr++] = pdy;
                 if (pdx + level_no < 32 &&
                     img_comp.dx <= uint.MaxValue / (1u << (int)(pdx + level_no)))
                 {
-                    dx = img_comp.dx * (1u << (int)(pdx + level_no));
+                    var dx = img_comp.dx * (1u << (int)(pdx + level_no));
                     // take the minimum size for l_dx for each comp and resolution
                     dx_min = Math.Min(dx_min, dx);
                 }
                 if (pdy + level_no < 32 &&
                     img_comp.dy <= uint.MaxValue / (1u << (int)(pdy + level_no)))
                 {
-                    dy = img_comp.dy * (1u << (int)(pdy + level_no));
+                    var dy = img_comp.dy * (1u << (int)(pdy + level_no));
                     dy_min = Math.Min(dy_min, dy);
                 }
 
                 /* various calculations of extents*/
-                rx0 = MyMath.uint_ceildivpow2(tcx0, (int)level_no);
-                ry0 = MyMath.uint_ceildivpow2(tcy0, (int)level_no);
-                rx1 = MyMath.uint_ceildivpow2(tcx1, (int)level_no);
-                ry1 = MyMath.uint_ceildivpow2(tcy1, (int)level_no);
-                px0 = MyMath.uint_floordivpow2(rx0, (int)pdx) << (int)pdx;
-                py0 = MyMath.uint_floordivpow2(ry0, (int)pdy) << (int)pdy;
-                px1 = MyMath.uint_ceildivpow2(rx1, (int)pdx) << (int)pdx;
-                py1 = MyMath.uint_ceildivpow2(ry1, (int)pdy) << (int)pdy;
-                pw = rx0==rx1?0:(px1 - px0) >> (int)pdx;
-                ph = ry0==ry1?0:(py1 - py0) >> (int)pdy;
+                var rx0 = MyMath.uint_ceildivpow2(tcx0, (int)level_no);
+                var ry0 = MyMath.uint_ceildivpow2(tcy0, (int)level_no);
+                var rx1 = MyMath.uint_ceildivpow2(tcx1, (int)level_no);
+                var ry1 = MyMath.uint_ceildivpow2(tcy1, (int)level_no);
+                var px0 = MyMath.uint_floordivpow2(rx0, (int)pdx) << (int)pdx;
+                var py0 = MyMath.uint_floordivpow2(ry0, (int)pdy) << (int)pdy;
+                var px1 = MyMath.uint_ceildivpow2(rx1, (int)pdx) << (int)pdx;
+                var py1 = MyMath.uint_ceildivpow2(ry1, (int)pdy) << (int)pdy;
+                var pw = rx0==rx1?0:(px1 - px0) >> (int)pdx;
+                var ph = ry0==ry1?0:(py1 - py0) >> (int)pdy;
                 resolutions[resolution_ptr++] = pw;
                 resolutions[resolution_ptr++] = ph;
-                product = pw * ph;
-			
+                var product = pw * ph;
+
                 // update precision
                 if (product > max_prec) {
                     max_prec = product;
@@ -1333,30 +1282,29 @@ internal sealed class PacketIterator
     /// </remarks>
     internal static PacketIterator[] Create(JPXImage image, CodingParameters cp, uint tileno, CompressionInfo cinfo)
     {
-        TileCodingParams tcp = cp.tcps[tileno];
+        var tcp = cp.tcps[tileno];
         //uint poc_bound = tcp.numpocs + 1; C# uses pi_ar.Length instead
 
         var pi_ar = new PacketIterator[tcp.numpocs + 1];
 
         //C# current_pi is set inside the loop
-        for (int pino = 0; pino < pi_ar.Length; pino++)
+        for (var pino = 0; pino < pi_ar.Length; pino++)
         {
-            TileCompParams tccp;
             var current_pi = pi_ar[pino] = new PacketIterator(cinfo);
 
             current_pi.numcomps = image.numcomps;
             current_pi.comps = new PIComp[image.numcomps];
 
-            for (int compno = 0; compno < current_pi.comps.Length; compno++)
+            for (var compno = 0; compno < current_pi.comps.Length; compno++)
             {
                 var comp = current_pi.comps[compno] = new PIComp();
 
-                tccp = tcp.tccps[compno];
+                var tccp = tcp.tccps[compno];
 
                 comp.resolutions = new PIResolution[tccp.numresolutions];
                 comp.numresolutions = tccp.numresolutions;
 
-                for (int resno = 0; resno < comp.resolutions.Length; resno++)
+                for (var resno = 0; resno < comp.resolutions.Length; resno++)
                     comp.resolutions[resno] = new PIResolution();
             }     
         }
@@ -1370,20 +1318,16 @@ internal sealed class PacketIterator
     /// </remarks>
     internal static PacketIterator[] CreateDecode(JPXImage image, CodingParameters cp, uint tileno, CompressionInfo cinfo)
     {
-        TileCodingParams tcp = cp.tcps[tileno];
+        var tcp = cp.tcps[tileno];
         //uint bound = tcp.numpocs + 1; C# uses pi_ar.Length instead
 
         //to store w, h, dx and dy fro all components and resolutions
-        const int data_stride = 4 * Constants.J2K_MAXRLVLS;
-        OPJ_UINT32[] tmp_data = new OPJ_UINT32[image.numcomps * data_stride];
-        OPJ_UINT32[] tmp_ptr = new OPJ_UINT32[image.numcomps];
+        const int data_stride = 4 * Constants.J2KMaxrlvls;
+        var tmp_data = new OPJ_UINT32[image.numcomps * data_stride];
+        var tmp_ptr = new OPJ_UINT32[image.numcomps];
 
         /* encoding prameters to set*/
-        OPJ_UINT32 max_res;
-        OPJ_UINT32 max_prec;
-        OPJ_UINT32 tx0, tx1, ty0, ty1;
         OPJ_UINT32 dx_min, dy_min;
-        OPJ_UINT32 step_p, step_c, step_r, step_l;
 
         var pi_ar = Create(image, cp, tileno, cinfo);
 
@@ -1394,13 +1338,13 @@ internal sealed class PacketIterator
         for (uint compno = 1; compno < tmp_ptr.Length; compno++)
             tmp_ptr[compno] = compno * data_stride;
 
-        GetAllEncodingParameters(image, cp, tileno, out tx0, out tx1, out ty0, out ty1, out dx_min, out dy_min, out max_prec, out max_res, tmp_ptr, ref tmp_data);
+        GetAllEncodingParameters(image, cp, tileno, out var tx0, out var tx1, out var ty0, out var ty1, out dx_min, out dy_min, out var max_prec, out var max_res, tmp_ptr, ref tmp_data);
 
         // step calculations
-        step_p = 1;
-        step_c = max_prec * step_p;
-        step_r = image.numcomps * step_c;
-        step_l = max_res * step_r;
+        OPJ_UINT32 step_p = 1;
+        var step_c = max_prec * step_p;
+        var step_r = image.numcomps * step_c;
+        var step_l = max_res * step_r;
 
         // set values on the first packet iterator
         var current_pi = pi_ar[0];
@@ -1418,7 +1362,7 @@ internal sealed class PacketIterator
         }
 
         // Special treatment for the first packet iterator
-        PIComp[] current_comps = current_pi.comps;
+        var current_comps = current_pi.comps;
         var img_comps = image.comps;
         //var tccps = tcp.tccps;
 
@@ -1433,26 +1377,26 @@ internal sealed class PacketIterator
         current_pi.step_l = step_l;
 
         // allocation for components and number of components has already been calculated by opj_pi_create
-        for (int compno = 0; compno < current_pi.numcomps; ++compno)
+        for (var compno = 0; compno < current_pi.numcomps; ++compno)
         {
             //C# Updating pointers
-            PIComp current_comp = current_comps[compno];
-            ImageComp img_comp = img_comps[compno];
+            var current_comp = current_comps[compno];
+            var img_comp = img_comps[compno];
 
-            PIResolution[] res_ar = current_comp.resolutions;
+            var res_ar = current_comp.resolutions;
 
             //C# impl. This is a pointer into tmp_data, which is why we
             //         have the tmp_data as an extra parameter to this func
-            uint encoding_value_ptr = tmp_ptr[compno];
+            var encoding_value_ptr = tmp_ptr[compno];
 
             current_comp.dx = img_comp.dx;
             current_comp.dy = img_comp.dy;
 
             /* resolutions have already been initialized */
-            for (int resno = 0; resno < current_comp.numresolutions; resno++)
+            for (var resno = 0; resno < current_comp.numresolutions; resno++)
             {
                 //C# Updates pointers
-                PIResolution res = res_ar[resno];
+                var res = res_ar[resno];
 
                 res.pdx = tmp_data[encoding_value_ptr++];
                 res.pdy = tmp_data[encoding_value_ptr++];
@@ -1461,7 +1405,7 @@ internal sealed class PacketIterator
             }
         }
 
-        for (int pino = 1; pino < pi_ar.Length; ++pino)
+        for (var pino = 1; pino < pi_ar.Length; ++pino)
         {
             //C# Updates the ponters
             current_pi = pi_ar[pino];
@@ -1482,22 +1426,22 @@ internal sealed class PacketIterator
             current_pi.step_l = step_l;
 
             // allocation for components and number of components has already been calculated by opj_pi_create
-            for (int compno = 0; compno < current_pi.numcomps; ++compno)
+            for (var compno = 0; compno < current_pi.numcomps; ++compno)
             {
                 //C# Updates the pointers
-                PIComp current_comp = current_comps[compno];
-                ImageComp img_comp = img_comps[compno];
+                var current_comp = current_comps[compno];
+                var img_comp = img_comps[compno];
 
-                PIResolution[] res_ar = current_comp.resolutions;
-                uint encoding_value_ptr = tmp_ptr[compno];
+                var res_ar = current_comp.resolutions;
+                var encoding_value_ptr = tmp_ptr[compno];
 
                 current_comp.dx = img_comp.dx;
                 current_comp.dy = img_comp.dy;
                 /* resolutions have already been initialized */
-                for (int resno = 0; resno < current_comp.numresolutions; resno++)
+                for (var resno = 0; resno < current_comp.numresolutions; resno++)
                 {
                     //C# updates the pointers
-                    PIResolution l_res = res_ar[resno];
+                    var l_res = res_ar[resno];
 
                     l_res.pdx = tmp_data[encoding_value_ptr++];
                     l_res.pdy = tmp_data[encoding_value_ptr++];
@@ -1524,7 +1468,7 @@ internal sealed class PacketIterator
         //C# instead of l_bound we use pi_ar.Length
         Debug.Assert(pi_ar.Length == tcp.numpocs + 1);
 
-        for (int pino = 0; pino < pi_ar.Length; pino++)
+        for (var pino = 0; pino < pi_ar.Length; pino++)
         {
             //C# updates the pointers
             var current_pi = pi_ar[pino];
@@ -1548,7 +1492,7 @@ internal sealed class PacketIterator
         //C# instead of l_bound we use pi_ar.Length
         Debug.Assert(pi_ar.Length == tcp.numpocs + 1);
 
-        for (int pino = 0; pino < pi_ar.Length; pino++)
+        for (var pino = 0; pino < pi_ar.Length; pino++)
         {
             //C# updates the pointers
             var current_poc = tcp.pocs[pino];
@@ -1603,8 +1547,6 @@ internal sealed class PacketIterator
     private IEnumerable<bool> Next_lrcp()
     {
         //bool skip;
-        PIComp comp;
-        PIResolution res;
 
         if (poc.compno0 >= numcomps ||
             poc.compno1 >= numcomps + 1)
@@ -1619,17 +1561,17 @@ internal sealed class PacketIterator
             {
                 for (compno = poc.compno0; compno < poc.compno1; compno++)
                 {
-                    comp = comps[compno];
+                    var comp = comps[compno];
                     if (resno >= comp.numresolutions)
                         continue;
-                    res = comp.resolutions[resno];
+                    var res = comp.resolutions[resno];
                     if (!tp_on)
                         poc.precno1 = res.pw * res.ph;
                         
                     for (precno = poc.precno0; precno < poc.precno1; precno++)
                     {
                         //I belive c++ long == c# int (index was long)
-                        uint index = layno * step_l + resno * step_r + compno * step_c + precno * step_p;
+                        var index = layno * step_l + resno * step_r + compno * step_c + precno * step_p;
                         if (index >= include.Length)
                         {
                             //C# impl. note:
@@ -1659,9 +1601,6 @@ internal sealed class PacketIterator
     /// </remarks>
     private IEnumerable<bool> Next_rlcp()
     {
-        PIComp comp;
-        PIResolution res;
-
         if (poc.compno0 >= numcomps ||
             poc.compno1 >= numcomps + 1)
         {
@@ -1675,17 +1614,17 @@ internal sealed class PacketIterator
             {
                 for (compno = poc.compno0; compno < poc.compno1; compno++)
                 {
-                    comp = comps[compno];
+                    var comp = comps[compno];
                     if (resno >= comp.numresolutions)
                         continue;
-                    res = comp.resolutions[resno];
+                    var res = comp.resolutions[resno];
                     if (!tp_on)
                         poc.precno1 = res.pw * res.ph;
 
                     for (precno = poc.precno0; precno < poc.precno1; precno++)
                     {
                         //I belive c++ long == c# int (index was long)
-                        uint index = layno * step_l + resno * step_r + compno * step_c + precno * step_p;
+                        var index = layno * step_l + resno * step_r + compno * step_c + precno * step_p;
                         if (index >= include.Length)
                         {
                             _cinfo.Error("Invalid access to pi->include");
@@ -1720,30 +1659,28 @@ internal sealed class PacketIterator
             yield break;
         }
 
-        { 
-            OPJ_UINT32 compno, resno;
+        {
             //first = false;
             dx = 0;
             dy = 0;
-            for (compno = 0; compno < numcomps; compno++)
+            for (OPJ_UINT32 compno = 0; compno < numcomps; compno++)
             {
                 comp = comps[compno];
-                for (resno = 0; resno < comp.numresolutions; resno++)
+                for (OPJ_UINT32 resno = 0; resno < comp.numresolutions; resno++)
                 {
-                    OPJ_UINT32 dx, dy;
                     res = comp.resolutions[resno];
                     var tmp = res.pdx + comp.numresolutions - 1 - resno;
                     if (tmp < 32 &&
                         comp.dx <= int.MaxValue / (1 << (int)tmp))
                     {
-                        dx = comp.dx * (1u << (int)tmp);
+                        var dx = comp.dx * (1u << (int)tmp);
                         this.dx = this.dx == 0 ? dx : Math.Min(this.dx, dx);
                     }
                     tmp = res.pdy + comp.numresolutions - 1 - resno;
                     if (tmp < 32 &&
                         comp.dy <= int.MaxValue / (1 << (int)tmp))
                     {
-                        dy = comp.dy * (1u << (int)tmp);
+                        var dy = comp.dy * (1u << (int)tmp);
                         this.dy = this.dy == 0 ? dy : Math.Min(this.dy, dy);
                     }
                 }
@@ -1772,14 +1709,11 @@ internal sealed class PacketIterator
                 {
                     for (compno = poc.compno0; compno < poc.compno1; compno++)
                     {
-                        uint levelno, trx0, try0, trx1;
-                        uint try1, rpx, rpy, prci, prcj;
-
                         comp = comps[compno];
                         if (resno >= comp.numresolutions)
                             continue;
                         res = comp.resolutions[resno];
-                        levelno = comp.numresolutions - 1u - resno;
+                        var levelno = comp.numresolutions - 1u - resno;
 
                         if ((uint)(((ulong)comp.dx << (int) levelno) >> (int) levelno) != comp.dx ||
                             (uint)(((ulong)comp.dy << (int) levelno) >> (int) levelno) != comp.dy)
@@ -1787,12 +1721,12 @@ internal sealed class PacketIterator
                             continue;
                         }
 
-                        trx0 = MyMath.uint64_ceildiv_res_uint32(tx0, (ulong)comp.dx << (int)levelno);
-                        try0 = MyMath.uint64_ceildiv_res_uint32(ty0, (ulong)comp.dy << (int)levelno);
-                        trx1 = MyMath.uint64_ceildiv_res_uint32(tx1, (ulong)comp.dx << (int)levelno);
-                        try1 = MyMath.uint64_ceildiv_res_uint32(ty1, (ulong)comp.dy << (int)levelno);
-                        rpx = res.pdx + levelno;
-                        rpy = res.pdy + levelno;
+                        var trx0 = MyMath.uint64_ceildiv_res_uint32(tx0, (ulong)comp.dx << (int)levelno);
+                        var try0 = MyMath.uint64_ceildiv_res_uint32(ty0, (ulong)comp.dy << (int)levelno);
+                        var trx1 = MyMath.uint64_ceildiv_res_uint32(tx1, (ulong)comp.dx << (int)levelno);
+                        var try1 = MyMath.uint64_ceildiv_res_uint32(ty1, (ulong)comp.dy << (int)levelno);
+                        var rpx = res.pdx + levelno;
+                        var rpy = res.pdy + levelno;
 
                         if ((uint)(((ulong)comp.dx << (int) rpx) >> (int) rpx) != comp.dx ||
                             (uint)(((ulong)comp.dy << (int) rpy) >> (int) rpy) != comp.dy)
@@ -1808,15 +1742,15 @@ internal sealed class PacketIterator
                         if (res.pw == 0 || res.ph == 0) continue;
                         if (trx0 == trx1 || try0 == try1) continue;
 
-                        prci = MyMath.uint_floordivpow2(MyMath.uint64_ceildiv_res_uint32(x, (ulong)comp.dx << (int)levelno), (int)res.pdx)
-                               - MyMath.uint_floordivpow2(trx0, (int)res.pdx);
-                        prcj = MyMath.uint_floordivpow2(MyMath.uint64_ceildiv_res_uint32(y, (ulong)comp.dy << (int)levelno), (int)res.pdy)
-                               - MyMath.uint_floordivpow2(try0, (int)res.pdy);
+                        var prci = MyMath.uint_floordivpow2(MyMath.uint64_ceildiv_res_uint32(x, (ulong)comp.dx << (int)levelno), (int)res.pdx)
+                                   - MyMath.uint_floordivpow2(trx0, (int)res.pdx);
+                        var prcj = MyMath.uint_floordivpow2(MyMath.uint64_ceildiv_res_uint32(y, (ulong)comp.dy << (int)levelno), (int)res.pdy)
+                                   - MyMath.uint_floordivpow2(try0, (int)res.pdy);
                         precno = prci + prcj * res.pw;
                             
                         for (layno = poc.layno0; layno < poc.layno1; layno++)
                         {
-                            uint index = layno * step_l + resno * step_r + compno * step_c + precno * step_p;
+                            var index = layno * step_l + resno * step_r + compno * step_c + precno * step_p;
                             if (index >= include.Length)
                             {
                                 _cinfo.Error("Invalid access to pi->include");
@@ -1852,29 +1786,27 @@ internal sealed class PacketIterator
         }
 
         {
-            OPJ_UINT32 compno, resno;
             //first = false;
             dx = 0;
             dy = 0;
-            for (compno = 0; compno < numcomps; compno++)
+            for (OPJ_UINT32 compno = 0; compno < numcomps; compno++)
             {
                 comp = comps[compno];
-                for (resno = 0; resno < comp.numresolutions; resno++)
+                for (OPJ_UINT32 resno = 0; resno < comp.numresolutions; resno++)
                 {
-                    OPJ_UINT32 dx, dy;
                     res = comp.resolutions[resno];
                     var tmp = res.pdx + comp.numresolutions - 1 - resno;
                     if (tmp < 32 &&
                         comp.dx <= int.MaxValue / (1 << (int)tmp))
                     {
-                        dx = comp.dx * (1u << (int)tmp);
+                        var dx = comp.dx * (1u << (int)tmp);
                         this.dx = this.dx == 0 ? dx : Math.Min(this.dx, dx);
                     }
                     tmp = res.pdy + comp.numresolutions - 1 - resno;
                     if (tmp < 32 &&
                         comp.dy <= int.MaxValue / (1 << (int)tmp))
                     {
-                        dy = comp.dy * (1u << (int)tmp);
+                        var dy = comp.dy * (1u << (int)tmp);
                         this.dy = this.dy == 0 ? dy : Math.Min(this.dy, dy);
                     }
                 }
@@ -1903,11 +1835,8 @@ internal sealed class PacketIterator
                     comp = comps[compno];
                     for (resno = poc.resno0; resno < MyMath.uint_min(poc.resno1, comp.numresolutions); resno++)
                     {
-                        uint levelno, trx0, try0, trx1;
-                        uint try1, rpx, rpy, prci, prcj;
-
                         res = comp.resolutions[resno];
-                        levelno = comp.numresolutions - 1 - resno;
+                        var levelno = comp.numresolutions - 1 - resno;
 
                         if ((uint)(((ulong)comp.dx << (int)levelno) >> (int)levelno) != comp.dx ||
                             (uint)(((ulong)comp.dy << (int)levelno) >> (int)levelno) != comp.dy)
@@ -1915,12 +1844,12 @@ internal sealed class PacketIterator
                             continue;
                         }
 
-                        trx0 = MyMath.uint64_ceildiv_res_uint32(tx0, (ulong)comp.dx << (int)levelno);
-                        try0 = MyMath.uint64_ceildiv_res_uint32(ty0, (ulong)comp.dy << (int)levelno);
-                        trx1 = MyMath.uint64_ceildiv_res_uint32(tx1, (ulong)comp.dx << (int)levelno);
-                        try1 = MyMath.uint64_ceildiv_res_uint32(ty1, (ulong)comp.dy << (int)levelno);
-                        rpx = res.pdx + levelno;
-                        rpy = res.pdy + levelno;
+                        var trx0 = MyMath.uint64_ceildiv_res_uint32(tx0, (ulong)comp.dx << (int)levelno);
+                        var try0 = MyMath.uint64_ceildiv_res_uint32(ty0, (ulong)comp.dy << (int)levelno);
+                        var trx1 = MyMath.uint64_ceildiv_res_uint32(tx1, (ulong)comp.dx << (int)levelno);
+                        var try1 = MyMath.uint64_ceildiv_res_uint32(ty1, (ulong)comp.dy << (int)levelno);
+                        var rpx = res.pdx + levelno;
+                        var rpy = res.pdy + levelno;
 
                         if ((uint)(((ulong)comp.dx << (int)rpx) >> (int)rpx) != comp.dx ||
                             (uint)(((ulong)comp.dy << (int)rpy) >> (int)rpy) != comp.dy)
@@ -1936,10 +1865,10 @@ internal sealed class PacketIterator
                         if (res.pw == 0 || res.ph == 0) continue;
                         if (trx0 == trx1 || try0 == try1) continue;
 
-                        prci = MyMath.uint_floordivpow2(MyMath.uint64_ceildiv_res_uint32(x, (ulong)comp.dx << (int)levelno), (int)res.pdx)
-                               - MyMath.uint_floordivpow2(trx0, (int)res.pdx);
-                        prcj = MyMath.uint_floordivpow2(MyMath.uint64_ceildiv_res_uint32(y, (ulong)comp.dy << (int)levelno), (int)res.pdy)
-                               - MyMath.uint_floordivpow2(try0, (int)res.pdy);
+                        var prci = MyMath.uint_floordivpow2(MyMath.uint64_ceildiv_res_uint32(x, (ulong)comp.dx << (int)levelno), (int)res.pdx)
+                                   - MyMath.uint_floordivpow2(trx0, (int)res.pdx);
+                        var prcj = MyMath.uint_floordivpow2(MyMath.uint64_ceildiv_res_uint32(y, (ulong)comp.dy << (int)levelno), (int)res.pdy)
+                                   - MyMath.uint_floordivpow2(try0, (int)res.pdy);
                         precno = prci + prcj * res.pw;
 
                         //C# Part of skip:
@@ -1947,7 +1876,7 @@ internal sealed class PacketIterator
                             
                         for (layno = poc.layno0; layno < poc.layno1; layno++)
                         {
-                            uint index = layno * step_l + resno * step_r + compno * step_c + precno * step_p;
+                            var index = layno * step_l + resno * step_r + compno * step_c + precno * step_p;
                             if (index >= include.Length)
                             {
                                 _cinfo.Error("Invalid access to pi->include");
@@ -1991,26 +1920,24 @@ internal sealed class PacketIterator
         for (compno = poc.compno0; compno < poc.compno1; compno++)
         {
             {
-                OPJ_UINT32 resno;
                 dx = 0;
                 dy = 0;
                 comp = comps[compno];
-                for (resno = 0; resno < comp.numresolutions; resno++)
+                for (OPJ_UINT32 resno = 0; resno < comp.numresolutions; resno++)
                 {
-                    OPJ_UINT32 dx, dy;
                     res = comp.resolutions[resno];
                     var tmp = res.pdx + comp.numresolutions - 1 - resno;
                     if (tmp < 32 &&
                         comp.dx <= int.MaxValue / (1 << (int)tmp))
                     {
-                        dx = comp.dx * (1u << (int)tmp);
+                        var dx = comp.dx * (1u << (int)tmp);
                         this.dx = this.dx == 0 ? dx : Math.Min(this.dx, dx);
                     }
                     tmp = res.pdy + comp.numresolutions - 1 - resno;
                     if (tmp < 32 &&
                         comp.dy <= int.MaxValue / (1 << (int)tmp))
                     {
-                        dy = comp.dy * (1u << (int)tmp);
+                        var dy = comp.dy * (1u << (int)tmp);
                         this.dy = this.dy == 0 ? dy : Math.Min(this.dy, dy);
                     }
                 }
@@ -2038,11 +1965,8 @@ internal sealed class PacketIterator
                 {
                     for (resno = poc.resno0; resno < MyMath.uint_min(poc.resno1, comp.numresolutions); resno++)
                     {
-                        uint levelno, trx0, try0, trx1;
-                        uint try1, rpx, rpy, prci, prcj;
-
                         res = comp.resolutions[resno];
-                        levelno = comp.numresolutions - 1 - resno;
+                        var levelno = comp.numresolutions - 1 - resno;
 
                         if ((uint)(((ulong)comp.dx << (int)levelno) >> (int)levelno) != comp.dx ||
                             (uint)(((ulong)comp.dy << (int)levelno) >> (int)levelno) != comp.dy)
@@ -2050,12 +1974,12 @@ internal sealed class PacketIterator
                             continue;
                         }
 
-                        trx0 = MyMath.uint64_ceildiv_res_uint32(tx0, (ulong)comp.dx << (int)levelno);
-                        try0 = MyMath.uint64_ceildiv_res_uint32(ty0, (ulong)comp.dy << (int)levelno);
-                        trx1 = MyMath.uint64_ceildiv_res_uint32(tx1, (ulong)comp.dx << (int)levelno);
-                        try1 = MyMath.uint64_ceildiv_res_uint32(ty1, (ulong)comp.dy << (int)levelno);
-                        rpx = res.pdx + levelno;
-                        rpy = res.pdy + levelno;
+                        var trx0 = MyMath.uint64_ceildiv_res_uint32(tx0, (ulong)comp.dx << (int)levelno);
+                        var try0 = MyMath.uint64_ceildiv_res_uint32(ty0, (ulong)comp.dy << (int)levelno);
+                        var trx1 = MyMath.uint64_ceildiv_res_uint32(tx1, (ulong)comp.dx << (int)levelno);
+                        var try1 = MyMath.uint64_ceildiv_res_uint32(ty1, (ulong)comp.dy << (int)levelno);
+                        var rpx = res.pdx + levelno;
+                        var rpy = res.pdy + levelno;
 
                         if ((uint)(((ulong)comp.dx << (int)rpx) >> (int)rpx) != comp.dx ||
                             (uint)(((ulong)comp.dy << (int)rpy) >> (int)rpy) != comp.dy)
@@ -2071,16 +1995,16 @@ internal sealed class PacketIterator
                         if (res.pw == 0 || res.ph == 0) continue;
                         if (trx0 == trx1 || try0 == try1) continue;
 
-                        prci = MyMath.uint_floordivpow2(MyMath.uint64_ceildiv_res_uint32(x, (ulong)comp.dx << (int)levelno), (int)res.pdx)
-                               - MyMath.uint_floordivpow2(trx0, (int)res.pdx);
-                        prcj = MyMath.uint_floordivpow2(MyMath.uint64_ceildiv_res_uint32(y, (ulong)comp.dy << (int)levelno), (int)res.pdy)
-                               - MyMath.uint_floordivpow2(try0, (int)res.pdy);
+                        var prci = MyMath.uint_floordivpow2(MyMath.uint64_ceildiv_res_uint32(x, (ulong)comp.dx << (int)levelno), (int)res.pdx)
+                                   - MyMath.uint_floordivpow2(trx0, (int)res.pdx);
+                        var prcj = MyMath.uint_floordivpow2(MyMath.uint64_ceildiv_res_uint32(y, (ulong)comp.dy << (int)levelno), (int)res.pdy)
+                                   - MyMath.uint_floordivpow2(try0, (int)res.pdy);
                         precno = prci + prcj * res.pw;
                             
                         for (layno = poc.layno0; layno < poc.layno1; layno++)
                         {
                             //I belive c++ long == c# int (index was long)
-                            uint index = layno * step_l + resno * step_r + compno * step_c + precno * step_p;
+                            var index = layno * step_l + resno * step_r + compno * step_c + precno * step_p;
                             if (index >= include.Length)
                             {
                                 _cinfo.Error("Invalid access to pi->include");

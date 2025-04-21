@@ -39,16 +39,16 @@ namespace OpenJpeg;
 /// Implement this delegate to consume msg events
 /// </summary>
 /// <param name="msg">The message</param>
-/// <param name="client_data">Optional client data</param>
-public delegate void MsgCallback(string msg, object client_data);
+/// <param name="clientData">Optional client data</param>
+public delegate void MsgCallback(string msg, object clientData);
 
 public class EventMgr
 {
     #region Variables and properties
 
-    internal readonly MsgCallback _error;
-    internal readonly MsgCallback _warning;
-    internal readonly MsgCallback _info;
+    internal readonly MsgCallback Error;
+    internal readonly MsgCallback Warning;
+    internal readonly MsgCallback Info;
 
     #endregion
 
@@ -61,7 +61,7 @@ public class EventMgr
     /// <param name="warn">Warning message callback</param>
     /// <param name="info">Information message callback</param>
     public EventMgr(MsgCallback error, MsgCallback warn, MsgCallback info)
-    { _error = error; _warning = warn; _info = info; }
+    { Error = error; Warning = warn; Info = info; }
 
     #endregion
 

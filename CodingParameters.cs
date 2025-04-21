@@ -19,7 +19,7 @@ public class CompressionParameters
 
     public int NumberOfResolutions
     {
-        get => this.numresolution;
+        get => numresolution;
         set => numresolution = value;
     }
 
@@ -60,7 +60,7 @@ public class CompressionParameters
                 if (cp_disto_alloc)
                     return false;
                 double last = 0;
-                for (int c = 0; c < tcp_distoratio.Length; c++)
+                for (var c = 0; c < tcp_distoratio.Length; c++)
                 {
                     var cur = tcp_distoratio[c];
                     if (cur < last) return false;
@@ -69,8 +69,8 @@ public class CompressionParameters
             }
             else if (cp_disto_alloc)
             {
-                double last = double.MaxValue;
-                for (int c = 0; c < tcp_distoratio.Length; c++)
+                var last = double.MaxValue;
+                for (var c = 0; c < tcp_distoratio.Length; c++)
                 {
                     var cur = tcp_distoratio[c];
                     if (cur > last) return false;
@@ -213,8 +213,8 @@ public class CompressionParameters
         {
             if (value == null)
             {
-                cblockw_init = Constants.PARAM_DEFAULT_CBLOCKW;
-                cblockh_init = Constants.PARAM_DEFAULT_CBLOCKH;
+                cblockw_init = Constants.ParamDefaultCblockw;
+                cblockh_init = Constants.ParamDefaultCblockh;
             }
             else
             {
@@ -233,14 +233,14 @@ public class CompressionParameters
         get
         {
             var r = new PrecinctSize[prch_init.Length];
-            for (int c = 0; c < r.Length; c++)
+            for (var c = 0; c < r.Length; c++)
                 r[c] = new PrecinctSize(prcw_init[c], prch_init[c]);
             return r;
         }
         set
         {
             if (value == null) return;
-            for (int c = 0; c < value.Length && c < prch_init.Length; c++)
+            for (var c = 0; c < value.Length && c < prch_init.Length; c++)
             {
                 var v = value[c];
                 prcw_init[c] = v.X;
@@ -299,9 +299,9 @@ public class CompressionParameters
         get => (int)mode;
         set
         {
-            for (int i = 0; i <= 5; i++)
+            for (var i = 0; i <= 5; i++)
             {
-                int cache = value & (1 << i);
+                var cache = value & (1 << i);
                 if (cache != 0)
                     mode |= (CCP_CBLKSTY)(1 << i);
             }
@@ -328,7 +328,7 @@ public class CompressionParameters
         set => max_cs_size = value;
     }
 
-    public bool IsCinema => rsiz >= J2K_PROFILE.CINEMA_2K && rsiz <= J2K_PROFILE.CINEMA_S4K;
+    public bool IsCinema => rsiz is >= J2K_PROFILE.CINEMA_2K and <= J2K_PROFILE.CINEMA_S4K;
 
     public bool IsStorage => rsiz == J2K_PROFILE.CINEMA_LTS;
 
@@ -450,12 +450,12 @@ public class CompressionParameters
     /// <summary>
     /// initial precinct width
     /// </summary>
-    internal int[] prcw_init = new int[Constants.J2K_MAXRLVLS];
+    internal int[] prcw_init = new int[Constants.J2KMaxrlvls];
 
     /// <summary>
     /// initial precinct height
     /// </summary>
-    internal int[] prch_init = new int[Constants.J2K_MAXRLVLS];
+    internal int[] prch_init = new int[Constants.J2KMaxrlvls];
 
     internal int image_offset_x0;
     /** subimage encoding: origin image offset in y direction */
@@ -741,11 +741,11 @@ public class CompressionParameters
         cp_cinema = CINEMA_MODE.OFF; /* DEPRECATED */
         rsiz = J2K_PROFILE.NONE;
         max_comp_size = 0;
-        numresolution = Constants.PARAM_DEFAULT_NUMRESOLUTION;
+        numresolution = Constants.ParamDefaultNumresolution;
         cp_rsiz = RSIZ_CAPABILITIES.STD_RSIZ; /* DEPRECATED */
-        cblockw_init = Constants.PARAM_DEFAULT_CBLOCKW;
-        cblockh_init = Constants.PARAM_DEFAULT_CBLOCKW;
-        prog_order = Constants.PARAM_DEFAULT_PROG_ORDER;
+        cblockw_init = Constants.ParamDefaultCblockw;
+        cblockh_init = Constants.ParamDefaultCblockw;
+        prog_order = Constants.ParamDefaultProgOrder;
         roi_compno = -1;
         subsampling_dx = 1;
         subsampling_dy = 1;
@@ -817,7 +817,7 @@ internal class CodingParameters
 
     #region JPEG 2000 profile macros
 
-    public bool IsCinema => rsiz >= J2K_PROFILE.CINEMA_2K && rsiz <= J2K_PROFILE.CINEMA_S4K;
+    public bool IsCinema => rsiz is >= J2K_PROFILE.CINEMA_2K and <= J2K_PROFILE.CINEMA_S4K;
 
     public bool IsStorage => rsiz == J2K_PROFILE.CINEMA_LTS;
 
@@ -915,14 +915,14 @@ internal class CodingParameters
 
     public bool ppm
     {
-        get => (this.bitvector1 & 1u) != 0;
-        set => this.bitvector1 = value ? 1u | bitvector1 : ~1u & bitvector1;
+        get => (bitvector1 & 1u) != 0;
+        set => bitvector1 = value ? 1u | bitvector1 : ~1u & bitvector1;
     }
 
     public bool IsDecoder
     {
-        get => (this.bitvector1 & 2u) == 2u;
-        set => this.bitvector1 = value ? 2u | bitvector1 : ~2u & bitvector1;
+        get => (bitvector1 & 2u) == 2u;
+        set => bitvector1 = value ? 2u | bitvector1 : ~2u & bitvector1;
     }
 
     public bool AllowDifferentBitDepthSign

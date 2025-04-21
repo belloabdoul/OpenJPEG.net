@@ -15,7 +15,7 @@ internal static class MyMath
     /// </summary>
     public static int fix_mul(int a, int b)
     {
-        long temp = a * (long)b;
+        var temp = a * (long)b;
         temp += temp & 4096;
         return (int)(temp >> 13);
     }
@@ -158,7 +158,7 @@ internal static class MyMath
         var pb = new IntOrUInt();
         pa.I = a;
         pb.I = b;
-        uint ures = pa.U + pb.U;
+        var ures = pa.U + pb.U;
         pa.U = ures;
         return pa.I;
 
@@ -180,7 +180,7 @@ internal static class MyMath
         var pb = new IntOrUInt();
         pa.I = a;
         pb.I = b;
-        uint ures = pa.U - pb.U;
+        var ures = pa.U - pb.U;
         pa.U = ures;
         return pa.I;
 

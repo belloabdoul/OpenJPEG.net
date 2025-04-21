@@ -49,13 +49,13 @@ internal class BIO
     /// that may exceed the 24-bit limit of the org impl.
     /// anyway.
     /// </remarks>
-    internal int bit_buffer = 0;
+    internal int bit_buffer;
 
     /// <summary>
     /// Encoder: Number of free bites in the buffer
     /// Decoder: Number of bits in the buffer
     /// </summary>
-    internal int n_buf_bits = 0;
+    internal int n_buf_bits;
 
     /// <summary>
     /// Mask for the first bit in the bit buffer
@@ -157,7 +157,7 @@ internal class BIO
     /// <returns>The bits in the lower end of a int</returns>
     internal int Read(int n)
     {
-        int ret = (bit_buffer & 0xff) >> (8 - n);
+        var ret = (bit_buffer & 0xff) >> (8 - n);
         if (n > n_buf_bits)
         {
             n -= n_buf_bits;
@@ -198,7 +198,7 @@ internal class BIO
     /// </returns>
     internal int Read0(int n)
     {
-        int ret = (bit_buffer & 0xff) >> (8 - n);
+        var ret = (bit_buffer & 0xff) >> (8 - n);
         if (n > n_buf_bits)
         {
             n -= n_buf_bits;
@@ -248,7 +248,7 @@ internal class BIO
                 n_buf_bits--;
             }
         }
-        bool ret = (bit_buffer & FIRST_BIST) == FIRST_BIST;
+        var ret = (bit_buffer & FIRST_BIST) == FIRST_BIST;
         bit_buffer <<= 1;
         n_buf_bits--;
         return ret;
@@ -290,10 +290,10 @@ internal class WBIO
     //buffer from 256 to 4. An alternative is to simply drop this
     //buffer. 
     internal byte[] _buf = new byte[4];
-    private int _buf_pos = 0;
-    private byte _unfinished_byte = 0;
+    private int _buf_pos;
+    private byte _unfinished_byte;
     private int _u_pos = 8;
-    private readonly BufferCIO _target;
+    private readonly BufferCio _target;
 
     /**
      * BIO will not write beyond this length
@@ -305,7 +305,7 @@ internal class WBIO
      */
     private int _written;
 
-    internal WBIO(BufferCIO target, int length)
+    internal WBIO(BufferCio target, int length)
     {
         _target = target;
         _length = length;
@@ -313,7 +313,7 @@ internal class WBIO
 
     public void Write(uint value, int nbits)
     {
-        for (int i = nbits - 1; i >= 0; i--)
+        for (var i = nbits - 1; i >= 0; i--)
             WriteBit((value >> i) & 1);
     }
 
@@ -361,7 +361,7 @@ internal class WBIO
      */
     public bool Flush()
     {
-        bool write_null = false;
+        var write_null = false;
         if (_u_pos < 8)
         {
             if (_written >= _length) return false;

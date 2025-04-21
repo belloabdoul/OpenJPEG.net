@@ -72,7 +72,7 @@ internal sealed class MQCoder
     /// <summary>
     /// Original value of the 2 bytes at end[0] and end[1]
     /// </summary>
-    private readonly byte[] _backup = new byte[Constants.COMMON_CBLK_DATA_EXTRA];
+    private readonly byte[] _backup = new byte[Constants.CommonCblkDataExtra];
 
     /// <summary>
     /// aaaaaaaaaaa
@@ -103,7 +103,7 @@ internal sealed class MQCoder
     /// out a "ptr", and if that ptr is updated said update
     /// is reflected in this array.
     /// </remarks>
-    internal Ptr<MQCState>[] ctxs = new Ptr<MQCState>[Constants.MQC_NUMCTXS];
+    internal Ptr<MQCState>[] ctxs = new Ptr<MQCState>[Constants.MqcNumctxs];
 
     /// <summary>Current context</summary>
     /// <remarks>
@@ -135,7 +135,7 @@ internal sealed class MQCoder
     //     c pointer peculiarities I needed to support.
     internal MQCoder()
     {
-        for (int c = 0; c < ctxs.Length; c++)
+        for (var c = 0; c < ctxs.Length; c++)
             ctxs[c] = new Ptr<MQCState>();
         curctx = ctxs[0];
     }
@@ -145,7 +145,7 @@ internal sealed class MQCoder
     /// </remarks>
     private void CommonInit(byte[] data, uint offset, uint length, uint extra_writable_bytes)
     {
-        Debug.Assert(extra_writable_bytes >= Constants.COMMON_CBLK_DATA_EXTRA);
+        Debug.Assert(extra_writable_bytes >= Constants.CommonCblkDataExtra);
         _data = data;
         _start = (int) offset;
         _end = offset + length;
@@ -154,7 +154,7 @@ internal sealed class MQCoder
         // data so that the bytein routines stop on it. This saves us comparing
         // the bp and end pointers
         // But before inserting it, backup th bytes we will overwrite
-        Array.Copy(_data, _end, _backup, 0, Constants.COMMON_CBLK_DATA_EXTRA);
+        Array.Copy(_data, _end, _backup, 0, Constants.CommonCblkDataExtra);
         _data[_end + 0] = 0xFF;
         _data[_end + 1] = 0xFF;
         _bp = (int)offset;
@@ -310,7 +310,7 @@ internal sealed class MQCoder
     /// </summary>
     /// <remarks>2.5 - opj_mqc_setbits</remarks>
     internal void Setbits() {
-        uint tempc = c + a;
+        var tempc = c + a;
         c |= 0xffffu;
         if (c >= tempc)
             c -= 0x8000;
@@ -384,7 +384,7 @@ internal sealed class MQCoder
     {
         curctx = ctxs[18];
 
-        for (int i = 1; i < 5; i++)
+        for (var i = 1; i < 5; i++)
         {
             Encode(i % 2 != 0);
         }
@@ -419,7 +419,7 @@ internal sealed class MQCoder
     /// <remarks>2.5 - opj_mqc_erterm_enc</remarks>
     internal void ErtermEnc()
     {
-        int k = (int)(11 - ct + 1);
+        var k = (int)(11 - ct + 1);
 
         while (k > 0)
         {
@@ -600,14 +600,14 @@ internal sealed class MQCoder
     //C# - This method dosn't exist in 2.5, but the equivalent code it identical.
     internal void CheckPTerm(CompressionInfo cinfo)
     {
-        if (this._bp + 2 < _end)
+        if (_bp + 2 < _end)
         {
-            cinfo.WarnMT("\"PTERM check failure: {0} remaining bytes in code block ({1} used / {2})",
+            cinfo.WarnMt("\"PTERM check failure: {0} remaining bytes in code block ({1} used / {2})",
                 _end - _bp, _bp - _start, _end - _start);
         }
         else if (_end_of_byte_stream_counter > 2)
         {
-            cinfo.WarnMT("PTERM check failure: {0} synthetized 0xFF markers read",
+            cinfo.WarnMt("PTERM check failure: {0} synthetized 0xFF markers read",
                 _end_of_byte_stream_counter);
         }
     }
@@ -616,13 +616,13 @@ internal sealed class MQCoder
     internal void FinishDec()
     {
         //Restore the bytes overwritten by opj_mqc_init_dec_common()
-        Array.Copy(_backup, 0, _data, _end, Constants.COMMON_CBLK_DATA_EXTRA);
+        Array.Copy(_backup, 0, _data, _end, Constants.CommonCblkDataExtra);
     }
 
     //2.5 - opj_mqc_resetstates
     internal void ResetStates()
     {
-        for (int i = 0; i < Constants.MQC_NUMCTXS; i++)
+        for (var i = 0; i < Constants.MqcNumctxs; i++)
             ctxs[i].P = MQCState.mqc_states[0];
     }
 
@@ -774,10 +774,10 @@ internal class MQCState
     {
         mqc_states = new MQCState[47 * 2];
 
-        for (int c = 0; c < mqc_states.Length; c++)
+        for (var c = 0; c < mqc_states.Length; c++)
             mqc_states[c] = new MQCState(mcqints[c, 0], mcqints[c, 1]);
 
-        for (int c = 0; c < mqc_states.Length; c++)
+        for (var c = 0; c < mqc_states.Length; c++)
         {
             var mcq = mqc_states[c];
             mcq.nmps = mqc_states[mcqints[c, 2]];

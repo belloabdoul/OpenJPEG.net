@@ -45,10 +45,10 @@ internal static class T1Luts
     {
         if (bitpos > 0)
         {
-            return lut_nmsedec_ref[(x >> bitpos) & ((1 << Constants.T1_NMSEDEC_BITS) - 1)];
+            return lut_nmsedec_ref[(x >> bitpos) & ((1 << Constants.T1NmsedecBits) - 1)];
         }
 
-        return lut_nmsedec_ref0[x & ((1 << Constants.T1_NMSEDEC_BITS) - 1)];
+        return lut_nmsedec_ref0[x & ((1 << Constants.T1NmsedecBits) - 1)];
     }
 
     private static readonly short[] lut_nmsedec_sig = {
@@ -94,10 +94,10 @@ internal static class T1Luts
     {
         if (bitpos > 0)
         {
-            return lut_nmsedec_sig[(x >> bitpos) & ((1 << Constants.T1_NMSEDEC_BITS) - 1)];
+            return lut_nmsedec_sig[(x >> bitpos) & ((1 << Constants.T1NmsedecBits) - 1)];
         }
 
-        return lut_nmsedec_sig0[x & ((1 << Constants.T1_NMSEDEC_BITS) - 1)];
+        return lut_nmsedec_sig0[x & ((1 << Constants.T1NmsedecBits) - 1)];
     }
 
 
@@ -115,8 +115,8 @@ internal static class T1Luts
           6  fX T1_CHI_(THIS + 1)     T1_LUT_SGN_S
           7 tfX T1_SIGMA_7            T1_LUT_SIG_S
         */
-        T1 lu = (T1)((uint)fX >> (ci * 3)) & (T1.SIGMA_1 | T1.SIGMA_3 | T1.SIGMA_5 |
-                                              T1.SIGMA_7);
+        var lu = (T1)((uint)fX >> (ci * 3)) & (T1.SIGMA_1 | T1.SIGMA_3 | T1.SIGMA_5 |
+                                               T1.SIGMA_7);
 
         lu |= (T1)(((uint)pfX >> ((int)T1.CHI_THIS_I + ci * 3)) & (1U << 0));
         lu |= (T1)(((uint)nfX >> ((int)T1.CHI_THIS_I - 2 + ci * 3)) & (1U << 2));
@@ -259,8 +259,8 @@ internal static class T1Luts
     /// </remarks>
     internal static uint Getctxno_mag(T1 f)
     {
-        uint tmp1 = (f & T1.SIGMA_NEIGHBOURS) != 0 ? (uint) T1_CTXNO.MAG + 1 : (uint) T1_CTXNO.MAG;
-        uint tmp2 = (f & T1.MU_0) != 0 ? (uint) T1_CTXNO.MAG + 2 : tmp1;
+        var tmp1 = (f & T1.SIGMA_NEIGHBOURS) != 0 ? (uint) T1_CTXNO.MAG + 1 : (uint) T1_CTXNO.MAG;
+        var tmp2 = (f & T1.MU_0) != 0 ? (uint) T1_CTXNO.MAG + 2 : tmp1;
         return tmp2;
     }
 

@@ -193,7 +193,7 @@ internal sealed class TileCoder
 
         _tcd_image.tiles = new TcdTile[1] { tile };
         tile.comps = new TcdTilecomp[image.numcomps];
-        for(int i = 0; i < tile.comps.Length; i++)
+        for(var i = 0; i < tile.comps.Length; i++)
             tile.comps[i] = new TcdTilecomp();
 
         tile.numcomps = image.numcomps;
@@ -210,7 +210,7 @@ internal sealed class TileCoder
     /// <param name="marker_info">Marker information structure</param>
     /// <returns>true if the coding is successful</returns>
     /// <remarks>2.5 - opj_tcd_encode_tile</remarks>
-    internal bool EncodeTile(uint tileno, BufferCIO dest, out uint data_written, int max_length, TcdMarkerInfo marker_info)
+    internal bool EncodeTile(uint tileno, BufferCio dest, out uint data_written, int max_length, TcdMarkerInfo marker_info)
     {
         if (_cur_tp_num == 0)
         {
@@ -255,21 +255,21 @@ internal sealed class TileCoder
     private void DcLevelShiftEncode()
     {
         var tile = _tcd_image.tiles[0];
-        TcdTilecomp[] tile_comps = tile.comps;
+        var tile_comps = tile.comps;
         var tccps = _tcp.tccps;
 
-        for (int compno = 0; compno < tile.numcomps; compno++)
+        for (var compno = 0; compno < tile.numcomps; compno++)
         {
             var tile_comp = tile_comps[compno];
-            OPJ_UINT32 n_elem = (OPJ_UINT32) ((tile_comp.x1 - tile_comp.x0) * (tile_comp.y1 - tile_comp.y0));
+            var n_elem = (OPJ_UINT32) ((tile_comp.x1 - tile_comp.x0) * (tile_comp.y1 - tile_comp.y0));
             var tccp = tccps[compno];
 
-            int current_pointer = 0;
-            int[] data = tile_comp.data;
+            var current_pointer = 0;
+            var data = tile_comp.data;
 
             if (tccp.qmfbid == 1)
             {
-                for (int i = 0; i < n_elem; i++)
+                for (var i = 0; i < n_elem; i++)
                 {
                     data[current_pointer] -= tccp.dc_level_shift;
                     current_pointer++;
@@ -278,7 +278,7 @@ internal sealed class TileCoder
             else
             {
                 var iof = new IntOrFloat();
-                for (int i = 0; i < n_elem; i++)
+                for (var i = 0; i < n_elem; i++)
                 {
                     iof.F = data[current_pointer] - tccp.dc_level_shift;
                     data[current_pointer] = iof.I;
@@ -296,7 +296,7 @@ internal sealed class TileCoder
 
         var tile = _tcd_image.tiles[0];
         var tile_comp = tile.comps[0];
-        OPJ_UINT32 samples = (OPJ_UINT32)((tile_comp.x1 - tile_comp.x0) * (tile_comp.y1 - tile_comp.y0));
+        var samples = (OPJ_UINT32)((tile_comp.x1 - tile_comp.x0) * (tile_comp.y1 - tile_comp.y0));
 
         if (_tcp.mct == 2)
         {
@@ -304,8 +304,8 @@ internal sealed class TileCoder
             if (_tcp.mct_coding_matrix == null)
                 return true;
 
-            int[][] data = new int[tile.numcomps][];
-            for(int i=0; i < tile.numcomps; i++)
+            var data = new int[tile.numcomps][];
+            for(var i=0; i < tile.numcomps; i++)
             {
                 data[i] = tile.comps[i].data;
             }
@@ -330,13 +330,13 @@ internal sealed class TileCoder
     {
         var tile = _tcd_image.tiles[0];
 
-        for (int compno = 0; compno < tile.numcomps; compno++)
+        for (var compno = 0; compno < tile.numcomps; compno++)
         {
-            TcdTilecomp tilec = tile.comps[compno];
+            var tilec = tile.comps[compno];
             if (_tcp.tccps[compno].qmfbid == 1)
-                DWT.Encode(this, tilec);
+                Dwt.Encode(this, tilec);
             else if (_tcp.tccps[compno].qmfbid == 0)
-                DWT.EncodeReal(this, tilec);
+                Dwt.EncodeReal(this, tilec);
         }
     }
 
@@ -392,7 +392,7 @@ internal sealed class TileCoder
     }
 
     //2.5 - opj_tcd_t2_encode
-    private bool T2Encode(BufferCIO dest, out uint data_written, OPJ_UINT32 max_dest_size, TcdMarkerInfo marker_info)
+    private bool T2Encode(BufferCio dest, out uint data_written, OPJ_UINT32 max_dest_size, TcdMarkerInfo marker_info)
     {
         var t2 = new Tier2Coding(_cinfo, _image, _cp);
 
@@ -410,7 +410,7 @@ internal sealed class TileCoder
     }
 
     //2.5 - opj_tcd_rate_allocate_encode
-    private void RateAllocateEncode(BufferCIO dest, int max_dest_size)
+    private void RateAllocateEncode(BufferCio dest, int max_dest_size)
     {
         if (_cp.specific_param.enc.quality_layer_alloc_strategy == J2K_QUALITY_LAYER_ALLOCATION_STRATEGY.RATE_DISTORTION_RATIO || 
             _cp.specific_param.enc.quality_layer_alloc_strategy == J2K_QUALITY_LAYER_ALLOCATION_STRATEGY.FIXED_DISTORTION_RATIO)
@@ -428,7 +428,7 @@ internal sealed class TileCoder
     //2.5.1 - opj_tcd_rateallocate_fixed
     private void RateallocateFixed()
     {
-        for (int layno = 0; layno < _tcp.numlayers; layno++)
+        for (var layno = 0; layno < _tcp.numlayers; layno++)
             MakeLayerFixed(layno, true);
     }
 
@@ -438,40 +438,40 @@ internal sealed class TileCoder
     ///  - allocation by fixed quality  (quality_layer_alloc_strategy == FIXED_DISTORTION_RATIO)
     /// </summary>
     /// <remarks>2.5 - opj_tcd_rateallocate</remarks>
-    private bool Rateallocate(BufferCIO dest, ref uint data_written, int len)
+    private bool Rateallocate(BufferCio dest, ref uint data_written, int len)
     {
-        double[] cumdisto = new double[100];
+        var cumdisto = new double[100];
         const double K = 1;
         double maxSE = 0;
 
-        double min = double.MaxValue;
+        var min = double.MaxValue;
         double max = 0;
 
         var tcd_tile = _tcd_image.tiles[0];
         tcd_tile.numpix = 0;
 
-        for (int compno = 0; compno < tcd_tile.numcomps; compno++)
+        for (var compno = 0; compno < tcd_tile.numcomps; compno++)
         {
             var tilec = tcd_tile.comps[compno];
             tilec.numpix = 0;
 
-            for (int resno = 0; resno < tilec.numresolutions; resno++)
+            for (var resno = 0; resno < tilec.numresolutions; resno++)
             {
-                TcdResolution res = tilec.resolutions[resno];
-                for (int bandno = 0; bandno < res.numbands; bandno++)
+                var res = tilec.resolutions[resno];
+                for (var bandno = 0; bandno < res.numbands; bandno++)
                 {
-                    TcdBand band = res.bands[bandno];
+                    var band = res.bands[bandno];
                     if (band.IsEmpty) continue;
 
-                    for (int precno = 0; precno < res.pw * res.ph; precno++)
+                    for (var precno = 0; precno < res.pw * res.ph; precno++)
                     {
-                        TcdPrecinct prc = band.precincts[precno];
-                        for (int cblkno = 0; cblkno < prc.cw * prc.ch; cblkno++)
+                        var prc = band.precincts[precno];
+                        for (var cblkno = 0; cblkno < prc.cw * prc.ch; cblkno++)
                         {
-                            TcdCblkEnc cblk = prc.enc[cblkno];
-                            for (int passno = 0; passno < cblk.totalpasses; passno++)
+                            var cblk = prc.enc[cblkno];
+                            for (var passno = 0; passno < cblk.totalpasses; passno++)
                             {
-                                TcdPass pass = cblk.passes[passno];
+                                var pass = cblk.passes[passno];
                                 int dr;
                                 double dd;
 
@@ -489,7 +489,7 @@ internal sealed class TileCoder
                                 if (dr == 0) 
                                     continue;
 
-                                double rdslope = dd / dr;
+                                var rdslope = dd / dr;
 
                                 if (rdslope < min) 
                                     min = rdslope;
@@ -498,8 +498,8 @@ internal sealed class TileCoder
                             }
 
                             {
-                                uint cblk_pix_count = (uint)((cblk.x1 - cblk.x0) *
-                                                             (cblk.y1 - cblk.y0));
+                                var cblk_pix_count = (uint)((cblk.x1 - cblk.x0) *
+                                                            (cblk.y1 - cblk.y0));
                                 tcd_tile.numpix += cblk_pix_count;
                                 tilec.numpix += cblk_pix_count;
                             }
@@ -516,12 +516,12 @@ internal sealed class TileCoder
 
         for (uint layno = 0; layno < _tcp.numlayers; layno++)
         {
-            double lo = min;
-            double hi = max;
-            int maxlen = _tcp.rates[layno] != 0 ? Math.Min((int)Math.Ceiling(_tcp.rates[layno]), len) : len;
+            var lo = min;
+            var hi = max;
+            var maxlen = _tcp.rates[layno] != 0 ? Math.Min((int)Math.Ceiling(_tcp.rates[layno]), len) : len;
             double goodthresh;
             double stable_thresh = 0;
-            double distotarget = tcd_tile.distotile - K * maxSE / Math.Pow((float)10, _tcp.distoratio[layno] / 10);
+            var distotarget = tcd_tile.distotile - K * maxSE / Math.Pow((float)10, _tcp.distoratio[layno] / 10);
 
             /* Don't try to find an optimal threshold but rather take everything not included yet, if
               -r xx,yy,zz,0   (quality_layer_alloc_strategy == RATE_DISTORTION_RATIO and rates == NULL)
@@ -534,12 +534,12 @@ internal sealed class TileCoder
             {
                 var t2 = new Tier2Coding(_cinfo, _image, _cp);
                 double thresh = 0;
-                bool last_layer_allocation_ok = false;
+                var last_layer_allocation_ok = false;
                 var hold = dest.BufferPos;
 
-                for (int i = 0; i < 128; i++)
+                for (var i = 0; i < 128; i++)
                 {
-                    double new_thresh = (lo + hi) / 2;
+                    var new_thresh = (lo + hi) / 2;
 
                     // Stop iterating when the threshold has stabilized enough
                     // 0.5 * 1e-5 is somewhat arbitrary, but has been selected
@@ -549,7 +549,7 @@ internal sealed class TileCoder
                         break;
                     thresh = new_thresh;
 
-                    bool layer_allocation_is_same = MakeLayer(layno, thresh, false) && i != 0;
+                    var layer_allocation_is_same = MakeLayer(layno, thresh, false) && i != 0;
 
                     if (_cp.specific_param.enc.quality_layer_alloc_strategy == J2K_QUALITY_LAYER_ALLOCATION_STRATEGY.FIXED_DISTORTION_RATIO)
                     {
@@ -654,38 +654,38 @@ internal sealed class TileCoder
         Debug.Assert(false, "Untested code");
         var tcd_tile = _tcd_image.tiles[0];
         tcd_tile.distolayer[layno] = 0;
-        var matrice = new int[Constants.J2K_TCD_MATRIX_MAX_LAYER_COUNT, Constants.J2K_TCD_MATRIX_MAX_RESOLUTION_COUNT, 3];
+        var matrice = new int[Constants.J2KTcdMatrixMaxLayerCount, Constants.J2KTcdMatrixMaxResolutionCount, 3];
         int value;
 
-        for (int compno = 0; compno < tcd_tile.numcomps; compno++)
+        for (var compno = 0; compno < tcd_tile.numcomps; compno++)
         {
-            TcdTilecomp tilec = tcd_tile.comps[compno];
-            for (int i = 0; i < _tcp.numlayers; i++)
+            var tilec = tcd_tile.comps[compno];
+            for (var i = 0; i < _tcp.numlayers; i++)
             {
-                for (int j = 0; j < tilec.numresolutions; j++)
+                for (var j = 0; j < tilec.numresolutions; j++)
                 {
-                    for (int k = 0; k < 3; k++)
+                    for (var k = 0; k < 3; k++)
                         matrice[i, j, k] = (int)(_cp.specific_param.enc.matrice[i * tilec.numresolutions * 3 + j * 3 + k]
                             * _image.comps[compno].prec / 16f);
                 }
             }
 
-            for (int resno = 0; resno < tilec.numresolutions; resno++)
+            for (var resno = 0; resno < tilec.numresolutions; resno++)
             {
-                TcdResolution res = tilec.resolutions[resno];
-                for (int bandno = 0; bandno < res.numbands; bandno++)
+                var res = tilec.resolutions[resno];
+                for (var bandno = 0; bandno < res.numbands; bandno++)
                 {
-                    TcdBand band = res.bands[bandno];
+                    var band = res.bands[bandno];
                     if (band.IsEmpty)
                         continue;
 
-                    for (int precno = 0; precno < res.pw * res.ph; precno++)
+                    for (var precno = 0; precno < res.pw * res.ph; precno++)
                     {
-                        TcdPrecinct prc = band.precincts[precno];
-                        for (int cblkno = 0; cblkno < prc.cw * prc.ch; cblkno++)
+                        var prc = band.precincts[precno];
+                        for (var cblkno = 0; cblkno < prc.cw * prc.ch; cblkno++)
                         {
-                            TcdCblkEnc cblk = prc.enc[cblkno];
-                            TcdLayer layer = cblk.layers[layno];
+                            var cblk = prc.enc[cblkno];
+                            var layer = cblk.layers[layno];
                             if (layer == null)
                             {
                                 layer = new TcdLayer();
@@ -693,7 +693,7 @@ internal sealed class TileCoder
                             }
 
                             //number of bit-plan equal to zero
-                            int imsb = (int)_image.comps[compno].prec - (int)cblk.numbps;
+                            var imsb = (int)_image.comps[compno].prec - (int)cblk.numbps;
 
                             // Correction of the matrix of coefficient to include the IMSB information
                             if (layno == 0)
@@ -717,7 +717,7 @@ internal sealed class TileCoder
                             if (layno == 0)
                                 cblk.numpassesinlayers = 0;
 
-                            uint n = cblk.numpassesinlayers;
+                            var n = cblk.numpassesinlayers;
                             if (n == 0)
                             {
                                 if (value != 0)
@@ -766,30 +766,30 @@ internal sealed class TileCoder
     private bool MakeLayer(uint layno, double thresh, bool final)
     {
         var tcd_tile = _tcd_image.tiles[0];
-        bool layer_allocation_is_same = true;
+        var layer_allocation_is_same = true;
 
         tcd_tile.distolayer[layno] = 0;
 
         for (uint compno = 0; compno < tcd_tile.numcomps; compno++)
         {
-            TcdTilecomp tilec = tcd_tile.comps[compno];
+            var tilec = tcd_tile.comps[compno];
             for (uint resno = 0; resno < tilec.numresolutions; resno++)
             {
-                TcdResolution res = tilec.resolutions[resno];
+                var res = tilec.resolutions[resno];
                 for (uint bandno = 0; bandno < res.numbands; bandno++)
                 {
-                    TcdBand band = res.bands[bandno];
+                    var band = res.bands[bandno];
                     if (band.IsEmpty) continue;
 
                     for (uint precno = 0; precno < res.pw * res.ph; precno++)
                     {
-                        TcdPrecinct prc = band.precincts[precno];
+                        var prc = band.precincts[precno];
                         for (uint cblkno = 0; cblkno < prc.cw * prc.ch; cblkno++)
                         {
                             //C# impl. We grab the cblk and create the layer object, since we
                             //use a class instead of a struct.
-                            TcdCblkEnc cblk = prc.enc[cblkno];
-                            TcdLayer layer = cblk.layers[layno];
+                            var cblk = prc.enc[cblkno];
+                            var layer = cblk.layers[layno];
                             if (layer == null)
                             {// Not sure if this is needed, as layer objects are created.
                                 // in CodeBlockEncAllocate
@@ -798,10 +798,9 @@ internal sealed class TileCoder
                                 cblk.layers[layno] = layer;
                             }
 
-                            uint n;
                             if (layno == 0)
                                 cblk.numpassesinlayers = 0;
-                            n = cblk.numpassesinlayers;
+                            var n = cblk.numpassesinlayers;
 
 
                             if (thresh < 0)
@@ -811,11 +810,11 @@ internal sealed class TileCoder
                             }
                             else
                             {
-                                for (uint passno = cblk.numpassesinlayers; passno < cblk.totalpasses; passno++)
+                                for (var passno = cblk.numpassesinlayers; passno < cblk.totalpasses; passno++)
                                 {
                                     uint dr;
                                     double dd;
-                                    TcdPass pass = cblk.passes[passno];
+                                    var pass = cblk.passes[passno];
 
                                     if (n == 0)
                                     {
@@ -905,35 +904,28 @@ internal sealed class TileCoder
     /// </remarks>
     private bool InitTile(uint p_tile_no, bool is_encoder)
     {
-        DWT.GetGainFunc gain_ptr;
-        uint pdx, pdy;
+        Dwt.GetGainFunc gain_ptr;
         uint gain;
-        int x0b, y0b;
         // extent of precincts , top left, bottom right
-        int tl_prc_x_start, tl_prc_y_start, br_prc_x_end, br_prc_y_end;
+        int br_prc_x_end, br_prc_y_end;
         // number of precinct for a resolution 
-        uint n_precincts;
         // room needed to store l_nb_precinct precinct for a resolution 
-        uint n_precinct_size;
         // number of code blocks for a precinct
-        uint n_code_blocks;
         // room needed to store l_nb_code_blocks code blocks for a precinct
-        uint n_code_blocks_size;
         // size of data for a tile 
-        int data_size;
 
-        CodingParameters cp = _cp;
-        TileCodingParams tcp = cp.tcps[p_tile_no];
-        TcdTile[] tiles = _tcd_image.tiles;
-        TcdTile tile = tiles[0];
-        TileCompParams[] tccps = tcp.tccps;
-        TileCompParams tccp = tccps[0];
-        TcdTilecomp[] tilecs = tile.comps;
-        JPXImage image = _image;
-        ImageComp[] image_comps = _image.comps;
+        var cp = _cp;
+        var tcp = cp.tcps[p_tile_no];
+        var tiles = _tcd_image.tiles;
+        var tile = tiles[0];
+        var tccps = tcp.tccps;
+        var tccp = tccps[0];
+        var tilecs = tile.comps;
+        var image = _image;
+        var image_comps = _image.comps;
 
-        uint p = p_tile_no % cp.tw;       // tile coordinates 
-        uint q = p_tile_no / cp.tw;
+        var p = p_tile_no % cp.tw;       // tile coordinates 
+        var q = p_tile_no / cp.tw;
 
         // 4 borders of the tile rescale on the image if necessary
         {
@@ -975,8 +967,8 @@ internal sealed class TileCoder
             //C# impl, we don't have pointers, so these three are
             //         fetched every cycle.
             tccp = tccps[compno];
-            TcdTilecomp tilec = tilecs[compno];
-            ImageComp image_comp = image_comps[compno];
+            var tilec = tilecs[compno];
+            var image_comp = image_comps[compno];
 
             image_comp.resno_decoded = 0;
             // Border of each tile component (global) 
@@ -999,21 +991,19 @@ internal sealed class TileCoder
 
             if (is_encoder)
             {
-                long tile_data_size;
-
                 // Compute data_size with overflow check
                 long w = tilec.x1 - tilec.x0;
                 long h = tilec.y1 - tile.y0;
 
                 // issue 733, l_data_size == 0U, probably something wrong should be checked before getting here
-                if (h > 0 && w > Constants.SIZE_MAX / h)
+                if (h > 0 && w > Constants.SizeMax / h)
                 {
                     _cinfo.Error("Size of tile data exceeds system limits");
                     return false;
                 }
-                tile_data_size = w * h;
+                var tile_data_size = w * h;
 
-                if (Constants.SIZE_MAX / 4 < tile_data_size)
+                if (Constants.SizeMax / 4 < tile_data_size)
                 {
                     _cinfo.Error("Size of tile data exceeds system limits");
                     return false;
@@ -1025,7 +1015,7 @@ internal sealed class TileCoder
 
             //C# tilec.resolutions is an array of pointers instead of a
             //   struct[], so datasize is simply the number of resolutions
-            data_size = (int) tilec.numresolutions;
+            var data_size = (int) tilec.numresolutions;
 
             tilec.data_win = null;
             tilec.win_x0 = 0;
@@ -1038,32 +1028,31 @@ internal sealed class TileCoder
                 tilec.resolutions = new TcdResolution[data_size];
                 //tilec.resolutions_size = data_size;
 
-                for (int c = 0; c < tilec.resolutions.Length; c++)
+                for (var c = 0; c < tilec.resolutions.Length; c++)
                     tilec.resolutions[c] = new TcdResolution();
             }
             else if (data_size > tilec.resolutions.Length)
             {
                 var old = tilec.resolutions.Length;
                 Array.Resize<TcdResolution>(ref tilec.resolutions, data_size);
-                for (int c = old; c < tilec.resolutions.Length; c++)
+                for (var c = old; c < tilec.resolutions.Length; c++)
                     tilec.resolutions[c] = new TcdResolution();
             }
 
-            uint level_no = tilec.numresolutions;
+            var level_no = tilec.numresolutions;
             //TcdResolution[] reso = tilec.resolutions;
-            StepSize[] step_sizes = tccp.stepsizes;
+            var step_sizes = tccp.stepsizes;
 
             //C# C moves the step_size pointer, so we use this instead.
-            int step_size_ptr = 0;
+            var step_size_ptr = 0;
 
-            for (int resno = 0; resno < tilec.numresolutions; resno++)
+            for (var resno = 0; resno < tilec.numresolutions; resno++)
             {
                 int tlcbgxstart, tlcbgystart /*, brcbgxend, brcbgyend*/;
                 uint cbgwidthexpn, cbgheightexpn;
-                uint cblkwidthexpn, cblkheightexpn;
 
                 //C# impl, advances the res pointer.
-                TcdResolution res = tilec.resolutions[resno];
+                var res = tilec.resolutions[resno];
 
                 --level_no;
 
@@ -1074,14 +1063,14 @@ internal sealed class TileCoder
                 res.y1 = MyMath.int_ceildivpow2(tilec.y1, (int)level_no);
 
                 // p. 35, table A-23, ISO/IEC FDIS154444-1 : 2000 (18 august 2000) 
-                pdx = tccp.prcw[resno];
-                pdy = tccp.prch[resno];
+                var pdx = tccp.prcw[resno];
+                var pdy = tccp.prch[resno];
 
                 // p. 64, B.6, ISO/IEC FDIS15444-1 : 2000 (18 august 2000)  
-                tl_prc_x_start = MyMath.int_floordivpow2(res.x0, (int)pdx) << (int)pdx;
-                tl_prc_y_start = MyMath.int_floordivpow2(res.y0, (int)pdy) << (int)pdy;
+                var tl_prc_x_start = MyMath.int_floordivpow2(res.x0, (int)pdx) << (int)pdx;
+                var tl_prc_y_start = MyMath.int_floordivpow2(res.y0, (int)pdy) << (int)pdy;
                 {
-                    uint tmp = (uint) MyMath.int_ceildivpow2(res.x1, (int)pdx) << (int)pdx;
+                    var tmp = (uint) MyMath.int_ceildivpow2(res.x1, (int)pdx) << (int)pdx;
                     if (tmp > int.MaxValue)
                     {
                         _cinfo.Error("Integer overflow");
@@ -1090,7 +1079,7 @@ internal sealed class TileCoder
                     br_prc_x_end = (int)tmp;
                 }
                 {
-                    uint tmp = (uint) MyMath.int_ceildivpow2(res.y1, (int)pdy) << (int)pdy;
+                    var tmp = (uint) MyMath.int_ceildivpow2(res.y1, (int)pdy) << (int)pdy;
                     if (tmp > int.MaxValue)
                     {
                         _cinfo.Error("Integer overflow");
@@ -1110,14 +1099,14 @@ internal sealed class TileCoder
                     return false;
                 }
 
-                n_precincts = res.pw * res.ph;
+                var n_precincts = res.pw * res.ph;
                 //C# impl note.
                 //Snip code that tests if the n_precincts * sizeof(opj_tcd_precinct_t)
                 //is bigger than uint.MaxValue (they get this value by casting -1 to uint)
                 //Anyway, in this implementation TcdPrecinct is not a struct. Meaning the
                 //check dosn't quite make sense. But there is probably a practial limit to
                 //how big we should accept n_precincts to be.
-                n_precinct_size = n_precincts;
+                var n_precinct_size = n_precincts;
 
                 if (resno == 0)
                 {
@@ -1140,13 +1129,13 @@ internal sealed class TileCoder
                     res.numbands = 3;
                 }
 
-                cblkwidthexpn = Math.Min(tccp.cblkw, cbgwidthexpn);
-                cblkheightexpn = Math.Min(tccp.cblkh, cbgheightexpn);
-                //C# impl: We set band inside the for loop.
+                var cblkwidthexpn = Math.Min(tccp.cblkw, cbgwidthexpn);
+                var cblkheightexpn = Math.Min(tccp.cblkh, cbgheightexpn);
 
+                //C# impl: We set band inside the for loop.
                 for (uint bandno = 0; bandno < res.numbands; bandno++, step_size_ptr++)
                 {
-                    TcdBand band = res.bands[bandno];
+                    var band = res.bands[bandno];
 
                     if (resno == 0)
                     {
@@ -1160,9 +1149,9 @@ internal sealed class TileCoder
                     {
                         band.bandno = bandno + 1;
                         // x0b = 1 if bandno = 1 or 3 
-                        x0b = (int) (band.bandno & 1u);
+                        var x0b = (int) (band.bandno & 1u);
                         // y0b = 1 if bandno = 2 or 3 
-                        y0b = (int) (band.bandno >> 1);
+                        var y0b = (int) (band.bandno >> 1);
                         // l_band border (global) 
                         band.x0 = MyMath.int64_ceildivpow2(tilec.x0 - (1L << (int)level_no) * x0b, (int)(level_no + 1));
                         band.y0 = MyMath.int64_ceildivpow2(tilec.y0 - (1L << (int)level_no) * y0b, (int)(level_no + 1));
@@ -1183,18 +1172,18 @@ internal sealed class TileCoder
                     }
 
                     //C# *_step_size is kept in synch with *l_band, see ++l_band, ++l_step_size in 2.5 source.
-                    StepSize step_size = step_sizes[step_size_ptr];
+                    var step_size = step_sizes[step_size_ptr];
                     {
                         // Table E-1 - Sub-band gains
                         // BUG_WEIRD_TWO_INVK (look for this identifier in dwt.c):
                         // the test (!isEncoder && l_tccp->qmfbid == 0) is strongly
                         // linked to the use of two_invK instead of invK
-                        int log2_gain = !is_encoder && tccp.qmfbid == 0 ? 0 : 
+                        var log2_gain = !is_encoder && tccp.qmfbid == 0 ? 0 : 
                             band.bandno == 0 ? 0 :
                             band.bandno == 3 ? 2 : 1;
 
                         // Nominal dynamic range. Equation E-4
-                        int Rb = (int)image_comp.prec + log2_gain;
+                        var Rb = (int)image_comp.prec + log2_gain;
 
                         // Delta_b value of Equation E-3 in "E.1 Inverse quantization
                         // procedure" of the standard
@@ -1212,7 +1201,7 @@ internal sealed class TileCoder
                             band.precincts = new TcdPrecinct[n_precinct_size];
 
                             //Nulling
-                            for (int c = 0; c < band.precincts.Length; c++)
+                            for (var c = 0; c < band.precincts.Length; c++)
                                 band.precincts[c] = new TcdPrecinct();
 
                             //same as l_band.precincts.Length
@@ -1221,41 +1210,40 @@ internal sealed class TileCoder
                     }
                     else if (band.precincts.Length < n_precinct_size)
                     {
-                        int old_size = band.precincts.Length;
+                        var old_size = band.precincts.Length;
                         Array.Resize<TcdPrecinct>(ref band.precincts, (int)n_precinct_size);
-                        for (int c = old_size; c < band.precincts.Length; c++)
+                        for (var c = old_size; c < band.precincts.Length; c++)
                             band.precincts[c] = new TcdPrecinct();
                     }
 
                     //C# impl: current_precinct is set within the loop
-                    for (int precno = 0; precno < n_precincts; precno++)
+                    for (var precno = 0; precno < n_precincts; precno++)
                     {
-                        int tlcblkxstart, tlcblkystart, brcblkxend, brcblkyend;
-                        int cbgxstart = tlcbgxstart + (int)(precno % res.pw) * (1 << (int)cbgwidthexpn);
-                        int cbgystart = tlcbgystart + (int)(precno / res.pw) * (1 << (int)cbgheightexpn);
-                        int cbgxend = cbgxstart + (1 << (int)cbgwidthexpn);
-                        int cbgyend = cbgystart + (1 << (int)cbgheightexpn);
+                        var cbgxstart = tlcbgxstart + (int)(precno % res.pw) * (1 << (int)cbgwidthexpn);
+                        var cbgystart = tlcbgystart + (int)(precno / res.pw) * (1 << (int)cbgheightexpn);
+                        var cbgxend = cbgxstart + (1 << (int)cbgwidthexpn);
+                        var cbgyend = cbgystart + (1 << (int)cbgheightexpn);
 
                         // C# since we don't have pointers, we set instead of increment.
-                        TcdPrecinct current_precinct = band.precincts[precno];
+                        var current_precinct = band.precincts[precno];
 
                         current_precinct.x0 = Math.Max(cbgxstart, band.x0);
                         current_precinct.y0 = Math.Max(cbgystart, band.y0);
                         current_precinct.x1 = Math.Min(cbgxend, band.x1);
                         current_precinct.y1 = Math.Min(cbgyend, band.y1);
 
-                        tlcblkxstart = MyMath.int_floordivpow2(current_precinct.x0, (int)cblkwidthexpn) << (int)cblkwidthexpn;
-                        tlcblkystart = MyMath.int_floordivpow2(current_precinct.y0, (int)cblkheightexpn) << (int)cblkheightexpn;
-                        brcblkxend = MyMath.int_ceildivpow2(current_precinct.x1, (int)cblkwidthexpn) << (int)cblkwidthexpn;
-                        brcblkyend = MyMath.int_ceildivpow2(current_precinct.y1, (int)cblkheightexpn) << (int)cblkheightexpn;
+                        var tlcblkxstart = MyMath.int_floordivpow2(current_precinct.x0, (int)cblkwidthexpn) << (int)cblkwidthexpn;
+                        var tlcblkystart = MyMath.int_floordivpow2(current_precinct.y0, (int)cblkheightexpn) << (int)cblkheightexpn;
+                        var brcblkxend = MyMath.int_ceildivpow2(current_precinct.x1, (int)cblkwidthexpn) << (int)cblkwidthexpn;
+                        var brcblkyend = MyMath.int_ceildivpow2(current_precinct.y1, (int)cblkheightexpn) << (int)cblkheightexpn;
                         current_precinct.cw = (uint)((brcblkxend - tlcblkxstart) >> (int)cblkwidthexpn);
                         current_precinct.ch = (uint)((brcblkyend - tlcblkystart) >> (int)cblkheightexpn);
 
-                        n_code_blocks = current_precinct.cw * current_precinct.ch;
+                        var n_code_blocks = current_precinct.cw * current_precinct.ch;
                         //C# impl note.
                         //Snip code that tests if the n_code_blocks * sizeof(sizeof_block)
                         //is bigger than uint.MaxValue. Again we're not using a struct[]
-                        n_code_blocks_size = n_code_blocks;
+                        var n_code_blocks_size = n_code_blocks;
 
                         if (is_encoder)
                         {
@@ -1267,7 +1255,7 @@ internal sealed class TileCoder
                                 current_precinct.enc = new TcdCblkEnc[n_code_blocks_size];
 
                                 //Nulling
-                                for (int c = 0; c < current_precinct.enc.Length; c++)
+                                for (var c = 0; c < current_precinct.enc.Length; c++)
                                     current_precinct.enc[c] = new TcdCblkEnc();
 
                                 //Same as l_current_precinct.enc.Length
@@ -1275,9 +1263,9 @@ internal sealed class TileCoder
                             }
                             else if (n_code_blocks_size > current_precinct.enc.Length)
                             {
-                                int old_size = current_precinct.enc.Length;
+                                var old_size = current_precinct.enc.Length;
                                 Array.Resize(ref current_precinct.enc, (int)n_code_blocks_size);
-                                for (int c = old_size; c < current_precinct.enc.Length; c++)
+                                for (var c = old_size; c < current_precinct.enc.Length; c++)
                                     current_precinct.enc[c] = new TcdCblkEnc();
                             }
                         }
@@ -1288,7 +1276,7 @@ internal sealed class TileCoder
                                 current_precinct.dec = new TcdCblkDec[n_code_blocks_size];
 
                                 //Nulling
-                                for (int c = 0; c < current_precinct.dec.Length; c++)
+                                for (var c = 0; c < current_precinct.dec.Length; c++)
                                     current_precinct.dec[c] = new TcdCblkDec();
 
                                 //Same as l_current_precinct.enc.Length
@@ -1296,9 +1284,9 @@ internal sealed class TileCoder
                             }
                             else if (n_code_blocks_size > current_precinct.dec.Length)
                             {
-                                int old_size = current_precinct.dec.Length;
+                                var old_size = current_precinct.dec.Length;
                                 Array.Resize<TcdCblkDec>(ref current_precinct.dec, (int)n_code_blocks_size);
-                                for (int c = old_size; c < current_precinct.dec.Length; c++)
+                                for (var c = old_size; c < current_precinct.dec.Length; c++)
                                     current_precinct.dec[c] = new TcdCblkDec();
                             }
                         }
@@ -1321,12 +1309,12 @@ internal sealed class TileCoder
                             current_precinct.imsbtree.Init(current_precinct.cw, current_precinct.ch);
                         }
 
-                        for (int cblkno = 0; cblkno < n_code_blocks; cblkno++)
+                        for (var cblkno = 0; cblkno < n_code_blocks; cblkno++)
                         {
-                            int cblkxstart = tlcblkxstart + (int)(cblkno % current_precinct.cw) * (1 << (int)cblkwidthexpn);
-                            int cblkystart = tlcblkystart + (int)(cblkno / current_precinct.cw) * (1 << (int)cblkheightexpn);
-                            int cblkxend = cblkxstart + (1 << (int)cblkwidthexpn);
-                            int cblkyend = cblkystart + (1 << (int)cblkheightexpn);
+                            var cblkxstart = tlcblkxstart + (int)(cblkno % current_precinct.cw) * (1 << (int)cblkwidthexpn);
+                            var cblkystart = tlcblkystart + (int)(cblkno / current_precinct.cw) * (1 << (int)cblkheightexpn);
+                            var cblkxend = cblkxstart + (1 << (int)cblkwidthexpn);
+                            var cblkyend = cblkystart + (1 << (int)cblkheightexpn);
 
                             if (is_encoder)
                             {
@@ -1375,7 +1363,7 @@ internal sealed class TileCoder
         {
             code_block.layers = new TcdLayer[100];
 
-            for (int c = 0; c < code_block.layers.Length; c++)
+            for (var c = 0; c < code_block.layers.Length; c++)
                 code_block.layers[c] = new TcdLayer();
         }
 
@@ -1383,7 +1371,7 @@ internal sealed class TileCoder
         {
             code_block.passes = new TcdPass[100];
 
-            for (int c = 0; c < code_block.passes.Length; c++)
+            for (var c = 0; c < code_block.passes.Length; c++)
                 code_block.passes[c] = new TcdPass();
         }
     }
@@ -1396,20 +1384,19 @@ internal sealed class TileCoder
     /// </remarks>
     private void CodeBlockEncAllocateData(TcdCblkEnc code_block)
     {
-        uint l_data_size;
-
-        // +1 is needed for https://github.com/uclouvain/openjpeg/issues/835
-        // and actually +2 required for https://github.com/uclouvain/openjpeg/issues/982
-        // and +7 for https://github.com/uclouvain/openjpeg/issues/1283 (-M 3)
-        // and +26 for https://github.com/uclouvain/openjpeg/issues/1283 (-M 7)
-        // and +28 for https://github.com/uclouvain/openjpeg/issues/1283 (-M 44)
-        // and +33 for https://github.com/uclouvain/openjpeg/issues/1283 (-M 4)
-        // and +63 for https://github.com/uclouvain/openjpeg/issues/1283 (-M 4 -IMF 2K)
-        // and +74 for https://github.com/uclouvain/openjpeg/issues/1283 (-M 4 -n 8 -s 7,7 -I)
-        // TODO: is there a theoretical upper-bound for the compressed code
-        // block size ?
-        l_data_size = 74u + (uint)((code_block.x1 - code_block.x0) *
-                                   (code_block.y1 - code_block.y0) * sizeof(uint));
+        var l_data_size =
+            // +1 is needed for https://github.com/uclouvain/openjpeg/issues/835
+            // and actually +2 required for https://github.com/uclouvain/openjpeg/issues/982
+            // and +7 for https://github.com/uclouvain/openjpeg/issues/1283 (-M 3)
+            // and +26 for https://github.com/uclouvain/openjpeg/issues/1283 (-M 7)
+            // and +28 for https://github.com/uclouvain/openjpeg/issues/1283 (-M 44)
+            // and +33 for https://github.com/uclouvain/openjpeg/issues/1283 (-M 4)
+            // and +63 for https://github.com/uclouvain/openjpeg/issues/1283 (-M 4 -IMF 2K)
+            // and +74 for https://github.com/uclouvain/openjpeg/issues/1283 (-M 4 -n 8 -s 7,7 -I)
+            // TODO: is there a theoretical upper-bound for the compressed code
+            // block size ?
+            74u + (uint)((code_block.x1 - code_block.x0) *
+                         (code_block.y1 - code_block.y0) * sizeof(uint));
 
         if (l_data_size > code_block.data_size)
         {
@@ -1436,18 +1423,18 @@ internal sealed class TileCoder
     {
         if (code_block.segs == null)
         {
-            code_block.segs = new TcdSeg[Constants.J2K_DEFAULT_NB_SEGS];
+            code_block.segs = new TcdSeg[Constants.J2KDefaultNbSegs];
             //for (int c = 0; c < p_code_block.segs.Length; c++)
             //    p_code_block.segs[c] = new TcdSeg();
 
-            code_block.current_max_segs = Constants.J2K_DEFAULT_NB_SEGS;
+            code_block.current_max_segs = Constants.J2KDefaultNbSegs;
         }
         else
         {
-            TcdSeg[] segs = code_block.segs;
-            uint current_max_segs = code_block.current_max_segs;
-            TcdSegDataChunk[] chunks = code_block.chunks;
-            uint numchunksalloc = code_block.numchunksalloc;
+            var segs = code_block.segs;
+            var current_max_segs = code_block.current_max_segs;
+            var chunks = code_block.chunks;
+            var numchunksalloc = code_block.numchunksalloc;
 
             code_block.decoded_data = null;
 
@@ -1470,7 +1457,7 @@ internal sealed class TileCoder
     //2.5
     private bool T2Decode(byte[] src, int src_len, CodestreamIndex cstr_index)
     {
-        Tier2Coding t2 = new Tier2Coding(_cinfo, _image, _cp);
+        var t2 = new Tier2Coding(_cinfo, _image, _cp);
 
         return t2.DecodePackets(this, _tcd_tileno, _tcd_image.tiles[0], src, src_len, cstr_index);
     }
@@ -1511,13 +1498,12 @@ internal sealed class TileCoder
     /// <returns>True of true</returns>
     private bool RunThreads(CreateJobs create_jobs, ThreadWorker run_thread)
     {
-        bool ret = true;
+        var ret = true;
 
         //How many threads are currently working
-        int running_jobs = 0;
+        var running_jobs = 0;
 
-        int max_threads;
-        ThreadPool.GetAvailableThreads(out max_threads, out _);
+        ThreadPool.GetAvailableThreads(out var max_threads, out _);
         max_threads = _cinfo.DisableMultiThreading ? 1 : Math.Min(Environment.ProcessorCount, max_threads);
 
         //Generator for work
@@ -1525,7 +1511,7 @@ internal sealed class TileCoder
         {
             //Since we only allow setting this value false,
             //we don't need to worry about syncing the threads.
-            if (val != null && val.Value == false)
+            if (val is false)
                 ret = val.Value;
             return ret;
         });
@@ -1538,7 +1524,7 @@ internal sealed class TileCoder
             {
                 //Before we enqueue the job, we must wait for a thread to become
                 //avalible.
-                int jobs = Interlocked.Increment(ref running_jobs);
+                var jobs = Interlocked.Increment(ref running_jobs);
                 if (jobs == max_threads)
                 {
                     //When max_threads == 1, we'll always enter this if,
@@ -1575,7 +1561,7 @@ internal sealed class TileCoder
                         lock (reset)
                         {
                             //Only worker threads decrement running jobs. 
-                            int rj = Interlocked.Decrement(ref running_jobs);
+                            var rj = Interlocked.Decrement(ref running_jobs);
 
                             //In theory we don't always have to set the reset flag,
                             //we only need to do so when (running_jobs == max_threads)
@@ -1659,9 +1645,9 @@ internal sealed class TileCoder
     /// </remarks>
     private IEnumerable<Tier1Coding.T1CBLKDecodeProcessingJob> T1Decode(bool must_copy, Tier1Coding.SetRet set_ret)
     {
-        TcdTile tile = _tcd_image.tiles[0];
+        var tile = _tcd_image.tiles[0];
         var tccps = _tcp.tccps;
-        bool check_pterm = false;
+        var check_pterm = false;
 
 
         if (_tcp.num_layers_to_decode == _tcp.numlayers &&
@@ -1670,7 +1656,7 @@ internal sealed class TileCoder
             check_pterm = true;
         }
 
-        for (int compno = 0; compno < tile.numcomps; ++compno)
+        for (var compno = 0; compno < tile.numcomps; ++compno)
         {
             if (_used_component != null && !_used_component[compno])
                 continue;
@@ -1693,27 +1679,27 @@ internal sealed class TileCoder
     //2.5 - opj_tcd_dwt_decode
     private bool DWTDecode()
     {
-        TcdTile tile = _tcd_image.tiles[0];
+        var tile = _tcd_image.tiles[0];
         var tccps = _tcp.tccps;
         var comps = _image.comps;
 
-        for (int compno = 0; compno < tile.numcomps; compno++)
+        for (var compno = 0; compno < tile.numcomps; compno++)
         {
             if (_used_component != null && !_used_component[compno])
             {
                 continue;
             }
 
-            TcdTilecomp tilec = tile.comps[compno];
+            var tilec = tile.comps[compno];
 
             if (tccps[compno].qmfbid == 1)
             {
-                if (!DWT.Decode(this, tilec, comps[compno].resno_decoded + 1))
+                if (!Dwt.Decode(this, tilec, comps[compno].resno_decoded + 1))
                     return false;
             }
             else
             {
-                if (!DWT.DecodeReal(this, tilec, comps[compno].resno_decoded + 1))
+                if (!Dwt.DecodeReal(this, tilec, comps[compno].resno_decoded + 1))
                     return false;
             }
         }
@@ -1724,9 +1710,9 @@ internal sealed class TileCoder
     //2.5 - opj_tcd_mct_decode
     private bool MCTDecode()
     {
-        TcdTile tile = _tcd_image.tiles[0];
-        TcdTilecomp[] tile_comps = tile.comps;
-        TcdTilecomp tile_comp = tile_comps[0];
+        var tile = _tcd_image.tiles[0];
+        var tile_comps = tile.comps;
+        var tile_comp = tile_comps[0];
         int samples;
 
         if (_tcp.mct == 0 || _used_component != null)
@@ -1734,7 +1720,7 @@ internal sealed class TileCoder
 
         if (WholeTileDecoding)
         {
-            TcdResolution res_comp0 = tile.comps[0].resolutions[tile_comp.minimum_num_resolutions - 1];
+            var res_comp0 = tile.comps[0].resolutions[tile_comp.minimum_num_resolutions - 1];
 
             // A bit inefficient: we process more data than needed if
             // resno_decoded < l_tile_comp->minimum_num_resolutions-1,
@@ -1749,8 +1735,8 @@ internal sealed class TileCoder
                     return false;
                 }
 
-                TcdResolution res_comp1 = tile.comps[1].resolutions[tile_comp.minimum_num_resolutions - 1];
-                TcdResolution res_comp2 = tile.comps[2].resolutions[tile_comp.minimum_num_resolutions - 1];
+                var res_comp1 = tile.comps[1].resolutions[tile_comp.minimum_num_resolutions - 1];
+                var res_comp2 = tile.comps[2].resolutions[tile_comp.minimum_num_resolutions - 1];
                 // testcase 1336.pdf.asan.47.376
                 if (_image.comps[0].resno_decoded != _image.comps[1].resno_decoded ||
                     _image.comps[0].resno_decoded != _image.comps[2].resno_decoded ||
@@ -1764,13 +1750,13 @@ internal sealed class TileCoder
         }
         else
         {
-            TcdResolution res_comp0 = tile.comps[0].resolutions[tile_comp.minimum_num_resolutions - 1];
+            var res_comp0 = tile.comps[0].resolutions[tile_comp.minimum_num_resolutions - 1];
             samples = (int)((res_comp0.win_x1 - res_comp0.win_x0) * (res_comp0.win_y1 - res_comp0.win_y0));
 
             if (tile.numcomps >= 3)
             {
-                TcdResolution res_comp1 = tile.comps[1].resolutions[tile_comp.minimum_num_resolutions - 1];
-                TcdResolution res_comp2 = tile.comps[2].resolutions[tile_comp.minimum_num_resolutions - 1];
+                var res_comp1 = tile.comps[1].resolutions[tile_comp.minimum_num_resolutions - 1];
+                var res_comp2 = tile.comps[2].resolutions[tile_comp.minimum_num_resolutions - 1];
                 // testcase 1336.pdf.asan.47.376
                 if (_image.comps[0].resno_decoded != _image.comps[1].resno_decoded ||
                     _image.comps[0].resno_decoded != _image.comps[2].resno_decoded ||
@@ -1791,7 +1777,7 @@ internal sealed class TileCoder
                     return true;
 
                 var data = new int[tile.numcomps][];
-                for (int i = 0; i < data.Length; i++)
+                for (var i = 0; i < data.Length; i++)
                     data[i] = tile_comps[i].data;
 
                 MCT.DecodeCustom(_tcp.mct_decoding_matrix, samples, data, tile.numcomps, _image.comps[0].sgnd);
@@ -1843,19 +1829,19 @@ internal sealed class TileCoder
     //2.5.1 - opj_tcd_dc_level_shift_decode
     private void DcLevelShiftDecode()
     {
-        TcdTile tile = _tcd_image.tiles[0];
+        var tile = _tcd_image.tiles[0];
         var tccps = _tcp.tccps;
         int min, max;
 
-        for (int compno = 0; compno < tile.numcomps; ++compno)
+        for (var compno = 0; compno < tile.numcomps; ++compno)
         {
             if (_used_component != null && !_used_component[compno])
                 continue;
 
-            TcdTilecomp tile_comp = tile.comps[compno];
-            ImageComp imagec = _image.comps[compno];
-            TcdResolution res = tile_comp.resolutions[imagec.resno_decoded];
-            TileCompParams tccp = tccps[compno];
+            var tile_comp = tile.comps[compno];
+            var imagec = _image.comps[compno];
+            var res = tile_comp.resolutions[imagec.resno_decoded];
+            var tccp = tccps[compno];
             int width, height, stride, data_ptr;
             int[] data;
 
@@ -1894,9 +1880,9 @@ internal sealed class TileCoder
 
             if (_tcp.tccps[compno].qmfbid == 1)
             {
-                for (int j = 0; j < height; j++)
+                for (var j = 0; j < height; j++)
                 {
-                    for (int i = 0; i < width; i++)
+                    for (var i = 0; i < width; i++)
                     {
                         data[data_ptr] = MyMath.int_clamp(data[data_ptr] + tccp.dc_level_shift, min, max);
                         data_ptr++;
@@ -1906,10 +1892,10 @@ internal sealed class TileCoder
             }
             else
             {
-                IntOrFloat fi = new IntOrFloat();
-                for (int j = 0; j < height; j++)
+                var fi = new IntOrFloat();
+                for (var j = 0; j < height; j++)
                 {
-                    for (int i = 0; i < width; i++)
+                    for (var i = 0; i < width; i++)
                     {
                         fi.I = data[data_ptr];
                         if (fi.F > int.MaxValue)
@@ -1924,7 +1910,7 @@ internal sealed class TileCoder
                         {
                             // Do addition on int64 to avoid overflows
                             //long value_int = lrintf(fi.F);
-                            long value_int = (long)Math.Round(fi.F); //<-- Impl. banker's rounding (round towards even).
+                            var value_int = (long)Math.Round(fi.F); //<-- Impl. banker's rounding (round towards even).
                             data[data_ptr] = (int)MyMath.int64_clamp(value_int + tccp.dc_level_shift, min, max);
                         }
                         data_ptr++;
@@ -2014,21 +2000,20 @@ internal sealed class TileCoder
 
                 var tilec = _tcd_image.tiles[0].comps[compno];
                 var l_res = tilec.resolutions[tilec.minimum_num_resolutions - 1];
-                long l_data_size;
 
                 // compute data_size with overflow check
                 long res_w = l_res.x1 - l_res.x0;
                 long res_h = l_res.y1 - l_res.y0;
 
                 // issue 733, l_data_size == 0U, probably something wrong should be checked before getting here
-                if (res_h > 0 && res_w > Constants.SIZE_MAX / res_h)
+                if (res_h > 0 && res_w > Constants.SizeMax / res_h)
                 {
                     _cinfo.Error("Size of tile data exceeds system limits");
                     return false;
                 }
-                l_data_size = res_w * res_h;
+                var l_data_size = res_w * res_h;
 
-                if (Constants.SIZE_MAX / sizeof(OPJ_UINT32) < l_data_size)
+                if (Constants.SizeMax / sizeof(OPJ_UINT32) < l_data_size)
                 {
                     _cinfo.Error("Size of tile data exceeds system limits");
                     return false;
@@ -2083,7 +2068,7 @@ internal sealed class TileCoder
                     return false;
                 }
 
-                for (int resno = 0; resno < tilec.numresolutions; ++resno)
+                for (var resno = 0; resno < tilec.numresolutions; ++resno)
                 {
                     var res = tilec.resolutions[resno];
                     res.win_x0 = MyMath.uint_ceildivpow2(tilec.win_x0,
@@ -2112,15 +2097,14 @@ internal sealed class TileCoder
         // the tile data buffer
         if (!WholeTileDecoding)
         {
-            for (int compno = 0; compno < _image.numcomps; compno++)
+            for (var compno = 0; compno < _image.numcomps; compno++)
             {
-                TcdTilecomp tilec = _tcd_image.tiles[0].comps[compno];
-                ImageComp image_comp = _image.comps[compno];
+                var tilec = _tcd_image.tiles[0].comps[compno];
+                var image_comp = _image.comps[compno];
                 var res = tilec.resolutions;
-                uint res_pt = image_comp.resno_decoded;
+                var res_pt = image_comp.resno_decoded;
                 ulong w = res[res_pt].win_x1 - res[res_pt].win_x0;
                 ulong h = res[res_pt].win_y1 - res[res_pt].win_y0;
-                ulong l_data_size;
 
                 tilec.data_win = null;
 
@@ -2131,13 +2115,13 @@ internal sealed class TileCoder
 
                 if (w > 0 && h > 0)
                 {
-                    if (w > Constants.SIZE_MAX / h)
+                    if (w > Constants.SizeMax / h)
                     {
                         _cinfo.Error("Size of tile data exceeds system limits");
                         return false;
                     }
-                    l_data_size = w * h;
-                    if (l_data_size > Constants.SIZE_MAX / sizeof(int))
+                    var l_data_size = w * h;
+                    if (l_data_size > Constants.SizeMax / sizeof(int))
                     {
                         _cinfo.Error("Size of tile data exceeds system limits");
                         return false;
@@ -2175,10 +2159,10 @@ internal sealed class TileCoder
 #if DEBUG
     private void DumpTilcomp(string txt, bool data_win = false)
     {
-        TcdTile tile = _tcd_image.tiles[0];
+        var tile = _tcd_image.tiles[0];
         using (var file = new System.IO.StreamWriter("c:/temp/j2k_dump.txt", append: false))
         {
-            for (int comp_nr = 0; comp_nr < tile.numcomps; comp_nr++)
+            for (var comp_nr = 0; comp_nr < tile.numcomps; comp_nr++)
             {
                 file.Write(txt + " int values for component " + (comp_nr + 1) + "\n");
                 var d = data_win ? tile.comps[comp_nr].data_win : tile.comps[comp_nr].data;
@@ -2194,13 +2178,13 @@ internal sealed class TileCoder
     {
         using (var file = new System.IO.StreamWriter("c:/temp/j2k_dump.txt"))
         {
-            int nr = 1;
+            var nr = 1;
             foreach (var job in T1Decode(false, (f) => true))
             {
                 var cb = job.cblk;
                 file.Write(txt+"Coblk " + nr++ + " (" + cb.numchunks + " chunks):\n");
                 var d = job.cblk.chunk_data;
-                for (int c = 0; c < cb.numchunks; c++)
+                for (var c = 0; c < cb.numchunks; c++)
                 {
                     file.Write(" -- Chunk " + (c + 1) + ":\n");
                     var chunk = cb.chunks[c];
@@ -2232,7 +2216,7 @@ internal sealed class TileCoder
     {
         using (var file = new System.IO.StreamWriter("c:/temp/j2k_dump.txt"))
         {
-            int nr = 1;
+            var nr = 1;
             foreach (var ob in Tier1Coding.EncodeCblks(_tcd_image.tiles[0], _tcp, null, 0, (f) => true))
             {
                 if (nr == 32)
@@ -2262,27 +2246,27 @@ internal sealed class TileCoder
 
         using (var file = new System.IO.StreamWriter("c:/temp/cblks.txt"))
         {
-            int nr = 1;
-            for (int compno = 0; compno < tile.numcomps; compno++)
+            var nr = 1;
+            for (var compno = 0; compno < tile.numcomps; compno++)
             {
                 var tilec = tile.comps[compno];
-                for (int resno = 0; resno < tilec.minimum_num_resolutions; ++resno)
+                for (var resno = 0; resno < tilec.minimum_num_resolutions; ++resno)
                 {
                     var res = tilec.resolutions[resno];
-                    for (int bandno = 0; bandno < res.numbands; ++bandno)
+                    for (var bandno = 0; bandno < res.numbands; ++bandno)
                     {
                         var band = res.bands[bandno];
-                        for (int precno = 0; precno < res.pw * res.ph; ++precno)
+                        for (var precno = 0; precno < res.pw * res.ph; ++precno)
                         {
                             var precinct = band.precincts[precno];
-                            for (int cblkno = 0; cblkno < precinct.cw * precinct.ch; ++cblkno)
+                            for (var cblkno = 0; cblkno < precinct.cw * precinct.ch; ++cblkno)
                             {
                                 var cb = precinct.dec[cblkno];
                                 if (cb.decoded_data != null)
                                 {
                                     var d = cb.decoded_data;
                                     file.Write(txt + "Coblk " + nr++ + ":\n");
-                                    for (int c = 0; c < d.Length; c++)
+                                    for (var c = 0; c < d.Length; c++)
                                     {
                                         file.Write("{1}: {0}\n", d[c], c);
                                     }
@@ -2304,19 +2288,16 @@ internal sealed class TileCoder
     /// <remarks>2.5 - opj_tcd_get_encoder_input_buffer_size</remarks>
     internal uint GetEncoderInputBufferSize()
     {
-        uint i, data_size = 0;
-        ImageComp[] img_comps;
-        TcdTilecomp[] tilecs;
-        uint size_comp, remaining;
+        uint data_size = 0;
 
-        tilecs = _tcd_image.tiles[0].comps;
-        img_comps = _image.comps;
-        for (i = 0; i < _image.numcomps; i++)
+        var tilecs = _tcd_image.tiles[0].comps;
+        var img_comps = _image.comps;
+        for (uint i = 0; i < _image.numcomps; i++)
         {
             var img_comp = img_comps[i];
             var l_tilec = tilecs[i];
-            size_comp = img_comp.prec >> 3; /*(/ 8)*/
-            remaining = img_comp.prec & 7u;  /* (%8) */
+            var size_comp = img_comp.prec >> 3 /*(/ 8)*/;
+            var remaining = img_comp.prec & 7u /* (%8) */;
 
             if (remaining != 0)
             {
@@ -2337,20 +2318,17 @@ internal sealed class TileCoder
     //2.5
     internal uint GetDecodedTileSize(bool take_into_account_partial_decoding)
     {
-        uint i, data_size = 0;
-        ImageComp[] img_comps;
-        TcdTilecomp[] tile_comps;
-        uint size_comp, remaining;
+        uint data_size = 0;
 
-        tile_comps = _tcd_image.tiles[0].comps;
-        img_comps = _image.comps;
-        for (i = 0; i < _image.numcomps; i++)
+        var tile_comps = _tcd_image.tiles[0].comps;
+        var img_comps = _image.comps;
+        for (uint i = 0; i < _image.numcomps; i++)
         {
             OPJ_UINT32 w, h;
             var img_comp = img_comps[i];
             var tile_comp = tile_comps[i];
-            size_comp = img_comp.prec >> 3; /*(/ 8)*/
-            remaining = img_comp.prec & 7u;  /* (%8) */
+            var size_comp = img_comp.prec >> 3 /*(/ 8)*/;
+            var remaining = img_comp.prec & 7u /* (%8) */;
 
             if (remaining != 0)
             {
@@ -2408,9 +2386,8 @@ internal sealed class TileCoder
         out uint stride,
         out uint tile_offset)
     {
-        uint remaining;
         size_comp = img_comp.prec >> 3; /* (/8) */
-        remaining = img_comp.prec & 7;  /* (%8) */
+        var remaining = img_comp.prec & 7 /* (%8) */;
         if (remaining != 0)
         {
             size_comp += 1;
@@ -2437,21 +2414,19 @@ internal sealed class TileCoder
     //2.5 - opj_j2k_get_tile_data
     internal void GetTileData(byte[] dest)
     {
-        int dest_ptr = 0;
+        var dest_ptr = 0;
 
         for (uint i = 0; i < _image.numcomps; i++)
         {
             var tilec = _tcd_image.tiles[0].comps[i];
             var img_comp = _image.Components[i];
-            uint size_comp, width, height,
-                stride, tile_offset;
 
             GetTileDimensions(_image, tilec, img_comp,
-                out size_comp, out width, out height,
+                out var size_comp, out var width, out var height,
                 out _, out _, out _,
-                out stride, out tile_offset);
+                out var stride, out var tile_offset);
 
-            int src_ptr = (int)tile_offset;
+            var src_ptr = (int)tile_offset;
             var src = img_comp.data;
 
             switch (size_comp)
@@ -2541,20 +2516,20 @@ internal sealed class TileCoder
     /// </remarks>
     internal bool CopyTileData(byte[] src, uint length)
     {
-        uint data_size = GetEncoderInputBufferSize();
+        var data_size = GetEncoderInputBufferSize();
 
         if (data_size != length)
             return false;
 
-        TcdTilecomp[] tilecs = _tcd_image.tiles[0].comps;
+        var tilecs = _tcd_image.tiles[0].comps;
         var img_comps = _image.comps;
-        int src_ptr = 0;
+        var src_ptr = 0;
 
-        for (int i = 0; i < img_comps.Length; i++)
+        for (var i = 0; i < img_comps.Length; i++)
         {
             var img_comp = img_comps[i];
-            uint size_comp = img_comp.prec >> 3;
-            uint remaining = img_comp.prec & 7;
+            var size_comp = img_comp.prec >> 3;
+            var remaining = img_comp.prec & 7;
 
             if (remaining != 0)
                 size_comp++;
@@ -2564,7 +2539,7 @@ internal sealed class TileCoder
 
             var tilec = tilecs[i];
             var dest = tilec.data;
-            int nb_elem = (tilec.x1 - tilec.x0) * (tilec.y1 - tilec.y0);
+            var nb_elem = (tilec.x1 - tilec.x0) * (tilec.y1 - tilec.y0);
 
             switch (size_comp)
             {
@@ -2572,12 +2547,12 @@ internal sealed class TileCoder
                 {
                     if (img_comp.sgnd)
                     {
-                        for (int j = 0; j < nb_elem; j++)
+                        for (var j = 0; j < nb_elem; j++)
                             dest[j] = src[src_ptr++];
                     }
                     else
                     {
-                        for (int j = 0; j < nb_elem; j++)
+                        for (var j = 0; j < nb_elem; j++)
                             dest[j] = src[src_ptr++] & 0xff;
                     }
 
@@ -2589,19 +2564,19 @@ internal sealed class TileCoder
                 {
                     if (img_comp.sgnd)
                     {
-                        for (int j = 0; j < nb_elem; j++)
+                        for (var j = 0; j < nb_elem; j++)
                         {
-                            short val = (short) (src[src_ptr++] | 
-                                                 (src[src_ptr++] << 8));
+                            var val = (short) (src[src_ptr++] | 
+                                               (src[src_ptr++] << 8));
                             dest[j] = val;
                         }
                     }
                     else
                     {
-                        for (int j = 0; j < nb_elem; j++)
+                        for (var j = 0; j < nb_elem; j++)
                         {
-                            short val = (short)((src[src_ptr++] |
-                                                 (src[src_ptr++] << 8)) & 0xFFFF);
+                            var val = (short)((src[src_ptr++] |
+                                               (src[src_ptr++] << 8)) & 0xFFFF);
                             dest[j] = val;
                         }
                     }
@@ -2643,7 +2618,7 @@ internal sealed class TileCoder
         //if (data_size > dest.Length)
         //    return false;
 
-        TcdTilecomp[] tilecs = _tcd_image.tiles[0].comps;
+        var tilecs = _tcd_image.tiles[0].comps;
         var img_comps = _image.comps;
         //int dest_ptr = 0;
 
@@ -2657,7 +2632,7 @@ internal sealed class TileCoder
         //    dest_ptr += nb_elem;
         //}
 
-        for (int i = 0; i < img_comps.Length; i++)
+        for (var i = 0; i < img_comps.Length; i++)
         {
             dest[i] = tilecs[i].data;
         }
@@ -2683,44 +2658,43 @@ internal sealed class TileCoder
         /* needed to be bumped to 4, in case inconsistencies are found while */
         /* decoding parts of irreversible coded images. */
         /* See opj_dwt_decode_partial_53 and opj_dwt_decode_partial_97 as well */
-        uint filter_margin = _tcp.tccps[compno].qmfbid == 1 ? 2u : 3u;
+        var filter_margin = _tcp.tccps[compno].qmfbid == 1 ? 2u : 3u;
         var tilec = _tcd_image.tiles[0].comps[compno];
         var image_comp = _image.comps[compno];
         /* Compute the intersection of the area of interest, expressed in tile coordinates */
         /* with the tile coordinates */
-        OPJ_UINT32 tcx0 = Math.Max(
+        var tcx0 = Math.Max(
             (OPJ_UINT32)tilec.x0,
             MyMath.uint_ceildiv(_win_x0, image_comp.dx));
-        OPJ_UINT32 tcy0 = Math.Max(
+        var tcy0 = Math.Max(
             (OPJ_UINT32)tilec.y0,
             MyMath.uint_ceildiv(_win_y0, image_comp.dy));
-        OPJ_UINT32 tcx1 = Math.Min(
+        var tcx1 = Math.Min(
             (OPJ_UINT32)tilec.x1,
             MyMath.uint_ceildiv(_win_x1, image_comp.dx));
-        OPJ_UINT32 tcy1 = Math.Min(
+        var tcy1 = Math.Min(
             (OPJ_UINT32)tilec.y1,
             MyMath.uint_ceildiv(_win_y1, image_comp.dy));
         /* Compute number of decomposition for this band. See table F-1 */
-        OPJ_UINT32 nb = resno == 0 ?
+        var nb = resno == 0 ?
             tilec.numresolutions - 1 :
             tilec.numresolutions - resno;
         /* Map above tile-based coordinates to sub-band-based coordinates per */
         /* equation B-15 of the standard */
-        OPJ_UINT32 x0b = bandno & 1;
-        OPJ_UINT32 y0b = bandno >> 1;
-        OPJ_UINT32 tbx0 = nb == 0 ? tcx0 :
+        var x0b = bandno & 1;
+        var y0b = bandno >> 1;
+        var tbx0 = nb == 0 ? tcx0 :
             tcx0 <= (1U << (int)(nb - 1)) * x0b ? 0 :
             MyMath.uint_ceildivpow2(tcx0 - (1U << (int)(nb - 1)) * x0b, (int)nb);
-        OPJ_UINT32 tby0 = nb == 0 ? tcy0 :
+        var tby0 = nb == 0 ? tcy0 :
             tcy0 <= (1U << (int)(nb - 1)) * y0b ? 0 :
             MyMath.uint_ceildivpow2(tcy0 - (1U << (int)(nb - 1)) * y0b, (int)nb);
-        OPJ_UINT32 tbx1 = nb == 0 ? tcx1 :
+        var tbx1 = nb == 0 ? tcx1 :
             tcx1 <= (1U << (int)(nb - 1)) * x0b ? 0 :
             MyMath.uint_ceildivpow2(tcx1 - (1U << (int)(nb - 1)) * x0b, (int)nb);
-        OPJ_UINT32 tby1 = nb == 0 ? tcy1 :
+        var tby1 = nb == 0 ? tcy1 :
             tcy1 <= (1U << (int)(nb - 1)) * y0b ? 0 :
             MyMath.uint_ceildivpow2(tcy1 - (1U << (int)(nb - 1)) * y0b, (int)nb);
-        bool intersects;
 
         if (tbx0 < filter_margin)
         {
@@ -2741,8 +2715,8 @@ internal sealed class TileCoder
         tbx1 = MyMath.uint_adds(tbx1, filter_margin);
         tby1 = MyMath.uint_adds(tby1, filter_margin);
 
-        intersects = band_x0 < tbx1 && band_y0 < tby1 && band_x1 > tbx0 &&
-                     band_y1 > tby0;
+        var intersects = band_x0 < tbx1 && band_y0 < tby1 && band_x1 > tbx0 &&
+                         band_y1 > tby0;
 
         return intersects;
     }
@@ -2762,20 +2736,20 @@ internal sealed class TileCoder
         var image_comp = _image.comps[compno];
         // Compute the intersection of the area of interest, expressed in tile coordinates
         // with the tile coordinates
-        OPJ_UINT32 tcx0 = Math.Max(
+        var tcx0 = Math.Max(
             (OPJ_UINT32)tilec.x0,
             MyMath.uint_ceildiv(_win_x0, image_comp.dx));
-        OPJ_UINT32 tcy0 = Math.Max(
+        var tcy0 = Math.Max(
             (OPJ_UINT32)tilec.y0,
             MyMath.uint_ceildiv(_win_y0, image_comp.dy));
-        OPJ_UINT32 tcx1 = Math.Min(
+        var tcx1 = Math.Min(
             (OPJ_UINT32)tilec.x1,
             MyMath.uint_ceildiv(_win_x1, image_comp.dx));
-        OPJ_UINT32 tcy1 = Math.Min(
+        var tcy1 = Math.Min(
             (OPJ_UINT32)tilec.y1,
             MyMath.uint_ceildiv(_win_y1, image_comp.dy));
 
-        int shift = (int) (tilec.numresolutions - tilec.minimum_num_resolutions);
+        var shift = (int) (tilec.numresolutions - tilec.minimum_num_resolutions);
         // Tolerate small margin within the reduced resolution factor to consider if
         // the whole tile path must be taken
         return tcx0 >= (OPJ_UINT32)tilec.x0 &&

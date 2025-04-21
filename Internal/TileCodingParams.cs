@@ -204,7 +204,7 @@ internal class TileCodingParams : ICloneable
 
     internal TileCodingParams()
     {
-        for (int c = 0; c < pocs.Length; c++)
+        for (var c = 0; c < pocs.Length; c++)
             pocs[c] = new ProgOrdChang();
     }
 
@@ -217,11 +217,11 @@ internal class TileCodingParams : ICloneable
         var tcp = (TileCodingParams) MemberwiseClone();
         tcp.rates = (float[]) rates.Clone();
         var p = new ProgOrdChang[pocs.Length];
-        for (int c = 0; c < p.Length; c++)
+        for (var c = 0; c < p.Length; c++)
             p[c] = (ProgOrdChang) pocs[c].Clone();
         tcp.pocs = p;
         var t = new TileCompParams[tccps.Length];
-        for (int c = 0; c < t.Length; c++)
+        for (var c = 0; c < t.Length; c++)
             t[c] = (TileCompParams)tccps[c].Clone();
         tcp.tccps = t;
         tcp.distoratio = (float[]) distoratio.Clone();

@@ -11,13 +11,13 @@ internal static class Invert
 		float[] DestMatrix,
 		int n_compo)
 	{
-		int permutation_size = n_compo;
-		int swap_size = n_compo;
+		var permutation_size = n_compo;
+		var swap_size = n_compo;
             
-		int[] permutations = new int[permutation_size];
-		float[] double_data = new float[swap_size];
-		float[] dest_temp = new float[swap_size];
-		float[] swap_area = new float[swap_size];
+		var permutations = new int[permutation_size];
+		var double_data = new float[swap_size];
+		var dest_temp = new float[swap_size];
+		var swap_area = new float[swap_size];
 
 		if (!lupDecompose(SrcMatrix, permutations, double_data, n_compo))
 			return false;
@@ -30,18 +30,15 @@ internal static class Invert
 	private static bool lupDecompose(float[] matrix, int[] permutations, 
 		float[] swap_area, int n_compo) 
 	{
-		int tmpPermutations = 0;
-		int dstPermutations;
-		int k2=0,t;
+		var tmpPermutations = 0;
+		var k2=0;
 		float temp;
-		int i,j,k;
-		float p;
-		int lLastColum = n_compo - 1;
-		int lSwapSize = n_compo;
-		int lTmpMatrix = 0;
-		int lColumnMatrix, lDestMatrix;
-		int offset = 1;
-		int lStride = n_compo-1;
+		int i;
+		var lLastColum = n_compo - 1;
+		var lSwapSize = n_compo;
+		var lTmpMatrix = 0;
+		var offset = 1;
+		var lStride = n_compo-1;
 
 		/*initialize permutations */
 		for (i = 0; i < n_compo; ++i) 
@@ -49,13 +46,13 @@ internal static class Invert
 	        
 		/* now make a pivot with colum switch */
 		tmpPermutations = 0;
-		for (k = 0; k < lLastColum; ++k) 
+		for (var k = 0; k < lLastColum; ++k) 
 		{
-			p = 0f;
+			var p = 0f;
 
 			/* take the middle element */
-			lColumnMatrix = lTmpMatrix + k;
-		
+			var lColumnMatrix = lTmpMatrix + k;
+
 			/* make permutation with the biggest value in the column */
 			for (i = k; i < n_compo; ++i) 
 			{
@@ -64,6 +61,7 @@ internal static class Invert
 					p = temp;
 					k2 = i;
 				}
+
 				/* next line */
 				lColumnMatrix += n_compo;
 			}
@@ -76,9 +74,9 @@ internal static class Invert
 			if (k2 != k) {
 				/*exchange of line */
 				/* k2 > k */
-				dstPermutations = tmpPermutations + k2 - k;
+				var dstPermutations = tmpPermutations + k2 - k;
 				/* swap indices */
-				t = permutations[tmpPermutations];
+				var t = permutations[tmpPermutations];
 				permutations[tmpPermutations] = permutations[dstPermutations];
 				permutations[dstPermutations] = t;
 
@@ -90,7 +88,7 @@ internal static class Invert
 			}
 
 			/* now update data in the rest of the line and line after */
-			lDestMatrix = lTmpMatrix + k;
+			var lDestMatrix = lTmpMatrix + k;
 			lColumnMatrix = lDestMatrix + n_compo;
 			/* take the middle element */
 			temp = matrix[lDestMatrix++];
@@ -99,16 +97,16 @@ internal static class Invert
 			for (i = offset; i < n_compo; ++i)  {
 				/*lColumnMatrix; */
 				/* divide the lower column elements by the diagonal value */
-
 				/* matrix[i][k] /= matrix[k][k]; */
 				/* p = matrix[i][k] */
 				p = matrix[lColumnMatrix] / temp;
 				matrix[lColumnMatrix++] = p;
      		
-				for (j = /* k + 1 */ offset; j < n_compo; ++j) {
+				for ( /* k + 1 */var j = offset; j < n_compo; ++j) {
 					/* matrix[i][j] -= matrix[i][k] * matrix[k][j]; */
 					matrix[lColumnMatrix++] -= p * matrix[lDestMatrix++];
 				}
+
 				/* come back to the k+1th element */
 				lDestMatrix -= lStride;
 				/* go to kth element of the next line */
@@ -133,25 +131,20 @@ internal static class Invert
 		int[] permutations,
 		int n_compo, float[] intermediate_data)
 	{
-		int k;
-		int i, j;
+		int j;
 		float sum;
-		float u;
-		int lStride = n_compo + 1;
+		var lStride = n_compo + 1;
 		int lCurrentPtr;
-		int lIntermediatePtr;
-		int lDestPtr;
 		int lTmpMatrix;
-		int lLineMatrix = 0;
-		int lBeginPtr = n_compo - 1;
-		int lGeneratedData;
-		int lCurrentPermutationPtr = 0;
+		var lLineMatrix = 0;
+		var lBeginPtr = n_compo - 1;
+		var lCurrentPermutationPtr = 0;
 
 
-		lIntermediatePtr = 0;
-		lGeneratedData = n_compo - 1;
+		var lIntermediatePtr = 0;
+		var lGeneratedData = n_compo - 1;
 
-		for (i = 0; i < n_compo; ++i)
+		for (var i = 0; i < n_compo; ++i)
 		{
 			sum = 0f;
 			lCurrentPtr = 0;
@@ -161,6 +154,7 @@ internal static class Invert
 				/* sum += matrix[i][j-1] * y[j-1]; */
 				sum += matrix[lTmpMatrix++] * intermediate_data[lCurrentPtr++];
 			}
+
 			/*y[i] = pVector[pPermutations[i]] - sum; */
 			intermediate_data[lIntermediatePtr++] = vector[permutations[lCurrentPermutationPtr++]] - sum;
 			lLineMatrix += n_compo;
@@ -170,21 +164,22 @@ internal static class Invert
 		lLineMatrix = n_compo * n_compo - 1;
 
 		/* and we take after the last point of the destination vector */
-		lDestPtr = n_compo;
+		var lDestPtr = n_compo;
 
 
 		System.Diagnostics.Debug.Assert(n_compo != 0);
-		for (k = n_compo - 1; k != -1; --k)
+		for (var k = n_compo - 1; k != -1; --k)
 		{
 			sum = 0f;
 			lTmpMatrix = lLineMatrix;
-			u = matrix[lTmpMatrix++];
+			var u = matrix[lTmpMatrix++];
 			lCurrentPtr = lDestPtr--;
 			for (j = k + 1; j < n_compo; ++j)
 			{
 				/* sum += matrix[k][j] * x[j] */
 				sum += matrix[lTmpMatrix++] * intermediate_data[lCurrentPtr++];
 			}
+
 			/*x[k] = (y[k] - sum) / u; */
 			result[lBeginPtr--] = (intermediate_data[lGeneratedData--] - sum) / u;
 			lLineMatrix -= lStride;
@@ -199,19 +194,17 @@ internal static class Invert
 		float[] dest_temp,
 		float[] swap_area)
 	{
-		int j, i;
-		int lCurrentPtr;
-		int lLineMatrix = 0;
+		var lLineMatrix = 0;
 
-		for (j = 0; j < n_compo; ++j)
+		for (var j = 0; j < n_compo; ++j)
 		{
-			lCurrentPtr = lLineMatrix++;
-			for (int c = 0; c < src_temp.Length; c++)
+			var lCurrentPtr = lLineMatrix++;
+			for (var c = 0; c < src_temp.Length; c++)
 				src_temp[c] = 0;
 			src_temp[j] = 1f;
 			lupSolve(dest_temp, SrcMatrix, src_temp, permutations, n_compo, swap_area);
 
-			for (i = 0; i < n_compo; ++i)
+			for (var i = 0; i < n_compo; ++i)
 			{
 				DestMatrix[lCurrentPtr] = dest_temp[i];
 				lCurrentPtr += n_compo;

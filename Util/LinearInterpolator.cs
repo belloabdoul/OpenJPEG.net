@@ -35,7 +35,7 @@ internal class LinearInterpolator
     {
         //Calcs the size of the window.
         //double Y_HEIGHT = y_max - y_min;
-        double X_WIDTH = x_max - x_min;
+        var X_WIDTH = x_max - x_min;
 
         MAPPING_U = (y_max - y_min) / X_WIDTH;
         //MAPPING_V = (V_MAX - V_MIN) / Y_HEIGHT;

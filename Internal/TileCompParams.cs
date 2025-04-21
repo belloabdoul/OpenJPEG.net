@@ -49,7 +49,7 @@ internal class TileCompParams : ICloneable
 	/// <summary>
 	/// stepsizes used for quantization
 	/// </summary>
-	internal StepSize[] stepsizes = new StepSize[Constants.J2K_MAXBANDS];
+	internal StepSize[] stepsizes = new StepSize[Constants.J2KMaxbands];
 	    
 	/// <summary>
 	/// number of guard bits
@@ -64,12 +64,12 @@ internal class TileCompParams : ICloneable
 	/// <summary>
 	/// precinct width
 	/// </summary>
-	internal uint[] prcw = new uint[Constants.J2K_MAXRLVLS];
+	internal uint[] prcw = new uint[Constants.J2KMaxrlvls];
 	    
 	/// <summary>
 	/// precinct height
 	/// </summary>
-	internal uint[] prch = new uint[Constants.J2K_MAXRLVLS];
+	internal uint[] prch = new uint[Constants.J2KMaxrlvls];
 
 	/// <summary>
 	/// the dc_level_shift
@@ -81,7 +81,7 @@ internal class TileCompParams : ICloneable
 	internal static TileCompParams[] Create(uint n)
 	{
 		var t = new TileCompParams[n];
-		for (int c = 0; c < t.Length; c++)
+		for (var c = 0; c < t.Length; c++)
 			t[c] = new TileCompParams();
 		return t;
 	}

@@ -48,7 +48,7 @@ namespace OpenJpeg;
 /// I don't see the point. Sticking to the old v.1.4
 /// way of doing this.
 /// </remarks>
-internal sealed class JP2
+internal sealed class Jp2
 {
     #region Variables and properties
 
@@ -60,13 +60,13 @@ internal sealed class JP2
     /// <summary>
     /// Code stream codex
     /// </summary>
-    private readonly J2K _j2k;
+    private readonly J2K _j2K;
 
     //List<ProcedureDlg> _validation_list;
     //List<ProcedureDlg> _procedure_list;
 
     private JP2_STATE _state;
-    private JP2_IMG_STATE _img_state;
+    private JP2_IMG_STATE _imgState;
 
     /// <summary>
     /// Width of the image
@@ -98,26 +98,26 @@ internal sealed class JP2
     /// </summary>
     private uint _enumcs;
 
-    private uint _C, _approx, _precedence, _minversion;
+    private uint _c, _approx, _precedence, _minversion;
     private JP2_Marker _brand;
 
     /// <summary>
     /// Unknown color space
     /// </summary>
-    private bool _UnkC;
+    private bool _unkC;
 
     /// <summary>
     /// Intellectual Property
     /// </summary>
-    private bool _IPR;
+    private bool _ipr;
 
     private JP2_Marker[] _cl;
 
-    private long _j2k_codestream_offset;
+    private long _j2KCodestreamOffset;
 
     private JP2Comps[] _comps;
 
-    private CIO _cio;
+    private Cio _cio;
 
     /// <summary>
     /// If the image being decoded has a ICC profile, it will be temporarily stored
@@ -125,17 +125,17 @@ internal sealed class JP2
     /// </summary>
     private JP2Color _color;
 
-    private bool _has_ihdr;
-    private bool _has_jp2h => (_state & JP2_STATE.HEADER) != 0;
+    private bool _hasIhdr;
+    private bool HasJp2H => (_state & JP2_STATE.HEADER) != 0;
 
     #endregion
 
     #region Init
 
-    internal JP2(CompressionInfo cinfo, J2K j2k)
+    internal Jp2(CompressionInfo cinfo, J2K j2K)
     {
         _cinfo = cinfo;
-        _j2k = j2k;
+        _j2K = j2K;
             
         //_validation_list = new List<ProcedureDlg>(1);
         //_procedure_list = new List<ProcedureDlg>();
@@ -158,7 +158,7 @@ internal sealed class JP2
             return false;
         }
 
-        _j2k.SetupEncoder(parameters, image);
+        _j2K.SetupEncoder(parameters, image);
 
         //
         // Sets up the JP2 codec
@@ -177,25 +177,25 @@ internal sealed class JP2
         _h = image.y1 - image.y0;
         _w = image.x1 - image.x0;
         //Setting bits per componet
-        uint depth_0 = image.comps[0].prec - 1;
-        uint sign = image.comps[0].sgnd ? 1u : 0u;
-        _bpc = depth_0 + (sign << 7);
-        for (int i = 0; i < image.numcomps; i++)
+        var depth0 = image.comps[0].prec - 1;
+        var sign = image.comps[0].sgnd ? 1u : 0u;
+        _bpc = depth0 + (sign << 7);
+        for (var i = 0; i < image.numcomps; i++)
         {
-            uint depth = image.comps[i].prec - 1;
+            var depth = image.comps[i].prec - 1;
             sign = image.comps[i].sgnd ? 1u : 0u;
 
             //If the pits per component aren't uniform,
             //bpc is set to 255 to signal that.
-            if (depth_0 != depth)
+            if (depth0 != depth)
                 _bpc = 255;
         }
-        _C = 7;
-        _UnkC = false;
-        _IPR = false;
+        _c = 7;
+        _unkC = false;
+        _ipr = false;
 
         //BitsPerComponent box
-        for (int i = 0; i < image.numcomps; i++)
+        for (var i = 0; i < image.numcomps; i++)
             _comps[i].bpcc = image.comps[i].prec - 1u + ((image.comps[i].sgnd ? 1u : 0u) << 7);
 
         //Color Specification box
@@ -210,56 +210,56 @@ internal sealed class JP2
             _enumcs = (uint)image.color_space;
         }
 
-        uint alpha_count = 0, alpha_channel = 0, color_channels = 0;
+        uint alphaCount = 0, alphaChannel = 0, colorChannels = 0;
         for (uint i = 0; i < image.numcomps; i++)
         {
             if (image.comps[i].alpha != 0)
             {
-                alpha_count++;
-                alpha_channel = i;
+                alphaCount++;
+                alphaChannel = i;
             }
         }
-        if (alpha_count == 1U)
+        if (alphaCount == 1U)
         { /* no way to deal with more than 1 alpha channel */
             switch (_enumcs)
             {
                 case 16:
                 case 18:
-                    color_channels = 3;
+                    colorChannels = 3;
                     break;
                 case 17:
-                    color_channels = 1;
+                    colorChannels = 1;
                     break;
                 default:
-                    alpha_count = 0U;
+                    alphaCount = 0U;
                     break;
             }
-            if (alpha_count == 0U)
+            if (alphaCount == 0U)
             {
                 _cinfo.Warn("Alpha channel specified but unknown enumcs. No cdef box will be created.");
             }
-            else if (image.numcomps < color_channels + 1)
+            else if (image.numcomps < colorChannels + 1)
             {
                 _cinfo.Warn("Alpha channel specified but not enough image components for an automatic cdef box creation.");
-                alpha_count = 0U;
+                alphaCount = 0U;
             }
-            else if (alpha_channel < color_channels)
+            else if (alphaChannel < colorChannels)
             {
                 _cinfo.Warn("Alpha channel position conflicts with color channel. No cdef box will be created.");
-                alpha_count = 0U;
+                alphaCount = 0U;
             }
         }
-        else if (alpha_count > 1)
+        else if (alphaCount > 1)
         {
             _cinfo.Warn("Multiple alpha channels specified. No cdef box will be created.");
         }
-        if (alpha_count == 1U)
+        if (alphaCount == 1U)
         { /* if here, we know what we can do */
-            if (_color == null) _color = new JP2Color();
+            _color ??= new JP2Color();
             _color.channel_definitions = new JP2cdefInfo[image.numcomps];
 
             uint i = 0;
-            for (; i < color_channels; i++)
+            for (; i < colorChannels; i++)
             {
                 _color.channel_definitions[i].cn = (ushort)i;
                 _color.channel_definitions[i].typ = 0;
@@ -287,8 +287,8 @@ internal sealed class JP2
         //C# PdfLib requires this.
         if (image.channel_definitions != null)
         {
-            if (_color == null) _color = new JP2Color();
-                
+            _color ??= new JP2Color();
+
             //Overwrites any channeld definition set above, this because
             //the definitions supplied by Pdflib are the correct definitions.
             _color.channel_definitions = image.channel_definitions;
@@ -309,16 +309,17 @@ internal sealed class JP2
     /// <remarks>
     /// 2.5
     /// </remarks>
-    internal void SetupDecode(CIO cio, DecompressionParameters parameters)
+    internal void SetupDecode(Cio cio, DecompressionParameters parameters)
     {
         _cio = cio;
-        _j2k.SetupDecode(cio, parameters);
+        _j2K.SetupDecode(cio, parameters);
 
-        _color = new JP2Color();
-        _color.ignore_pclr_cmap_cdef = (parameters.flags & DecompressionParameters.DPARAMETERS.IGNORE_PCLR_CMAP_CDEF_FLAG) != 0;
-
-        // This is a C# addition.
-        _color.ignore_cmap = parameters.IgnoreColorLookupTable;
+        _color = new JP2Color
+        {
+            ignore_pclr_cmap_cdef = (parameters.flags & DecompressionParameters.DPARAMETERS.IGNORE_PCLR_CMAP_CDEF_FLAG) != 0,
+            // This is a C# addition.
+            ignore_cmap = parameters.IgnoreColorLookupTable
+        };
     }
 
     #endregion
@@ -337,25 +338,25 @@ internal sealed class JP2
             image = null;
             return false;
         }
-        if (!_has_jp2h)
+        if (!HasJp2H)
         {
             _cinfo.Error("JP2H box missing. Required");
             image = null;
             return false;
         }
-        if (!_has_ihdr)
+        if (!_hasIhdr)
         {
             _cinfo.Error("IHDR box missing. Required");
             image = null;
             return false;
         }
 
-        var ret = _j2k.ReadHeader(out image);
+        var ret = _j2K.ReadHeader(out image);
 
         // Set Image Color Space
         if (image != null)
         {
-            if (11 <= _enumcs && _enumcs <= 18 && _enumcs != 15)
+            if (_enumcs is >= 11 and <= 18 && _enumcs != 15)
                 image.color_space = (COLOR_SPACE)_enumcs;
             else if (_enumcs == 24)
                 image.color_space = COLOR_SPACE.eYCC;
@@ -374,10 +375,7 @@ internal sealed class JP2
     //2.5 - opj_jp2_read_header_procedure
     private bool ReadHeaderProcedure()
     {
-        JP2Box box; 
-        int /* uint */ n_bytes_read;
-
-        while (ReadBoxhdr(out box, out n_bytes_read))
+        while (ReadBoxhdr(out var box, out var nBytesRead))
         {
             //Codestream box
             if (box.type == JP2_Marker.JP2C)
@@ -398,18 +396,18 @@ internal sealed class JP2
                 _cinfo.Error("Cannot handle box of undefined sizes\n");
                 return false;
             }
-            else if (box.length < n_bytes_read)
+            else if (box.length < nBytesRead)
             {
                 _cinfo.Error("invalid box size {0} ({1})\n", box.length, box.type.ToString());
                 return false;
             }
 
             var handler = FindHandler(box.type);
-            uint current_data_size = box.length - (uint)n_bytes_read;
-            if (current_data_size > _cio.BytesLeft)
+            var currentDataSize = box.length - (uint)nBytesRead;
+            if (currentDataSize > _cio.BytesLeft)
             {
                 _cinfo.Error("Invalid box size {0} for box '{1}'. Need {2} bytes, {3} bytes remaining",
-                    (int)box.length, box.type.ToString(), (int)current_data_size, _cio.BytesLeft);
+                    (int)box.length, box.type.ToString(), (int)currentDataSize, _cio.BytesLeft);
                 return false;
             }
 
@@ -420,15 +418,15 @@ internal sealed class JP2
             }
             else
             {
-                var hadler_misplaced = ImgFindHandler(box.type);
-                if (hadler_misplaced != null)
+                var hadlerMisplaced = ImgFindHandler(box.type);
+                if (hadlerMisplaced != null)
                 {
                     _cinfo.Warn("Found a misplaced {0} box outside jp2h box\n", box.type.ToString());
                     if ((_state & JP2_STATE.HEADER) != 0)
                     {
                         // Read anyway, we already have jp2h
-                        box.data_length = current_data_size;
-                        if (!hadler_misplaced(box))
+                        box.data_length = currentDataSize;
+                        if (!hadlerMisplaced(box))
                             return false;
 
                         continue;
@@ -440,7 +438,7 @@ internal sealed class JP2
                 }
                     
                 // Skip unkown boxes
-                _cio.Skip(current_data_size);
+                _cio.Skip(currentDataSize);
             }
         }
 
@@ -461,9 +459,9 @@ internal sealed class JP2
     {
         switch (type)
         {
-            case JP2_Marker.JP: return new Handeler(ReadJP);
-            case JP2_Marker.FTYP: return new Handeler(ReadFTYP);
-            case JP2_Marker.JP2H: return new Handeler(ReadJP2H);
+            case JP2_Marker.JP: return ReadJp;
+            case JP2_Marker.FTYP: return ReadFtyp;
+            case JP2_Marker.JP2H: return ReadJp2H;
         }
         return null;
     }
@@ -482,12 +480,12 @@ internal sealed class JP2
     {
         switch (type)
         {
-            case JP2_Marker.IHDR: return new Handeler(ReadIHDR);
-            case JP2_Marker.COLR: return new Handeler(ReadCOLR);
-            case JP2_Marker.BPCC: return new Handeler(ReadBPCC);
-            case JP2_Marker.PCLR: return new Handeler(ReadPCLR);
-            case JP2_Marker.CMAP: return new Handeler(ReadCMAP);
-            case JP2_Marker.CDEF: return new Handeler(ReadCDEF);
+            case JP2_Marker.IHDR: return ReadIhdr;
+            case JP2_Marker.COLR: return ReadColr;
+            case JP2_Marker.BPCC: return ReadBpcc;
+            case JP2_Marker.PCLR: return ReadPclr;
+            case JP2_Marker.CMAP: return ReadCmap;
+            case JP2_Marker.CDEF: return ReadCdef;
         }
         return null;
     }
@@ -498,7 +496,7 @@ internal sealed class JP2
         if (_cio.BytesLeft > 8)
             ReadHeaderProcedure();
 
-        return _j2k.EndDecompress();
+        return _j2K.EndDecompress();
     }
 
     private delegate bool Handeler(JP2Box box);
@@ -506,7 +504,7 @@ internal sealed class JP2
     //2.5.1 - opj_jp2_apply_color_postprocessing
     private bool ApplyColorPostprocessing(JPXImage image)
     {
-        if (_j2k.NumcompsToDecode != 0)
+        if (_j2K.NumcompsToDecode != 0)
         {
             // Bypass all JP2 component transforms
             return true;
@@ -526,7 +524,7 @@ internal sealed class JP2
                 {
                     if (!_color.ignore_cmap)
                     {
-                        if (!ApplyPCLR(image, _color, _cinfo))
+                        if (!ApplyPclr(image, _color, _cinfo))
                             return false;
                     }
                     else
@@ -540,7 +538,7 @@ internal sealed class JP2
             // Apply the color space if needed
             if (_color.channel_definitions != null)
             {
-                ApplyCDEF(image, _color);
+                ApplyCdef(image, _color);
             }
         }
 
@@ -553,7 +551,7 @@ internal sealed class JP2
         if (image == null) 
             return false;
 
-        if (!_j2k.Decode(image))
+        if (!_j2K.Decode(image))
         {
             _cinfo.Error("Failed to decode the codestream in the JP2 file");
             return false;
@@ -566,14 +564,14 @@ internal sealed class JP2
     /// Decodes a single tile in the image
     /// </summary>
     /// <remarks>2.5.1 - opj_jp2_get_tile</remarks>
-    internal bool Decode(JPXImage image, uint tile_nr)
+    internal bool Decode(JPXImage image, uint tileNr)
     {
         if (image == null)
             return false;
 
         _cinfo.Warn("JP2 box which are after the codestream will not be read by this function.");
 
-        if (!_j2k.Decode(image, tile_nr))
+        if (!_j2K.Decode(image, tileNr))
         {
             _cinfo.Error("Failed to decode the codestream in the JP2 file");
             return false;
@@ -589,41 +587,41 @@ internal sealed class JP2
         if (_color.channel_definitions != null)
         {
             var info = _color.channel_definitions;
-            uint nr_channels = image.numcomps;
+            var nrChannels = image.numcomps;
             ushort i;
 
             // cdef applies to cmap channels if any
-            if (_color.jp2_pclr != null && _color.jp2_pclr.cmap != null)
+            if (_color.jp2_pclr is { cmap: not null })
             {
-                nr_channels = _color.jp2_pclr.nr_channels;
+                nrChannels = _color.jp2_pclr.nr_channels;
             }
 
             for (i = 0; i < info.Length; i++)
             {
-                if (info[i].cn >= nr_channels)
+                if (info[i].cn >= nrChannels)
                 {
-                    _cinfo.Error("Invalid component index {0} (>= {1})", info[i].cn, nr_channels);
+                    _cinfo.Error("Invalid component index {0} (>= {1})", info[i].cn, nrChannels);
                     return false;
                 }
                 if (info[i].asoc == 65535U)
                 {
                     continue;
                 }
-                if (info[i].asoc > 0 && info[i].asoc - 1 >= nr_channels)
+                if (info[i].asoc > 0 && info[i].asoc - 1 >= nrChannels)
                 {
-                    _cinfo.Error("Invalid component index {0} (>= {1})", info[i].asoc - 1, nr_channels);
+                    _cinfo.Error("Invalid component index {0} (>= {1})", info[i].asoc - 1, nrChannels);
                     return false;
                 }
             }
 
             // issue 397
             // ISO 15444-1 states that if cdef is present, it shall contain a complete list of channel definitions. */
-            ushort n = (ushort)_color.channel_definitions.Length;
-            while (nr_channels > 0)
+            var n = (ushort)_color.channel_definitions.Length;
+            while (nrChannels > 0)
             {
                 for (i = 0; i < n; ++i)
                 {
-                    if (info[i].cn == nr_channels - 1U)
+                    if (info[i].cn == nrChannels - 1U)
                     {
                         break;
                     }
@@ -633,61 +631,61 @@ internal sealed class JP2
                     _cinfo.Error("Incomplete channel definitions.");
                     return false;
                 }
-                --nr_channels;
+                --nrChannels;
             }
         }
 
         /* testcases 451.pdf.SIGSEGV.f4c.3723, 451.pdf.SIGSEGV.5b5.3723 and
            66ea31acbb0f23a2bbc91f64d69a03f5_signal_sigsegv_13937c0_7030_5725.pdf */
-        if (_color.jp2_pclr != null && _color.jp2_pclr.cmap != null)
+        if (_color.jp2_pclr is { cmap: not null })
         {
-            var nr_channels = _color.jp2_pclr.nr_channels;
+            var nrChannels = _color.jp2_pclr.nr_channels;
             var cmap = _color.jp2_pclr.cmap;
-            bool[] pcol_usage; bool is_sane = true;
+            var isSane = true;
 
             /* verify that all original components match an existing one */
-            for (int i = 0; i < nr_channels; i++)
+            for (var i = 0; i < nrChannels; i++)
             {
                 if (cmap[i].cmp >= image.numcomps)
                 {
                     _cinfo.Error("Invalid component index {0} (>= {1}).", cmap[i].cmp, image.numcomps);
-                    is_sane = false;
+                    isSane = false;
                 }
             }
 
-            pcol_usage = new bool[nr_channels];
-            if (pcol_usage == null)
+            var pcolUsage = new bool[nrChannels];
+            if (pcolUsage == null)
             {
                 _cinfo.Error("Unexpected OOM.");
                 return false;
             }
                 
             /* verify that no component is targeted more than once */
-            for (int i = 0; i < nr_channels; i++)
+            for (var i = 0; i < nrChannels; i++)
             {
                 var mtyp = cmap[i].mtyp;
                 var pcol = cmap[i].pcol;
                 if (mtyp != 0 && mtyp != 1)
                 {
                     _cinfo.Error("Invalid value for cmap[{0}].mtyp = {1}.", i, mtyp);
-                    is_sane = false;
+                    isSane = false;
                 } 
-                else if (pcol >= nr_channels)
+                else if (pcol >= nrChannels)
                 {
                     _cinfo.Error("Invalid component/palette index for direct mapping {0}.", pcol);
-                    is_sane = false;
+                    isSane = false;
                 }
-                else if (pcol_usage[pcol] && mtyp == 1)
+                else if (pcolUsage[pcol] && mtyp == 1)
                 {
                     _cinfo.Error("Component {0} is mapped twice.", pcol);
-                    is_sane = false;
+                    isSane = false;
                 }
                 else if (mtyp == 0 && pcol != 0)
                 {
                     /* I.5.3.5 PCOL: If the value of the MTYP field for this channel is 0, then
                      * the value of this field shall be 0. */
                     _cinfo.Error("Direct use at #{0} however pcol={1}.", i, pcol);
-                    is_sane = false;
+                    isSane = false;
                 }
                 else if (mtyp == 1 && pcol != i)
                 {
@@ -696,36 +694,36 @@ internal sealed class JP2
                     _cinfo.Error("Implementation limitation: for palette mapping, "+
                                  "pcol[{0}] should be equal to {1}, but is equal "+
                                  "to {2}.", i, i, pcol);
-                    is_sane = false;
+                    isSane = false;
                 }
                 else
-                    pcol_usage[pcol] = true;
+                    pcolUsage[pcol] = true;
             }
             /* verify that all components are targeted at least once */
-            for (int i = 0; i < nr_channels; i++)
+            for (var i = 0; i < nrChannels; i++)
             {
-                if (!pcol_usage[i] && cmap[i].mtyp != 0)
+                if (!pcolUsage[i] && cmap[i].mtyp != 0)
                 {
                     _cinfo.Error("Component {0} doesn't have a mapping.", i);
-                    is_sane = false;
+                    isSane = false;
                 }
             }
             // Issue 235/447 weird cmap
-            if (is_sane && image.numcomps == 1U)
+            if (isSane && image.numcomps == 1U)
             {
-                for (int i = 0; i < nr_channels; i++)
+                for (var i = 0; i < nrChannels; i++)
                 {
-                    if (!pcol_usage[i])
+                    if (!pcolUsage[i])
                     {
-                        is_sane = false;
+                        isSane = false;
                         _cinfo.Warn("Component mapping seems wrong. Trying to correct.");
                         break;
                     }
                 }
-                if (!is_sane)
+                if (!isSane)
                 {
-                    is_sane = true;
-                    for (int i = 0; i < nr_channels; i++)
+                    isSane = true;
+                    for (var i = 0; i < nrChannels; i++)
                     {
                         cmap[i].mtyp = 1;
                         cmap[i].pcol = (byte)i;
@@ -733,7 +731,7 @@ internal sealed class JP2
                 }
             }
 
-            if (!is_sane)
+            if (!isSane)
                 return false;
         }
 
@@ -741,33 +739,27 @@ internal sealed class JP2
     }
 
     //2.5
-    internal bool SetDecodeArea(JPXImage image, int start_x, int start_y, int end_x, int end_y)
+    internal bool SetDecodeArea(JPXImage image, int startX, int startY, int endX, int endY)
     {
-        return _j2k.SetDecodeArea(image, start_x, start_y, end_x, end_y);
+        return _j2K.SetDecodeArea(image, startX, startY, endX, endY);
     }
 
     /// <summary>
     /// Apply collected palette data
     /// </summary>
     /// <remarks>2.5 - opj_jp2_apply_pclr</remarks>
-    internal static bool ApplyPCLR(JPXImage image, JP2Color color, CompressionInfo cinfo)
+    internal static bool ApplyPclr(JPXImage image, JP2Color color, CompressionInfo cinfo)
     {
-        ImageComp[] old_comps, new_comps;
-        byte[] channel_size, channel_sign;
-        uint[] entries;
-        JP2cmap_comp[] cmap;
-        int[] src, dst;
-        uint j, max;
-        ushort i, nr_channels, cmp, pcol;
-        int k, top_k;
+        uint max;
+        ushort i, cmp, pcol;
 
-        channel_size = color.jp2_pclr.channel_size;
-        channel_sign = color.jp2_pclr.channel_sign;
-        entries = color.jp2_pclr.entries;
-        cmap = color.jp2_pclr.cmap;
-        nr_channels = color.jp2_pclr.nr_channels;
+        var channelSize = color.jp2_pclr.channel_size;
+        var channelSign = color.jp2_pclr.channel_sign;
+        var entries = color.jp2_pclr.entries;
+        var cmap = color.jp2_pclr.cmap;
+        var nrChannels = color.jp2_pclr.nr_channels;
 
-        for(i = 0; i < nr_channels; ++i)
+        for(i = 0; i < nrChannels; ++i)
         {
             //Palette mapping
             cmp = cmap[i].cmp;
@@ -779,10 +771,10 @@ internal sealed class JP2
             }
         }
 
-        old_comps = image.comps;
-        new_comps = new ImageComp[nr_channels];
+        var oldComps = image.comps;
+        var newComps = new ImageComp[nrChannels];
 
-        for(i = 0; i < nr_channels; ++i)
+        for(i = 0; i < nrChannels; ++i)
         {
             pcol = cmap[i].pcol; cmp = cmap[i].cmp;
 
@@ -790,62 +782,65 @@ internal sealed class JP2
             if (cmap[i].mtyp == 0)
             {
                 Debug.Assert(pcol == 0);
-                new_comps[i] = (ImageComp)old_comps[cmp].Clone();
+                newComps[i] = (ImageComp)oldComps[cmp].Clone();
             }
             else
             {
                 Debug.Assert(pcol == i);
-                new_comps[pcol] = (ImageComp)old_comps[cmp].Clone();    
+                newComps[pcol] = (ImageComp)oldComps[cmp].Clone();    
             }
 
             /* Palette mapping: */
-            new_comps[pcol].data = new int[old_comps[cmp].w * old_comps[cmp].h];
-            new_comps[pcol].prec = channel_size[i];
-            new_comps[pcol].sgnd = channel_sign[i] != 0;
+            newComps[pcol].data = new int[oldComps[cmp].w * oldComps[cmp].h];
+            newComps[pcol].prec = channelSize[i];
+            newComps[pcol].sgnd = channelSign[i] != 0;
         }
-        top_k = color.jp2_pclr.nr_entries - 1;
+        var topK = color.jp2_pclr.nr_entries - 1;
 
-        for(i = 0; i < nr_channels; ++i)
+        for(i = 0; i < nrChannels; ++i)
         {
             /* Palette mapping: */
             cmp = cmap[i].cmp; 
             pcol = cmap[i].pcol;
-            src = old_comps[cmp].data; 
-            max = new_comps[i].w * new_comps[i].h;
+            var src = oldComps[cmp].data; 
+            max = newComps[i].w * newComps[i].h;
 
             /* Direct use: */
+            int[] dst;
+            uint j;
             if (cmap[i].mtyp == 0)
             {
-                dst = new_comps[i].data;
+                dst = newComps[i].data;
                 for (j = 0; j < max; j++)
                     dst[j] = src[j];
             }
             else
             {
-                dst = new_comps[pcol].data;
+                dst = newComps[pcol].data;
 
                 for (j = 0; j < max; ++j)
                 {
                     /* The index */
+                    int k;
                     if ((k = src[j]) < 0)
                         k = 0;
-                    else if (k > top_k)
-                        k = top_k;
+                    else if (k > topK)
+                        k = topK;
 
                     /* The colour */
-                    dst[j] = (int)entries[k * nr_channels + pcol];
+                    dst[j] = (int)entries[k * nrChannels + pcol];
                 }
             }
         }
         max = image.numcomps;
         for (i = 0; i < max; i++)
         {
-            if (old_comps[i].data != null)
-                old_comps[i].data = null;
+            if (oldComps[i].data != null)
+                oldComps[i].data = null;
         }
 
-        image.comps = new_comps;
-        image.numcomps = nr_channels;
+        image.comps = newComps;
+        image.numcomps = nrChannels;
 
         color.jp2_pclr = null;
 
@@ -853,17 +848,17 @@ internal sealed class JP2
     }
 
     //2.5 - opj_jp2_apply_cdef
-    private void ApplyCDEF(JPXImage image, JP2Color color)
+    private void ApplyCdef(JPXImage image, JP2Color color)
     {
-        ushort i, cn, typ, asoc, acn;
+        ushort typ;
 
         var info = color.channel_definitions;
         if (info == null) return;
 
-        for(i = 0; i < info.Length; ++i)
+        for(ushort i = 0; i < info.Length; ++i)
         {
-            asoc = info[i].asoc;
-            cn = info[i].cn;
+            var asoc = info[i].asoc;
+            var cn = info[i].cn;
 
             if (cn >= image.numcomps)
             {
@@ -877,7 +872,7 @@ internal sealed class JP2
                 continue;
             }
 
-            acn = (ushort) (asoc - 1);
+            var acn = (ushort) (asoc - 1);
             if (acn >= image.numcomps)
             {
                 _cinfo.Warn("opj_jp2_apply_cdef: acn={0}, numcomps={1}", 
@@ -889,13 +884,11 @@ internal sealed class JP2
             if (cn != acn && info[i].typ == 0)
             {
                 //C# Org impl does memcopies, but it is dealing with structs.
-                ImageComp saved = image.comps[cn];
-                image.comps[cn] = image.comps[acn];
-                image.comps[acn] = saved;
+                (image.comps[cn], image.comps[acn]) = (image.comps[acn], image.comps[cn]);
 
                 // Swap channels in following channel definitions, don't
                 // bother with j <= i that are already processed
-                for (ushort j = (ushort)(i + 1); j < info.Length; j++)
+                for (var j = (ushort)(i + 1); j < info.Length; j++)
                 {
                     if (info[j].cn == cn)
                         info[j].cn = acn;
@@ -919,7 +912,7 @@ internal sealed class JP2
     /// <remarks>
     /// 2.5 - opj_jp2_read_jp2h
     /// </remarks>
-    private bool ReadJP2H(JP2Box box) 
+    private bool ReadJp2H(JP2Box box) 
     {
         // Make sure the box is well placed
         if ((_state & JP2_STATE.FILE_TYPE) != JP2_STATE.FILE_TYPE)
@@ -928,27 +921,26 @@ internal sealed class JP2
             return false;
         }
 
-        _img_state = JP2_IMG_STATE.NONE;
+        _imgState = JP2_IMG_STATE.NONE;
 
         // iterate while there is data
-        uint header_size = box.length - 8;
-        while (header_size > 0)
+        var headerSize = box.length - 8;
+        while (headerSize > 0)
         {
-            int box_size;
-            if (!ReadBoxhdr_char(out box, out box_size, (int)header_size))
+            if (!ReadBoxhdr_char(out box, out var boxSize, (int)headerSize))
             {
                 _cinfo.Error("Stream error while reading JP2 Header box");
                 return false;
             }
 
-            if (box.length > header_size)
+            if (box.length > headerSize)
             {
                 _cinfo.Error("Stream error while reading JP2 Header box: box length is inconsistent.");
                 return false;
             }
 
             var handler = ImgFindHandler(box.type);
-            box.data_length = box.length - (uint) box_size;
+            box.data_length = box.length - (uint) boxSize;
 
             if (handler != null)
             {
@@ -966,14 +958,14 @@ internal sealed class JP2
             }
             else
             {
-                _img_state |= JP2_IMG_STATE.UNKNOWN;
+                _imgState |= JP2_IMG_STATE.UNKNOWN;
                 _cio.Skip(box.data_length);
             }
 
-            header_size -= box.length;
+            headerSize -= box.length;
         }
 
-        if (!_has_ihdr)
+        if (!_hasIhdr)
         {
             _cinfo.Error("Stream error while reading JP2 Header box: no 'ihdr' box");
             return false;
@@ -985,11 +977,8 @@ internal sealed class JP2
     }
 
     //2.5 - opj_jp2_read_cmap
-    private bool ReadCMAP(JP2Box box)
+    private bool ReadCmap(JP2Box box)
     {
-        JP2cmap_comp[] cmap;
-        ushort i, nr_channels;
-
         /* Need nr_channels: */
         if (_color.jp2_pclr == null)
         {
@@ -1006,16 +995,16 @@ internal sealed class JP2
             return false;
         }
 
-        nr_channels = _color.jp2_pclr.nr_channels;
-        if (box.data_length < nr_channels * 4)
+        var nrChannels = _color.jp2_pclr.nr_channels;
+        if (box.data_length < nrChannels * 4)
         {
             _cinfo.Error("Insufficient data for CMAP box.");
             return false;
         }
 
-        cmap = new JP2cmap_comp[nr_channels];
+        var cmap = new JP2cmap_comp[nrChannels];
 
-        for(i = 0; i < nr_channels; ++i)
+        for(ushort i = 0; i < nrChannels; ++i)
         {
             cmap[i].cmp = _cio.ReadUShort();
             cmap[i].mtyp = _cio.ReadByte();
@@ -1027,14 +1016,9 @@ internal sealed class JP2
     }
 
     //2.5 - opj_jp2_read_pclr
-    private bool ReadPCLR(JP2Box box)
+    private bool ReadPclr(JP2Box box)
     {
-        JP2pclr jp2_pclr;
-        byte[] channel_size, channel_sign;
-        uint[] entries;
-        ushort nr_entries, nr_channels;
-        byte uc;
-        var org_pos = _cio.Pos;
+        var orgPos = _cio.Pos;
 
         /* Part 1, I.5.3.4: 'There shall be at most one Palette box inside
          * a JP2 Header box' :
@@ -1044,57 +1028,59 @@ internal sealed class JP2
         if (box.data_length < 3)
             return false;
 
-        nr_entries = _cio.ReadUShort(); /* NE */
-        if (nr_entries == 0 || nr_entries > 1024)
+        var nrEntries = _cio.ReadUShort() /* NE */;
+        if (nrEntries == 0 || nrEntries > 1024)
         {
-            _cinfo.Error("Invalid PCLR box. Reports {0} entries", nr_entries);
+            _cinfo.Error("Invalid PCLR box. Reports {0} entries", nrEntries);
             return false;
         }
 
-        nr_channels = _cio.ReadByte(); /* NPC */
-        if (nr_channels == 0)
+        ushort nrChannels = _cio.ReadByte() /* NPC */;
+        if (nrChannels == 0)
         {
             _cinfo.Error("Invalid PCLR box. Reports 0 palette columns");
             return false;
         }
 
-        if (box.data_length < 3 + nr_channels)
+        if (box.data_length < 3 + nrChannels)
             return false;
 
-        entries = new uint[nr_channels * nr_entries];
-        channel_size = new byte[nr_channels];
-        channel_sign = new byte[nr_channels];
+        var entries = new uint[nrChannels * nrEntries];
+        var channelSize = new byte[nrChannels];
+        var channelSign = new byte[nrChannels];
 
-        jp2_pclr = new JP2pclr();
-        jp2_pclr.channel_sign = channel_sign;
-        jp2_pclr.channel_size = channel_size;
-        jp2_pclr.entries = entries;
-        jp2_pclr.nr_entries = nr_entries;
-        jp2_pclr.nr_channels = nr_channels;
-        jp2_pclr.cmap = null;
-
-        _color.jp2_pclr = jp2_pclr;
-
-        for(int i = 0; i < nr_channels; ++i)
+        var jp2Pclr = new JP2pclr
         {
-            uc = _cio.ReadByte(); // Bi
-            channel_size[i] = (byte) ((uc & 0x7f) + 1);
-            channel_sign[i] = (byte) ((uc & 0x80) == 0x80 ? 1 : 0);
+            channel_sign = channelSign,
+            channel_size = channelSize,
+            entries = entries,
+            nr_entries = nrEntries,
+            nr_channels = nrChannels,
+            cmap = null
+        };
+
+        _color.jp2_pclr = jp2Pclr;
+
+        for(var i = 0; i < nrChannels; ++i)
+        {
+            var uc = _cio.ReadByte(); // Bi
+            channelSize[i] = (byte) ((uc & 0x7f) + 1);
+            channelSign[i] = (byte) ((uc & 0x80) == 0x80 ? 1 : 0);
         }
 
-        for(int j = 0, k = 0; j < nr_entries; ++j)
+        for(int j = 0, k = 0; j < nrEntries; ++j)
         {
-            for(int i = 0; i < nr_channels; ++i)
+            for(var i = 0; i < nrChannels; ++i)
             {
-                uint bytes_to_read = (uint)(channel_size[i] + 7) >> 3;
+                var bytesToRead = (uint)(channelSize[i] + 7) >> 3;
 
                 //mem-b2ace68c-1381.jp2 triggers this condition. File decodes
                 //fine without this check.
-                if (box.data_length < _cio.Pos - org_pos + bytes_to_read)
+                if (box.data_length < _cio.Pos - orgPos + bytesToRead)
                     return false;
 
                 /* Cji */
-                entries[k++] = unchecked(_cio.Read(bytes_to_read));
+                entries[k++] = unchecked(_cio.Read(bytesToRead));
             }
         }
 
@@ -1108,11 +1094,8 @@ internal sealed class JP2
     /// 2.5 - opj_jp2_read_cdef
     /// This box defines what channels are alpha channels and such
     /// </remarks>
-    private bool ReadCDEF(JP2Box box)
+    private bool ReadCdef(JP2Box box)
     {
-        JP2cdefInfo[] info;
-        ushort i, n;
-
         /* Part 1, I.5.3.6: 'The shall be at most one Channel Definition box
          * inside a JP2 Header box.'
          */
@@ -1124,7 +1107,7 @@ internal sealed class JP2
             return false;
         }
 
-        n = _cio.ReadUShort();
+        var n = _cio.ReadUShort();
         if (n == 0)
         {
             _cinfo.Error("Number of channel description is equal to zero in CDEF box.");
@@ -1137,10 +1120,10 @@ internal sealed class JP2
             return false;
         }
 
-        info = new JP2cdefInfo[n];
+        var info = new JP2cdefInfo[n];
         _color.channel_definitions = info;
 
-        for(i = 0; i < n; ++i)
+        for(ushort i = 0; i < n; ++i)
         {
             info[i].cn = _cio.ReadUShort();
             info[i].typ = _cio.ReadUShort();
@@ -1151,7 +1134,7 @@ internal sealed class JP2
     }
 
     //2.5 - opj_jp2_read_colr
-    private bool ReadCOLR(JP2Box box) 
+    private bool ReadColr(JP2Box box) 
     {
         if (box.data_length < 3)
         {
@@ -1192,9 +1175,9 @@ internal sealed class JP2
                 var cielab = new uint[9];
                 cielab[0] = 14; // Enumcs
 
-                uint rl, ol, ra, oa, rb, ob, il;
-                rl = ra = rb = ol = oa = ob = 0;
-                il = 0x00443530; // D50
+                uint ol, ra, oa, rb, ob;
+                var rl = ra = rb = ol = oa = ob = 0;
+                uint il = 0x00443530; // D50
                 cielab[1] = 0x44454600; // DEF
 
                 if (box.data_length == 35)
@@ -1228,11 +1211,11 @@ internal sealed class JP2
         else if (_meth == 2)
         {
             /* ICC profile */
-            int icc_len = (int) box.data_length - 3;
+            var iccLen = (int) box.data_length - 3;
             Debug.Assert((int) (box.init_pos + box.length - _cio.Pos) == box.data_length - 3);
 
-            _color.icc_profile_buf = new byte[icc_len];
-            if (_cio.Read(_color.icc_profile_buf, 0, icc_len) != icc_len)
+            _color.icc_profile_buf = new byte[iccLen];
+            if (_cio.Read(_color.icc_profile_buf, 0, iccLen) != iccLen)
                 throw new EndOfStreamException();
 
             _color.HasColor = true;
@@ -1248,7 +1231,7 @@ internal sealed class JP2
     }
 
     //2.5 - opj_jp2_read_bpcc
-    private bool ReadBPCC(JP2Box box)
+    private bool ReadBpcc(JP2Box box)
     {
         if (_bpc != 255)
             _cinfo.Warn("A BPCC header box is available although BPC given by the IHDR box ({0}) indicate components bit depth is constant", _bpc);
@@ -1259,7 +1242,7 @@ internal sealed class JP2
             return false;
         }
 
-        for (int i = 0; i < _numcomps; i++)
+        for (var i = 0; i < _numcomps; i++)
         {
             _comps[i].bpcc = _cio.ReadByte();
         }
@@ -1268,7 +1251,7 @@ internal sealed class JP2
     }
 
     //2.5 - opj_jp2_read_ihdr
-    private bool ReadIHDR(JP2Box box)
+    private bool ReadIhdr(JP2Box box)
     {
         if (_comps!= null)
         {
@@ -1305,20 +1288,20 @@ internal sealed class JP2
 
         _bpc = _cio.ReadByte();
 
-        _C = _cio.ReadByte();
+        _c = _cio.ReadByte();
 
-        if (_C != 7)
+        if (_c != 7)
         {
-            _cinfo.Info("JP2 IHDR box: compression type indicate that the file is not a conforming JP2 file ({0}) ", _C);
+            _cinfo.Info("JP2 IHDR box: compression type indicate that the file is not a conforming JP2 file ({0}) ", _c);
         }
 
-        _UnkC = _cio.ReadBool();
-        _IPR = _cio.ReadBool();
+        _unkC = _cio.ReadBool();
+        _ipr = _cio.ReadBool();
 
-        _j2k.CP.AllowDifferentBitDepthSign = _bpc == 255;
-        _j2k._ihdr_w = _w;
-        _j2k._ihdr_h = _h;
-        _has_ihdr = true;
+        _j2K.CP.AllowDifferentBitDepthSign = _bpc == 255;
+        _j2K._ihdr_w = _w;
+        _j2K._ihdr_h = _h;
+        _hasIhdr = true;
 
         return true;
     }
@@ -1331,7 +1314,7 @@ internal sealed class JP2
     /// <remarks>
     /// 2.5 - opj_jp2_read_ftyp
     /// </remarks>
-    private bool ReadFTYP(JP2Box box)
+    private bool ReadFtyp(JP2Box box)
     {
         if (_state != JP2_STATE.SIGNATURE)
         {
@@ -1348,18 +1331,18 @@ internal sealed class JP2
         _brand = (JP2_Marker)_cio.ReadUInt();
         _minversion = _cio.ReadUInt();
 
-        int remaining_bytes = (int) box.length - 16;
+        var remainingBytes = (int) box.length - 16;
 
         // Number of bytes must be a multiple of 4
-        if ((remaining_bytes & 0x3) != 0)
+        if ((remainingBytes & 0x3) != 0)
         {
             _cinfo.Error("Error with FTYP signature Box size");
             return false;
         }
 
-        _cl = new JP2_Marker[remaining_bytes / 4];
+        _cl = new JP2_Marker[remainingBytes / 4];
 
-        for (int i = 0; i < _cl.Length; i++)
+        for (var i = 0; i < _cl.Length; i++)
         {
             _cl[i] = (JP2_Marker)_cio.ReadUInt();
         }
@@ -1377,7 +1360,7 @@ internal sealed class JP2
     /// <remarks>
     /// 2.5 - opj_jp2_read_jp
     /// </remarks>
-    private bool ReadJP(JP2Box box)
+    private bool ReadJp(JP2Box box)
     {
         if (_state != JP2_STATE.NONE)
         {
@@ -1406,21 +1389,23 @@ internal sealed class JP2
     /// Reads a box header. The box is the way data is packed inside a jpeg2000 file structure.
     /// </summary>
     /// <remarks>2.5 - opj_jp2_read_boxhdr</remarks>
-    private bool ReadBoxhdr(out JP2Box box, out int n_bytes_read)
+    private bool ReadBoxhdr(out JP2Box box, out int nBytesRead)
     {
-        box = new JP2Box();
-        box.init_pos = _cio.Pos;
+        box = new JP2Box
+        {
+            init_pos = _cio.Pos
+        };
 
         if (_cio.BytesLeft < 8)
         {
-            n_bytes_read = (int)_cio.BytesLeft;
-            _cio.Skip((uint)n_bytes_read);
+            nBytesRead = (int)_cio.BytesLeft;
+            _cio.Skip((uint)nBytesRead);
             return false;
         }
 
         box.length = _cio.ReadUInt();
         box.type = (JP2_Marker) _cio.ReadUInt();
-        n_bytes_read = 8;
+        nBytesRead = 8;
 
         // Do we have a "special very large box ?
         // read then the XLBo
@@ -1429,11 +1414,11 @@ internal sealed class JP2
             if (_cio.ReadInt() != 0)
             {
                 _cinfo.Error("Cannot handle box sizes higher than 2^32");
-                n_bytes_read += 4;
+                nBytesRead += 4;
                 return false;
             }
             box.length = _cio.ReadUInt();
-            n_bytes_read = 16;
+            nBytesRead = 16;
         }
         else if (box.length == 0) // last box
         {
@@ -1450,12 +1435,12 @@ internal sealed class JP2
     }
 
     //2.5 - opj_jp2_read_boxhdr_char
-    private bool ReadBoxhdr_char(out JP2Box box, out int n_bytes_read, int max_size)
+    private bool ReadBoxhdr_char(out JP2Box box, out int nBytesRead, int maxSize)
     {
         box = new JP2Box();
-        if (max_size < 8)
+        if (maxSize < 8)
         {
-            n_bytes_read = 0;
+            nBytesRead = 0;
             _cinfo.Error("Cannot handle box of less than 8 bytes");
             return false;
         }
@@ -1463,13 +1448,13 @@ internal sealed class JP2
         box.init_pos = _cio.Pos;
         box.length = _cio.ReadUInt();
         box.type = (JP2_Marker)_cio.ReadUInt();
-        n_bytes_read = 8;
+        nBytesRead = 8;
 
         // Do we have a "special very large box
         // read then the XLBox
         if (box.length == 1)
         {
-            if (max_size < 8)
+            if (maxSize < 8)
             {
                 _cinfo.Error("Cannot handle XL box of less than 16 bytes");
                 return false;
@@ -1478,11 +1463,11 @@ internal sealed class JP2
             if (_cio.ReadInt() != 0)
             {
                 _cinfo.Error("Cannot handle box sizes higher than 2^32");
-                n_bytes_read += 4;
+                nBytesRead += 4;
                 return false;
             }
             box.length = _cio.ReadUInt();
-            n_bytes_read = 16;
+            nBytesRead = 16;
 
             if (box.length == 0)
             {
@@ -1495,7 +1480,7 @@ internal sealed class JP2
             _cinfo.Error("Cannot handle box of undefined sizes");
             return false;
         }
-        if (box.length < n_bytes_read)
+        if (box.length < nBytesRead)
         {
             _cinfo.Error("Box length is inconsistent");
             return false;
@@ -1507,27 +1492,26 @@ internal sealed class JP2
     //2.5 - opj_jp2_encode
     internal bool Encode()
     {
-        return _j2k.Encode();
+        return _j2K.Encode();
     }
 
     //2.5 - opj_jp2_default_validation
     private bool DefaultValidation(Stream cio)
     {
-        bool l_is_valid = true;
-        int i;
+        var lIsValid = true;
 
         /* JPEG2000 codec validation */
 
         /* STATE checking */
         /* make sure the state is at 0 */
-        l_is_valid &= _state == JP2_STATE.NONE;
+        lIsValid &= _state == JP2_STATE.NONE;
 
         /* make sure not reading a jp2h ???? WEIRD */
-        l_is_valid &= _img_state == JP2_IMG_STATE.NONE;
+        lIsValid &= _imgState == JP2_IMG_STATE.NONE;
 
         /* POINTER validation */
         /* make sure a j2k codec is present */
-        l_is_valid &= _j2k != null;
+        lIsValid &= _j2K != null;
 
         /* make sure a procedure list is present */
         //l_is_valid &= (_procedure_list != null);
@@ -1537,33 +1521,33 @@ internal sealed class JP2
 
         /* PARAMETER VALIDATION */
         /* number of components */
-        l_is_valid &= _cl != null;
+        lIsValid &= _cl != null;
         /* width */
-        l_is_valid &= _h > 0;
+        lIsValid &= _h > 0;
         /* height */
-        l_is_valid &= _w > 0;
+        lIsValid &= _w > 0;
         /* precision */
-        for (i = 0; i < _numcomps; ++i)
+        for (var i = 0; i < _numcomps; ++i)
         {
-            l_is_valid &= (_comps[i].bpcc & 0x7FU) < 38U; //Bug in org. impl?
+            lIsValid &= (_comps[i].bpcc & 0x7FU) < 38U; //Bug in org. impl?
         }
 
         /* METH */
-        l_is_valid &= _meth > 0 && _meth < 3;
+        lIsValid &= _meth is > 0 and < 3;
 
         /* stream validation */
         /* back and forth is needed */
-        l_is_valid &= cio.CanSeek;
+        lIsValid &= cio.CanSeek;
 
-        return l_is_valid;
+        return lIsValid;
     }
 
     //2.5 - opj_jp2_start_compress
-    internal bool StartCompress(CIO cio)
+    internal bool StartCompress(Cio cio)
     {
-        var bcio = new BufferCIO(cio);
+        var bcio = new BufferCio(cio);
         {
-            byte[] buf = new byte[256];
+            var buf = new byte[256];
             bcio.SetBuffer(ref buf, 256);
         }
 
@@ -1576,28 +1560,28 @@ internal sealed class JP2
         //Makes room for the Code Stream marker, which will be
         //written later.
         Debug.Assert(bcio.BufferPos == 0);
-        SkipJP2C(cio.Stream);
+        SkipJp2C(cio.Stream);
 
-        return _j2k.StartCompress(bcio);
+        return _j2K.StartCompress(bcio);
     }
 
     //2.5 - opj_jp2_end_compress
     internal bool EndCompress()
     {
-        var bcio = _j2k.EndGetBCIO();
+        var bcio = _j2K.EndGetBCIO();
 
         // Writes header
-        WriteJP2C(bcio);
+        WriteJp2C(bcio);
 
         return true;
     }
 
     //2.5 - opj_jp2_setup_header_writing
-    private bool WriteHeader(BufferCIO bcio)
+    private bool WriteHeader(BufferCio bcio)
     {
-        WriteJP(bcio);
-        WriteFTYP(bcio);
-        if (!WriteJP2H(bcio))
+        WriteJp(bcio);
+        WriteFtyp(bcio);
+        if (!WriteJp2H(bcio))
             return false;
 
         //C# Skip is called by the parent function
@@ -1609,9 +1593,9 @@ internal sealed class JP2
     /// store away the position.
     /// </summary>
     /// <remarks>2.5 - opj_jp2_skip_jp2c</remarks>
-    private void SkipJP2C(Stream cio)
+    private void SkipJp2C(Stream cio)
     {
-        _j2k_codestream_offset = cio.Position;
+        _j2KCodestreamOffset = cio.Position;
         cio.Seek(8, SeekOrigin.Current);
     }
 
@@ -1620,75 +1604,73 @@ internal sealed class JP2
     /// Writes the Jpeg2000 codestream Header box - JP2C Header box. This function must be called AFTER the coding has been done.
     /// </summary>
     /// <remarks>2.5 - opj_jp2_write_jp2c</remarks>
-    private void WriteJP2C(BufferCIO bcio) 
+    private void WriteJp2C(BufferCio bcio) 
     {
-        long j2k_codestream_exit, j2k_codestream_length;
-
         /* J2K encoding */
-        j2k_codestream_exit = bcio.Pos;
-        j2k_codestream_length = j2k_codestream_exit - _j2k_codestream_offset;
+        var j2KCodestreamExit = bcio.Pos;
+        var j2KCodestreamLength = j2KCodestreamExit - _j2KCodestreamOffset;
 
-        bcio.Pos = _j2k_codestream_offset;
-        bcio.Write((int) j2k_codestream_length);
+        bcio.Pos = _j2KCodestreamOffset;
+        bcio.Write((int) j2KCodestreamLength);
         bcio.Write(JP2_Marker.JP2C);
         bcio.Commit();
-        bcio.Pos = j2k_codestream_exit;
+        bcio.Pos = j2KCodestreamExit;
     }
 
     /// <summary>
     /// JP2 header
     /// </summary>
     /// <remarks>2.5 - opj_jp2_write_jp2h</remarks>
-    private bool WriteJP2H(BufferCIO bcio)
+    private bool WriteJp2H(BufferCio bcio)
     {
-        uint jp2h_size = 8;
+        uint jp2HSize = 8;
 
         //C# - Calculate the needed buffer size
         //IHDR needs 22 bytes
-        jp2h_size += 22;
+        jp2HSize += 22;
 
         //Adds for Bit per Component
-        uint bpcc_size = 0;
+        uint bpccSize = 0;
         if (_bpc == 255)
-            bpcc_size += 8 + _numcomps;
-        jp2h_size += bpcc_size;
+            bpccSize += 8 + _numcomps;
+        jp2HSize += bpccSize;
 
         //Adds for the color info
-        uint colr_size = 11;
+        uint colrSize = 11;
         switch(_meth)
         {
             case 1:
-                colr_size += 4; break;
+                colrSize += 4; break;
             case 2:
-                colr_size += (uint) _color.icc_profile_buf.Length; break;
+                colrSize += (uint) _color.icc_profile_buf.Length; break;
             default:
                 return false;
         }
-        jp2h_size += colr_size;
+        jp2HSize += colrSize;
 
-        uint cdef_size = 0;
-        if (_color != null && _color.channel_definitions != null)
-            cdef_size = 10u + 6u * (uint)_color.channel_definitions.Length;
-        jp2h_size += cdef_size;
+        uint cdefSize = 0;
+        if (_color is { channel_definitions: not null })
+            cdefSize = 10u + 6u * (uint)_color.channel_definitions.Length;
+        jp2HSize += cdefSize;
 
-        bcio.SetBuffer(jp2h_size);
+        bcio.SetBuffer(jp2HSize);
 
         //Writes out the length
-        bcio.Write(jp2h_size);
+        bcio.Write(jp2HSize);
 
         //Signature
         bcio.Write(JP2_Marker.JP2H);
 
-        WriteIHDR(bcio);
+        WriteIhdr(bcio);
 
         if (_bpc == 255)
-            Write_BPCC(bcio, bpcc_size);
-        WriteCOLR(bcio, colr_size);
+            Write_BPCC(bcio, bpccSize);
+        WriteColr(bcio, colrSize);
 
-        if (_color != null && _color.channel_definitions != null)
-            WriteCDEF(bcio, cdef_size);
+        if (_color is { channel_definitions: not null })
+            WriteCdef(bcio, cdefSize);
 
-        Debug.Assert(bcio.BufferPos == jp2h_size);
+        Debug.Assert(bcio.BufferPos == jp2HSize);
         bcio.Commit();
 
         return true;
@@ -1698,21 +1680,21 @@ internal sealed class JP2
     ///  Writes the Channel Definition box.
     /// </summary>
     /// <remarks>2.5 - opj_jp2_write_cdef</remarks>
-    private void WriteCDEF(BufferCIO bcio, uint cdef_size)
+    private void WriteCdef(BufferCio bcio, uint cdefSize)
     {
-        var channel_definitions = _color.channel_definitions;
+        var channelDefinitions = _color.channel_definitions;
 
-        bcio.Write(cdef_size);
+        bcio.Write(cdefSize);
         bcio.Write(JP2_Marker.CDEF);
 
         //Writes number of definitions
-        bcio.WriteUShort(channel_definitions.Length);
+        bcio.WriteUShort(channelDefinitions.Length);
 
-        for (int c = 0; c < channel_definitions.Length; c++)
+        for (var c = 0; c < channelDefinitions.Length; c++)
         {
-            bcio.WriteUShort(channel_definitions[c].cn);
-            bcio.WriteUShort(channel_definitions[c].typ);
-            bcio.WriteUShort(channel_definitions[c].asoc);
+            bcio.WriteUShort(channelDefinitions[c].cn);
+            bcio.WriteUShort(channelDefinitions[c].typ);
+            bcio.WriteUShort(channelDefinitions[c].asoc);
         }
     }
 
@@ -1720,7 +1702,7 @@ internal sealed class JP2
     /// Writes the Image Header box - Image Header box.
     /// </summary>
     /// <remarks>2.5 - opj_jp2_write_ihdr</remarks>
-    private void WriteIHDR(BufferCIO bcio)
+    private void WriteIhdr(BufferCio bcio)
     {
         bcio.Write(22); // Size of the box
         bcio.Write(JP2_Marker.IHDR);
@@ -1733,21 +1715,21 @@ internal sealed class JP2
 
         bcio.Write(_bpc, 1);	
 
-        bcio.Write(_C, 1);
-        bcio.Write(_UnkC);
-        bcio.Write(_IPR);
+        bcio.Write(_c, 1);
+        bcio.Write(_unkC);
+        bcio.Write(_ipr);
     }
 
     /// <summary>
     /// Writes the Bit per Component box
     /// </summary>
     /// <remarks>2.5 - opj_jp2_write_bpcc</remarks>
-    private void Write_BPCC(BufferCIO bcio, uint bpcc_size)
+    private void Write_BPCC(BufferCio bcio, uint bpccSize)
     {
-        bcio.Write(bpcc_size);
+        bcio.Write(bpccSize);
         bcio.Write(JP2_Marker.BPCC);
 
-        for (int i = 0; i < _numcomps; i++)
+        for (var i = 0; i < _numcomps; i++)
             bcio.Write(_comps[i].bpcc, 1);
     }
 
@@ -1755,9 +1737,9 @@ internal sealed class JP2
     /// Writes the Colour Specification box
     /// </summary>
     /// <remarks>2.5 - opj_jp2_write_colr</remarks>
-    private void WriteCOLR(BufferCIO bcio, uint colr_size)
+    private void WriteColr(BufferCio bcio, uint colrSize)
     {
-        bcio.Write(colr_size);
+        bcio.Write(colrSize);
         bcio.Write(JP2_Marker.COLR);
 
         bcio.Write(_meth, 1);
@@ -1774,13 +1756,13 @@ internal sealed class JP2
     /// File type
     /// </summary>
     /// <remarks>2.5 - opj_jp2_write_ftyp</remarks>
-    private void WriteFTYP(BufferCIO bcio)
+    private void WriteFtyp(BufferCio bcio)
     {
-        int ftyp_size = 16 + 4 * _cl.Length;
-        bcio.SetBuffer((uint)ftyp_size);
+        var ftypSize = 16 + 4 * _cl.Length;
+        bcio.SetBuffer((uint)ftypSize);
 
         //Writes the length
-        bcio.Write(ftyp_size);
+        bcio.Write(ftypSize);
 
         //Signature
         bcio.Write(JP2_Marker.FTYP);
@@ -1788,7 +1770,7 @@ internal sealed class JP2
         bcio.Write(_brand);
         bcio.Write(_minversion);
 
-        for (int i = 0; i < _cl.Length; i++)
+        for (var i = 0; i < _cl.Length; i++)
             bcio.Write(_cl[i]);
 
         bcio.Commit();
@@ -1798,7 +1780,7 @@ internal sealed class JP2
     /// Signature
     /// </summary>
     /// <remarks>2.5 - opj_jp2_write_jp</remarks>
-    private bool WriteJP(BufferCIO bcio)
+    private bool WriteJp(BufferCio bcio)
     {
         //Writes the length
         bcio.Write(12);

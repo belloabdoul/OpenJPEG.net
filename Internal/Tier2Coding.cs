@@ -99,7 +99,7 @@ internal sealed class Tier2Coding
     internal bool DecodePackets(TileCoder tcd, uint tileno, TcdTile tile, byte[] src, int max_length, CodestreamIndex cstr_index)
     {
         var tcp = _cp.tcps[tileno];
-        PacketIterator[] pi_ar = PacketIterator.CreateDecode(_image, _cp, tileno, _cinfo);
+        var pi_ar = PacketIterator.CreateDecode(_image, _cp, tileno, _cinfo);
         if (pi_ar == null)
         {
             return false;
@@ -108,9 +108,9 @@ internal sealed class Tier2Coding
         int n_bytes_read;
 
         //C#: Position in the src stream
-        int src_pos = 0;
+        var src_pos = 0;
 
-        for (int pino = 0; pino <= tcp.numpocs; pino++)
+        for (var pino = 0; pino <= tcp.numpocs; pino++)
         {
             //C# Updates the pointers
             var current_pi = pi_ar[pino];
@@ -125,8 +125,8 @@ internal sealed class Tier2Coding
              * l_current_pi->resno is always >= p_tile->comps[l_current_pi->compno].minimum_num_resolutions
              * and no l_img_comp->resno_decoded are computed
              */
-            bool[] first_pass_failed = new bool[_image.numcomps];
-            for (int c = 0; c < first_pass_failed.Length; c++)
+            var first_pass_failed = new bool[_image.numcomps];
+            for (var c = 0; c < first_pass_failed.Length; c++)
                 first_pass_failed[c] = true;
 #if DEBUG
             //int n_itterations = 0, n_reads = 0;
@@ -247,7 +247,7 @@ internal sealed class Tier2Coding
         //we should read data for the packet
         if (read_data)
         {
-            int total = data_read;
+            var total = data_read;
             if (!ReadPacketData(tile, pi, src, src_pos, out data_read, max_length))
                 return false;
             data_read += total;
@@ -278,7 +278,7 @@ internal sealed class Tier2Coding
         //we should read data for the packet
         if (read_data)
         {
-            int total = data_read;
+            var total = data_read;
             if (!SkipPacketData(tile, pi, src, src_pos, out data_read, max_length))
                 return false;
             data_read += total;
@@ -290,11 +290,11 @@ internal sealed class Tier2Coding
     //2.5.3 - opj_t2_read_packet_data
     private bool ReadPacketData(TcdTile tile, PacketIterator pi, byte[] src, int src_pos, out int data_read, int max_length)
     {
-        TcdResolution res = tile.comps[pi.compno].resolutions[pi.resno];
-        int start_pos = src_pos;
-        bool partial_buffer = false;
+        var res = tile.comps[pi.compno].resolutions[pi.resno];
+        var start_pos = src_pos;
+        var partial_buffer = false;
 
-        for (int bandno = 0; bandno < res.numbands; bandno++)
+        for (var bandno = 0; bandno < res.numbands; bandno++)
         {
             //C# Updates pointers
             var band = res.bands[bandno];
@@ -304,12 +304,12 @@ internal sealed class Tier2Coding
             {
                 continue;
             }
-            uint n_code_blocks = prc.cw * prc.ch;
+            var n_code_blocks = prc.cw * prc.ch;
 
-            for (int cblkno = 0; cblkno < n_code_blocks; cblkno++)
+            for (var cblkno = 0; cblkno < n_code_blocks; cblkno++)
             {
                 //C# Updates pointers
-                TcdCblkDec cblk = prc.dec[cblkno];
+                var cblk = prc.dec[cblkno];
                 TcdSeg seg;
 
                 //C# retains a reference to the data array
@@ -375,7 +375,7 @@ internal sealed class Tier2Coding
                     }
                     if (cblk.numchunks == cblk.numchunksalloc)
                     {
-                        uint numchunksalloc = cblk.numchunksalloc * 2 + 1;
+                        var numchunksalloc = cblk.numchunksalloc * 2 + 1;
                         Array.Resize(ref cblk.chunks, (int) numchunksalloc);
                         cblk.numchunksalloc = numchunksalloc;
                     }
@@ -415,21 +415,21 @@ internal sealed class Tier2Coding
     //2.5.3 - opj_t2_skip_packet_data
     private bool SkipPacketData(TcdTile tile, PacketIterator pi, byte[] src, int src_pos, out int data_read, int max_length)
     {
-        TcdResolution res = tile.comps[pi.compno].resolutions[pi.resno];
+        var res = tile.comps[pi.compno].resolutions[pi.resno];
         data_read = 0;
-        int start_pos = src_pos;
+        var start_pos = src_pos;
 
-        for (int bandno = 0; bandno < res.numbands; bandno++)
+        for (var bandno = 0; bandno < res.numbands; bandno++)
         {
             var band = res.bands[bandno];
             var prc = band.precincts[pi.precno];
 
             if (band.x1 - band.x0 == 0 || band.y1 - band.y0 == 0) continue;
-            uint n_code_blocks = prc.cw * prc.ch;
+            var n_code_blocks = prc.cw * prc.ch;
 
-            for (int cblkno = 0; cblkno < n_code_blocks; cblkno++)
+            for (var cblkno = 0; cblkno < n_code_blocks; cblkno++)
             {
-                TcdCblkDec cblk = prc.dec[cblkno];
+                var cblk = prc.dec[cblkno];
                 TcdSeg seg;
 
                 if (cblk.numnewpasses == 0)
@@ -497,17 +497,17 @@ internal sealed class Tier2Coding
     /// <remarks>2.5.3 - opj_t2_read_packet_header</remarks>>
     private bool ReadPacketHeader(TcdTile tile, TileCodingParams tcp, PacketIterator pi, out bool is_data_present, byte[] src, int src_pos, out int data_dread, int max_length)
     {
-        int start_pos = src_pos; //<-- Used to calc num read
+        var start_pos = src_pos; //<-- Used to calc num read
         int header_length;
 
-        TcdResolution res = tile.comps[pi.compno].resolutions[pi.resno];
+        var res = tile.comps[pi.compno].resolutions[pi.resno];
 
         if (pi.layno == 0)
         {
             // reset tagtrees
-            for (int bandno = 0; bandno < res.numbands; bandno++)
+            for (var bandno = 0; bandno < res.numbands; bandno++)
             {
-                TcdBand band = res.bands[bandno];
+                var band = res.bands[bandno];
 
                 if (!band.IsEmpty)
                 {
@@ -519,14 +519,14 @@ internal sealed class Tier2Coding
                         data_dread = 0;
                         return false;
                     }
-                    TcdPrecinct prc = band.precincts[pi.precno];
+                    var prc = band.precincts[pi.precno];
 
                     TagTree.Reset(prc.incltree);
                     TagTree.Reset(prc.imsbtree);
-                    uint n_code_blocks = prc.cw * prc.ch;
-                    for (int cblkno = 0; cblkno < n_code_blocks; cblkno++)
+                    var n_code_blocks = prc.cw * prc.ch;
+                    for (var cblkno = 0; cblkno < n_code_blocks; cblkno++)
                     {
-                        TcdCblkDec cblk = prc.dec[cblkno];
+                        var cblk = prc.dec[cblkno];
                         cblk.numsegs = 0;
                         cblk.real_num_segs = 0;
                     }
@@ -581,9 +581,9 @@ internal sealed class Tier2Coding
             modified_length_ptr = start_pos + max_length - hd_pos;
         }
 
-        BIO bio = new BIO(header_data, hd_pos, hd_pos + modified_length_ptr);
+        var bio = new BIO(header_data, hd_pos, hd_pos + modified_length_ptr);
 
-        bool present = bio.ReadBool();
+        var present = bio.ReadBool();
 
         if (!present)
         {
@@ -644,19 +644,19 @@ internal sealed class Tier2Coding
             return true;
         }
 
-        for (int bandno = 0; bandno < res.numbands; bandno++)
+        for (var bandno = 0; bandno < res.numbands; bandno++)
         {
-            TcdBand band = res.bands[bandno];
-            TcdPrecinct prc = band.precincts[pi.precno];
+            var band = res.bands[bandno];
+            var prc = band.precincts[pi.precno];
 
             if (band.IsEmpty) continue;
 
             //cblkno = code block
-            uint n_code_blocks = prc.cw * prc.ch;
+            var n_code_blocks = prc.cw * prc.ch;
             for (uint cblkno = 0; cblkno < n_code_blocks; cblkno++)
             {
                 bool included;
-                TcdCblkDec cblk = prc.dec[cblkno];
+                var cblk = prc.dec[cblkno];
 
                 //if cblk not yet included before --> inclusion tagtree
                 if (cblk.numsegs == 0)
@@ -685,7 +685,7 @@ internal sealed class Tier2Coding
 
                 //Number of coding passes
                 cblk.numnewpasses = GetNumPasses(bio);
-                uint increment = GetCommaCode(bio);
+                var increment = GetCommaCode(bio);
 
                 //length indicator increment
                 cblk.numlenbits += increment;
@@ -701,15 +701,14 @@ internal sealed class Tier2Coding
                     if (cblk.segs[segno].numpasses == cblk.segs[segno].maxpasses)
                         InitSegment(cblk, ++segno, tcp.tccps[pi.compno].cblksty, false);
                 }
-                int n = (int)cblk.numnewpasses;
+                var n = (int)cblk.numnewpasses;
 
                 if ((tcp.tccps[pi.compno].cblksty & CCP_CBLKSTY.HT) != 0)
                 {
                     do
                     {
-                        uint bit_number;
                         cblk.segs[segno].numnewpasses = segno == 0 ? 1u : (uint)n;
-                        bit_number = cblk.numlenbits + MyMath.uint_floorlog2(
+                        var bit_number = cblk.numlenbits + MyMath.uint_floorlog2(
                             cblk.segs[segno].numnewpasses);
                         if (bit_number > 32)
                         {
@@ -733,10 +732,9 @@ internal sealed class Tier2Coding
                 {
                     do
                     {
-                        uint bit_number;
                         cblk.segs[segno].numnewpasses = (uint)Math.Min((int)(
                             cblk.segs[segno].maxpasses - cblk.segs[segno].numpasses), n);
-                        bit_number = cblk.numlenbits + MyMath.uint_floorlog2(
+                        var bit_number = cblk.numlenbits + MyMath.uint_floorlog2(
                             cblk.segs[segno].numnewpasses);
                         if (bit_number > 32)
                         {
@@ -834,7 +832,7 @@ internal sealed class Tier2Coding
     internal bool EncodePackets(uint tileno, 
         TcdTile tile, 
         uint maxlayers, 
-        BufferCIO dest, 
+        BufferCio dest, 
         out uint data_written, 
         uint max_len,
         TcdMarkerInfo marker_info,
@@ -844,12 +842,12 @@ internal sealed class Tier2Coding
         T2_MODE t2_mode)
     {
         uint l_nb_bytes;
-        TileCodingParams tcp = _cp.tcps[tileno];
-        int pocno = _cp.rsiz == J2K_PROFILE.CINEMA_4K ? 2 : 1;
-        uint maxcomp = _cp.specific_param.enc.max_comp_size > 0 ? _image.numcomps : 1;
-        uint n_pocs = tcp.numpocs + 1;
+        var tcp = _cp.tcps[tileno];
+        var pocno = _cp.rsiz == J2K_PROFILE.CINEMA_4K ? 2 : 1;
+        var maxcomp = _cp.specific_param.enc.max_comp_size > 0 ? _image.numcomps : 1;
+        var n_pocs = tcp.numpocs + 1;
 
-        PacketIterator[] pi = PacketIterator.InitialiseEncode(_image, _cp, tileno, t2_mode, _cinfo);
+        var pi = PacketIterator.InitialiseEncode(_image, _cp, tileno, t2_mode, _cinfo);
 
         data_written = 0;
 
@@ -859,12 +857,12 @@ internal sealed class Tier2Coding
             for (uint compno = 0; compno < maxcomp; compno++)
             {
                 uint comp_len = 0;
-                int pi_ptr = 0;
+                var pi_ptr = 0;
 
                 for (uint poc = 0; poc < pocno; poc++)
                 {
-                    PacketIterator current_pi = pi[pi_ptr];
-                    uint tpnump = compno; //Is called l_tp_num in org source.
+                    var current_pi = pi[pi_ptr];
+                    var tpnump = compno; //Is called l_tp_num in org source.
 
                     PacketIterator.CreateEncode(pi, _cp, tileno, poc, tpnump, tppos, t2_mode);
 
@@ -902,7 +900,7 @@ internal sealed class Tier2Coding
                 return false;
             }
 
-            if (marker_info != null && marker_info.need_PLT)
+            if (marker_info is { need_PLT: true })
             {
                 marker_info.p_packet_size = new uint[PacketIterator.GetEncodingPacketCount(_image, _cp, tileno)];
             }
@@ -925,7 +923,7 @@ internal sealed class Tier2Coding
                     max_len -= n_bytes;
                     data_written += n_bytes;
 
-                    if (marker_info != null && marker_info.need_PLT)
+                    if (marker_info is { need_PLT: true })
                     {
                         marker_info.p_packet_size[marker_info.packet_count++] = n_bytes;
                     }
@@ -956,7 +954,7 @@ internal sealed class Tier2Coding
         TcdTile tile, 
         TileCodingParams tcp, 
         PacketIterator pi, 
-        BufferCIO dest, 
+        BufferCio dest, 
         out uint data_written, 
         int length,
         T2_MODE t2_mode)
@@ -970,14 +968,14 @@ internal sealed class Tier2Coding
         //we assume that the buffer inside bcio is free for us to use.
         var hold = dest.BufferPos;
 
-        uint compno = pi.compno;
-        uint resno = pi.resno;
-        uint precno = pi.precno;
-        uint layno = pi.layno;
+        var compno = pi.compno;
+        var resno = pi.resno;
+        var precno = pi.precno;
+        var layno = pi.layno;
         data_written = 0;
 
-        TcdTilecomp tilec = tile.comps[compno];
-        TcdResolution res = tilec.resolutions[resno];
+        var tilec = tile.comps[compno];
+        var res = tilec.resolutions[resno];
 
 #if ENABLE_EMPTY_PACKET_OPTIMIZATION
             bool packet_empty = true;
@@ -1006,9 +1004,9 @@ internal sealed class Tier2Coding
 
         if (layno == 0)
         {
-            for (int bandno = 0; bandno < res.numbands; bandno++)
+            for (var bandno = 0; bandno < res.numbands; bandno++)
             {
-                TcdBand band = res.bands[bandno];
+                var band = res.bands[bandno];
                 if (band.IsEmpty)
                     continue;
 
@@ -1020,14 +1018,14 @@ internal sealed class Tier2Coding
                     return false;
                 }
 
-                TcdPrecinct prc = band.precincts[precno];
+                var prc = band.precincts[precno];
                 TagTree.Reset(prc.incltree);
                 TagTree.Reset(prc.imsbtree);
 
-                uint n_blocks = prc.cw * prc.ch;
-                for (int cblkno = 0; cblkno < n_blocks; cblkno++)
+                var n_blocks = prc.cw * prc.ch;
+                for (var cblkno = 0; cblkno < n_blocks; cblkno++)
                 {
-                    TcdCblkEnc cblk = prc.enc[cblkno];
+                    var cblk = prc.enc[cblkno];
                     cblk.numpasses = 0;
                     prc.imsbtree.SetValue(cblkno, band.numbps - (int)cblk.numbps);
                 }
@@ -1071,9 +1069,9 @@ internal sealed class Tier2Coding
         bio.WriteBit(packet_empty ? 0 : 1); // Empty header bit
 
         // Writes the packet header
-        for (int bandno = 0; !packet_empty && bandno < res.numbands; bandno++)
+        for (var bandno = 0; !packet_empty && bandno < res.numbands; bandno++)
         {
-            TcdBand band = res.bands[bandno];
+            var band = res.bands[bandno];
             if (band.IsEmpty)
                 continue;
 
@@ -1085,22 +1083,22 @@ internal sealed class Tier2Coding
                 return false;
             }
 
-            TcdPrecinct prc = band.precincts[precno];
-            uint n_blocks = prc.cw * prc.ch;
+            var prc = band.precincts[precno];
+            var n_blocks = prc.cw * prc.ch;
 
-            for (int cblkno = 0; cblkno < n_blocks; cblkno++)
+            for (var cblkno = 0; cblkno < n_blocks; cblkno++)
             {
-                TcdCblkEnc cblk = prc.enc[cblkno];
-                TcdLayer layer = cblk.layers[layno];
+                var cblk = prc.enc[cblkno];
+                var layer = cblk.layers[layno];
                 if (cblk.numpasses == 0 && layer.numpasses != 0)
                     prc.incltree.SetValue(cblkno, (int)layno);
             }
 
-            for (int cblkno = 0; cblkno < n_blocks; cblkno++)
+            for (var cblkno = 0; cblkno < n_blocks; cblkno++)
             {
-                TcdCblkEnc cblk = prc.enc[cblkno];
-                TcdLayer layer = cblk.layers[layno];
-                int increment = 0;
+                var cblk = prc.enc[cblkno];
+                var layer = cblk.layers[layno];
+                var increment = 0;
                 uint nump = 0;
                 uint len = 0;
 
@@ -1123,12 +1121,12 @@ internal sealed class Tier2Coding
 
                 //Number of coding passes included
                 PutNumPasses(bio, layer.numpasses);
-                uint n_passes = cblk.numpasses + layer.numpasses;
+                var n_passes = cblk.numpasses + layer.numpasses;
 
                 //computation of the increase of the length indicator and insertion in the header
-                for (uint passno = cblk.numpasses; passno < n_passes; passno++)
+                for (var passno = cblk.numpasses; passno < n_passes; passno++)
                 {
-                    TcdPass pass = cblk.passes[passno];
+                    var pass = cblk.passes[passno];
 
                     //C# If this happens it's likely that the CodingParameters.matrix is messed up somehow.
                     Debug.Assert(pass != null, "Should never happen");
@@ -1150,9 +1148,9 @@ internal sealed class Tier2Coding
                 cblk.numlenbits += (uint)increment;
 
                 //Insertion of the codeword segment length
-                for (int passno = (int)cblk.numpasses; passno < n_passes; passno++)
+                for (var passno = (int)cblk.numpasses; passno < n_passes; passno++)
                 {
-                    TcdPass pass = cblk.passes[passno];
+                    var pass = cblk.passes[passno];
                     nump++;
                     len += pass.len;
 
@@ -1194,19 +1192,19 @@ internal sealed class Tier2Coding
         ////Snip cstr_info code from org impl. 
 
         //Writing the packet body
-        for (int bandno = 0; !packet_empty && bandno < res.numbands; bandno++)
+        for (var bandno = 0; !packet_empty && bandno < res.numbands; bandno++)
         {
-            TcdBand band = res.bands[bandno];
+            var band = res.bands[bandno];
             if (band.IsEmpty)
                 continue;
 
-            TcdPrecinct prc = band.precincts[precno];
-            uint n_blocks = prc.cw * prc.ch;
+            var prc = band.precincts[precno];
+            var n_blocks = prc.cw * prc.ch;
 
-            for (int cblkno = 0; cblkno < n_blocks; cblkno++)
+            for (var cblkno = 0; cblkno < n_blocks; cblkno++)
             {
-                TcdCblkEnc cblk = prc.enc[cblkno];
-                TcdLayer layer = cblk.layers[layno];
+                var cblk = prc.enc[cblkno];
+                var layer = cblk.layers[layno];
 
                 if (layer.numpasses == 0)
                     continue;

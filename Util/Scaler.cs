@@ -18,7 +18,7 @@ public static class Scaler
             return pixels;
 
         //Array for finished pixels.
-        int[] dest = new int[width * height];
+        var dest = new int[width * height];
 
         //We calculate the size ratio differences between width and height. They are split up
         //into a "integer_part" that contains the result of the division and a "fractional_part"
@@ -29,21 +29,21 @@ public static class Scaler
         int fractional_part_h = org_height % height, fractional_part_w = org_width % width;
 
         //Fractions are added together into this value.
-        int fract = 0;
+        var fract = 0;
 
         //Remebers the start position of the last raster line. This is used to see if one should
         //copy the rasterline wholesale into the dest image. Say, if the image is twice as high
         //every other line will be copied.
-        int last_rasterline_pos = -1;
+        var last_rasterline_pos = -1;
 
         //Current position in the pixels array
-        int pixels_pos = 0;
+        var pixels_pos = 0;
 
         //Current possition in the destination array
-        int dest_pos = 0;
+        var dest_pos = 0;
 
         //We itterate line by line
-        for (int lines = height; lines-- > 0; )
+        for (var lines = height; lines-- > 0; )
         {
             if (pixels_pos == last_rasterline_pos)
             {
@@ -60,7 +60,7 @@ public static class Scaler
                 int lfract = 0, source_pos = pixels_pos; ;
 
                 //Itterates pixel by pixel
-                for (int npixels = width; npixels-- > 0; )
+                for (var npixels = width; npixels-- > 0; )
                 {
                     //Copies one pixel from
                     dest[dest_pos++] = pixels[source_pos];
