@@ -280,7 +280,7 @@ public class JPXImage
                 if (channel_definitions[c].typ != 0)
                     nalpha++;
             if (nalpha == 0) return null;
-            var ac = new ImageComp[nalpha];
+            var ac = GC.AllocateUninitializedArray<ImageComp>(nalpha);
             nalpha = 0;
             for (var c = 0; c < channel_definitions.Length; c++)
                 if (channel_definitions[c].typ != 0)
@@ -320,7 +320,7 @@ public class JPXImage
     #region Init
 
     //2.5
-    internal JPXImage() { }
+    public JPXImage() { }
 
     public JPXImage(int x0, int x1, int y0, int y1, ImageComp[] comps, COLOR_SPACE cs)
     {
@@ -366,7 +366,7 @@ public class JPXImage
         //comps with a new array anyway.
 
         numcomps = src.numcomps;
-        comps = new ImageComp[numcomps];
+        comps = GC.AllocateUninitializedArray<ImageComp>((int)numcomps);
 
         for (var compno = 0; compno < comps.Length; compno++)
         {
@@ -426,7 +426,7 @@ public class JPXImage
         uint w = x1 - x0, h = y1 - y0;
             
         //Resize channels if needed
-        var cc = new int[comps.Length][];
+        var cc = GC.AllocateUninitializedArray<int[]>(comps.Length);
         for (var c = 0; c < comps.Length; c++)
         {
             var comp = comps[c];
@@ -487,7 +487,7 @@ public class JPXImage
     {
         if (channel_definitions == null)
         {
-            channel_definitions = new JP2cdefInfo[numcomps];
+            channel_definitions = GC.AllocateUninitializedArray<JP2cdefInfo>((int)numcomps);
             for (var c = 0; c < channel_definitions.Length; c++)
             {
                 channel_definitions[c].cn = (ushort)c;
@@ -511,7 +511,7 @@ public class JPXImage
         for (var c = 0; c < channel_definitions.Length; c++)
             if (channel_definitions[c].typ == 0 && channel_definitions[c].asoc != 0)
                 nopague = Math.Max(channel_definitions[c].asoc, nopague);
-        var oc = new ImageComp[nopague];
+        var oc = GC.AllocateUninitializedArray<ImageComp>(nopague);
         nopague = 0;
         for (var c = 0; c < channel_definitions.Length; c++)
             if (channel_definitions[c].typ == 0 && channel_definitions[c].asoc != 0)
@@ -763,9 +763,9 @@ public class JPXImage
         var cr_ar = comps[2].data;
         var y = cb = cr = 0;
 
-        var d0 = new int[max];
-        var d1 = new int[max];
-        var d2 = new int[max];
+        var d0 = GC.AllocateUninitializedArray<int>((int)max);
+        var d1 = GC.AllocateUninitializedArray<int>((int)max);
+        var d2 = GC.AllocateUninitializedArray<int>((int)max);
         var r = g = b = 0;
 
         for (long i = 0U; i < max; ++i)
@@ -802,9 +802,9 @@ public class JPXImage
         var cr_ar = comps[2].data;
         var y = cb = cr = 0;
 
-        var d0 = new int[max];
-        var d1 = new int[max];
-        var d2 = new int[max];
+        var d0 = GC.AllocateUninitializedArray<int>((int)max);
+        var d1 = GC.AllocateUninitializedArray<int>((int)max);
+        var d2 = GC.AllocateUninitializedArray<int>((int)max);
         var r = g = b = 0;
 
         // if img->x0 is odd, then first column shall use Cb/Cr = 0
@@ -881,9 +881,9 @@ public class JPXImage
         var cr_ar = comps[2].data;
         var y = cb = cr = 0;
 
-        var d0 = new int[max];
-        var d1 = new int[max];
-        var d2 = new int[max];
+        var d0 = GC.AllocateUninitializedArray<int>((int)max);
+        var d1 = GC.AllocateUninitializedArray<int>((int)max);
+        var d2 = GC.AllocateUninitializedArray<int>((int)max);
         var r = g = b = 0;
 
         // if x0 is odd, then first column shall use Cb/Cr = 0
@@ -1126,90 +1126,88 @@ public class JPXImage
         // Write TGA header
         var bpp = write_alpha ? 32 : 24;
 
-        using (var bw = new BWrite(o))
+        using var bw = new BWrite(o);
+        if (!TGAWriteHeader(bw, bpp, width, height, true, cinfo))
+            return false;
+
+        var alpha_channel = numcomps - 1;
+
+        var scale = 255.0f / ((1 << (int)comps[0].prec) - 1);
+
+        var adjustR = comps[0].sgnd ? 1 << ((int)comps[0].prec - 1) : 0;
+        if (numcomps >= 3)
         {
-            if (!TGAWriteHeader(bw, bpp, width, height, true, cinfo))
-                return false;
+            adjustG = comps[1].sgnd ? 1 << ((int)comps[1].prec - 1) : 0;
+            adjustB = comps[2].sgnd ? 1 << ((int)comps[2].prec - 1) : 0;
+        }
 
-            var alpha_channel = numcomps - 1;
+        for (var y = 0; y < height; y++)
+        {
+            var index = (uint)(y * width);
 
-            var scale = 255.0f / ((1 << (int)comps[0].prec) - 1);
-
-            var adjustR = comps[0].sgnd ? 1 << ((int)comps[0].prec - 1) : 0;
-            if (numcomps >= 3)
+            for (var x = 0; x < width; x++, index++)
             {
-                adjustG = comps[1].sgnd ? 1 << ((int)comps[1].prec - 1) : 0;
-                adjustB = comps[2].sgnd ? 1 << ((int)comps[2].prec - 1) : 0;
-            }
+                float r = comps[0].data[index] + adjustR;
 
-            for (var y = 0; y < height; y++)
-            {
-                var index = (uint)(y * width);
-
-                for (var x = 0; x < width; x++, index++)
+                if (numcomps > 2)
                 {
-                    float r = comps[0].data[index] + adjustR;
+                    g = comps[1].data[index] + adjustG;
+                    b = comps[2].data[index] + adjustB;
+                }
+                else
+                {
+                    /* Greyscale ... */
+                    g = r;
+                    b = r;
+                }
 
-                    if (numcomps > 2)
-                    {
-                        g = comps[1].data[index] + adjustG;
-                        b = comps[2].data[index] + adjustB;
-                    }
-                    else
-                    {
-                        /* Greyscale ... */
-                        g = r;
-                        b = r;
-                    }
+                /* TGA format writes BGR ... */
+                if (b > 255f)
+                {
+                    b = 255f;
+                }
+                else if (b < 0f)
+                {
+                    b = 0f;
+                }
+                var val = (byte)(b * scale);
+                bw.s.Write(val);
 
-                    /* TGA format writes BGR ... */
-                    if (b > 255f)
-                    {
-                        b = 255f;
-                    }
-                    else if (b < 0f)
-                    {
-                        b = 0f;
-                    }
-                    var val = (byte)(b * scale);
-                    bw.s.Write(val);
+                if (g > 255f)
+                {
+                    g = 255f;
+                }
+                else if (g < 0f)
+                {
+                    g = 0f;
+                }
+                val = (byte)(g * scale);
+                bw.s.Write(val);
 
-                    if (g > 255f)
+                if (r > 255f)
+                {
+                    r = 255f;
+                }
+                else if (g < 0f)
+                {
+                    r = 0f;
+                }
+                val = (byte)(r * scale);
+                bw.s.Write(val);
+
+                if (write_alpha)
+                {
+                    float a = comps[alpha_channel].data[index];
+                    if (a > 255f)
                     {
-                        g = 255f;
+                        a = 255f;
                     }
                     else if (g < 0f)
                     {
-                        g = 0f;
+                        a = 0f;
                     }
-                    val = (byte)(g * scale);
+                    val = (byte)(a * scale);
                     bw.s.Write(val);
-
-                    if (r > 255f)
-                    {
-                        r = 255f;
-                    }
-                    else if (g < 0f)
-                    {
-                        r = 0f;
-                    }
-                    val = (byte)(r * scale);
-                    bw.s.Write(val);
-
-                    if (write_alpha)
-                    {
-                        float a = comps[alpha_channel].data[index];
-                        if (a > 255f)
-                        {
-                            a = 255f;
-                        }
-                        else if (g < 0f)
-                        {
-                            a = 0f;
-                        }
-                        val = (byte)(a * scale);
-                        bw.s.Write(val);
-                    }
                 }
             }
         }

@@ -191,7 +191,7 @@ internal sealed class TileCoder
 
         var tile = new TcdTile();
 
-        _tcd_image.tiles = new TcdTile[1] { tile };
+        _tcd_image.tiles = [tile];
         tile.comps = new TcdTilecomp[image.numcomps];
         for(var i = 0; i < tile.comps.Length; i++)
             tile.comps[i] = new TcdTilecomp();
@@ -2160,38 +2160,34 @@ internal sealed class TileCoder
     private void DumpTilcomp(string txt, bool data_win = false)
     {
         var tile = _tcd_image.tiles[0];
-        using (var file = new System.IO.StreamWriter("c:/temp/j2k_dump.txt", append: false))
+        using var file = new System.IO.StreamWriter("c:/temp/j2k_dump.txt", append: false);
+        for (var comp_nr = 0; comp_nr < tile.numcomps; comp_nr++)
         {
-            for (var comp_nr = 0; comp_nr < tile.numcomps; comp_nr++)
+            file.Write(txt + " int values for component " + (comp_nr + 1) + "\n");
+            var d = data_win ? tile.comps[comp_nr].data_win : tile.comps[comp_nr].data;
+            for (uint c = 0; c < d.Length; c++)
             {
-                file.Write(txt + " int values for component " + (comp_nr + 1) + "\n");
-                var d = data_win ? tile.comps[comp_nr].data_win : tile.comps[comp_nr].data;
-                for (uint c = 0; c < d.Length; c++)
-                {
-                    file.Write(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{1}: {0}\n", d[c], c));
-                }
+                file.Write(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{1}: {0}\n", d[c], c));
             }
         }
     }
 
     private void DumpCblks(string txt)
     {
-        using (var file = new System.IO.StreamWriter("c:/temp/j2k_dump.txt"))
+        using var file = new System.IO.StreamWriter("c:/temp/j2k_dump.txt");
+        var nr = 1;
+        foreach (var job in T1Decode(false, (f) => true))
         {
-            var nr = 1;
-            foreach (var job in T1Decode(false, (f) => true))
+            var cb = job.cblk;
+            file.Write(txt+"Coblk " + nr++ + " (" + cb.numchunks + " chunks):\n");
+            var d = job.cblk.chunk_data;
+            for (var c = 0; c < cb.numchunks; c++)
             {
-                var cb = job.cblk;
-                file.Write(txt+"Coblk " + nr++ + " (" + cb.numchunks + " chunks):\n");
-                var d = job.cblk.chunk_data;
-                for (var c = 0; c < cb.numchunks; c++)
+                file.Write(" -- Chunk " + (c + 1) + ":\n");
+                var chunk = cb.chunks[c];
+                for (int i = chunk.data_pt, b = 0, end = i + chunk.len; i < end; i++, b++)
                 {
-                    file.Write(" -- Chunk " + (c + 1) + ":\n");
-                    var chunk = cb.chunks[c];
-                    for (int i = chunk.data_pt, b = 0, end = i + chunk.len; i < end; i++, b++)
-                    {
-                        file.Write("{1}: {0}\n", d[i], b);
-                    }
+                    file.Write("{1}: {0}\n", d[i], b);
                 }
             }
         }
@@ -2199,9 +2195,31 @@ internal sealed class TileCoder
 
     private void DumpCblk(int nr, TcdCblkEnc cb)
     {
-        using (var file = new System.IO.StreamWriter("c:/temp/j2k_dump.txt", append: nr != 0))
+        using var file = new System.IO.StreamWriter("c:/temp/j2k_dump.txt", append: nr != 0);
+        file.Write("Enc cblk " + nr + " (" + cb.totalpasses + " passes):\n");
+        var d = cb.data;
+        var len = cb.totalpasses == 0 ? 0 : cb.passes[cb.totalpasses - 1].rate;
+
+        for (int c = 0, dp = cb.data_pt; c < cb.data_size && c < len; c++)
         {
-            file.Write("Enc cblk " + nr + " (" + cb.totalpasses + " passes):\n");
+            file.Write("{1}: {0}\n", d[dp + c], c);
+        }
+    }
+
+    private void DumpEncCblks(string txt)
+    {
+        using var file = new System.IO.StreamWriter("c:/temp/j2k_dump.txt");
+        var nr = 1;
+        foreach (var ob in Tier1Coding.EncodeCblks(_tcd_image.tiles[0], _tcp, null, 0, (f) => true))
+        {
+            if (nr == 32)
+            {
+                nr = nr;
+            }
+
+            var job = (Tier1Coding.T1CBLKEncodeProcessingJob)ob;
+            var cb = job.cblk;
+            file.Write(txt + "Enc cblk " + nr++ + " (" + cb.totalpasses + " passes, " + cb.numbps + " bps):\n");
             var d = cb.data;
             var len = cb.totalpasses == 0 ? 0 : cb.passes[cb.totalpasses - 1].rate;
 
@@ -2212,64 +2230,36 @@ internal sealed class TileCoder
         }
     }
 
-    private void DumpEncCblks(string txt)
-    {
-        using (var file = new System.IO.StreamWriter("c:/temp/j2k_dump.txt"))
-        {
-            var nr = 1;
-            foreach (var ob in Tier1Coding.EncodeCblks(_tcd_image.tiles[0], _tcp, null, 0, (f) => true))
-            {
-                if (nr == 32)
-                {
-                    nr = nr;
-                }
-
-                var job = (Tier1Coding.T1CBLKEncodeProcessingJob)ob;
-                var cb = job.cblk;
-                file.Write(txt + "Enc cblk " + nr++ + " (" + cb.totalpasses + " passes, " + cb.numbps + " bps):\n");
-                var d = cb.data;
-                var len = cb.totalpasses == 0 ? 0 : cb.passes[cb.totalpasses - 1].rate;
-
-                for (int c = 0, dp = cb.data_pt; c < cb.data_size && c < len; c++)
-                {
-                    file.Write("{1}: {0}\n", d[dp + c], c);
-                }
-            }
-        }
-    }
-
     private void DumpAreaCblks(string txt)
     {
         if (WholeTileDecoding)
             throw new NotSupportedException("This function can only be used with area decoding.");
         var tile = _tcd_image.tiles[0];
 
-        using (var file = new System.IO.StreamWriter("c:/temp/cblks.txt"))
+        using var file = new System.IO.StreamWriter("c:/temp/cblks.txt");
+        var nr = 1;
+        for (var compno = 0; compno < tile.numcomps; compno++)
         {
-            var nr = 1;
-            for (var compno = 0; compno < tile.numcomps; compno++)
+            var tilec = tile.comps[compno];
+            for (var resno = 0; resno < tilec.minimum_num_resolutions; ++resno)
             {
-                var tilec = tile.comps[compno];
-                for (var resno = 0; resno < tilec.minimum_num_resolutions; ++resno)
+                var res = tilec.resolutions[resno];
+                for (var bandno = 0; bandno < res.numbands; ++bandno)
                 {
-                    var res = tilec.resolutions[resno];
-                    for (var bandno = 0; bandno < res.numbands; ++bandno)
+                    var band = res.bands[bandno];
+                    for (var precno = 0; precno < res.pw * res.ph; ++precno)
                     {
-                        var band = res.bands[bandno];
-                        for (var precno = 0; precno < res.pw * res.ph; ++precno)
+                        var precinct = band.precincts[precno];
+                        for (var cblkno = 0; cblkno < precinct.cw * precinct.ch; ++cblkno)
                         {
-                            var precinct = band.precincts[precno];
-                            for (var cblkno = 0; cblkno < precinct.cw * precinct.ch; ++cblkno)
+                            var cb = precinct.dec[cblkno];
+                            if (cb.decoded_data != null)
                             {
-                                var cb = precinct.dec[cblkno];
-                                if (cb.decoded_data != null)
+                                var d = cb.decoded_data;
+                                file.Write(txt + "Coblk " + nr++ + ":\n");
+                                for (var c = 0; c < d.Length; c++)
                                 {
-                                    var d = cb.decoded_data;
-                                    file.Write(txt + "Coblk " + nr++ + ":\n");
-                                    for (var c = 0; c < d.Length; c++)
-                                    {
-                                        file.Write("{1}: {0}\n", d[c], c);
-                                    }
+                                    file.Write("{1}: {0}\n", d[c], c);
                                 }
                             }
                         }

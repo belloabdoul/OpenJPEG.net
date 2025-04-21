@@ -18,7 +18,7 @@ public static class Scaler
             return pixels;
 
         //Array for finished pixels.
-        var dest = new int[width * height];
+        var dest = GC.AllocateUninitializedArray<int>(width * height);
 
         //We calculate the size ratio differences between width and height. They are split up
         //into a "integer_part" that contains the result of the division and a "fractional_part"

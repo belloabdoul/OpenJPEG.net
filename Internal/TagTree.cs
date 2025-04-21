@@ -32,6 +32,7 @@
 #endregion
 using System;
 using System.Diagnostics;
+using CommunityToolkit.HighPerformance.Buffers;
 
 namespace OpenJpeg.Internal;
 
@@ -297,8 +298,9 @@ internal sealed class TagTree
     /// <remarks>2.5.1 - opj_tgt_encode</remarks>
     internal void Encode(WBIO bio, int leafno, uint threshold)
     {
-        var stk = new TagNode[31];
-
+        using var buffer = MemoryOwner<TagNode>.Allocate(31);
+        var stk = buffer.Span;
+        
         //C# Setting it to -1 so that we can detect
         //   that it hasn't moved. Org. impl does a
         //   pointer comparison instead.
@@ -349,7 +351,8 @@ internal sealed class TagTree
     //2.5
     internal bool Decode(BIO bio, uint leafno, uint threshold)
     {
-        var stk = new TagNode[31];
+        using var buffer = MemoryOwner<TagNode>.Allocate(31);
+        var stk = buffer.Span;
         var stk_pos = -1;
 
         //Builds a list that goes from "great grandparent"

@@ -8,9 +8,9 @@ namespace OpenJpeg.Internal;
 /// </summary>
 internal static class MCT
 {
-    private static readonly double[] mct_norms = { 1.732, .8292, .8292 };
-    private static readonly double[] mct_norms_real = { 1.732, 1.805, 1.573 };
-    internal static uint[] ELEMENT_SIZE = { 2, 4, 4, 8 };
+    private static readonly double[] mct_norms = [1.732, .8292, .8292];
+    private static readonly double[] mct_norms_real = [1.732, 1.805, 1.573];
+    internal static uint[] ELEMENT_SIZE = [2, 4, 4, 8];
 
     internal static void CalculateNorms(double[] pNorms,
         uint pNbComps,
@@ -68,14 +68,14 @@ internal static class MCT
         uint multiplicator = 1 << 13;
 
         //C# Org impl creates two arrays with one malloc (that's why there's data.Length + NMatCoeff)
-        var current_data = new int[data.Length];
-        var current_matrix = new int[NMatCoeff];
+        var current_data = GC.AllocateUninitializedArray<int>(data.Length);
+        var current_matrix = GC.AllocateUninitializedArray<int>((int)NMatCoeff);
 
         for (var i = 0; i < current_matrix.Length; i++)
             current_matrix[i] = (int)(mct[i] * multiplicator);
 
         //C# d = pointer on data's second dimension
-        var d = new int[data.Length];
+        var d = GC.AllocateUninitializedArray<int>(data.Length);
         for (int i = 0, cm_ptr = 0; i < n; i++)
         {
             //Current data is filled up with one int from each component
@@ -110,8 +110,8 @@ internal static class MCT
     /// </remarks>
     internal static void DecodeCustom(float[] mct, int n, int[][] data, uint n_comps, bool isSigned)
     {
-        var current_data = new IntOrFloat[n_comps];
-        var current_result = new IntOrFloat[n_comps]; 
+        var current_data = GC.AllocateUninitializedArray<IntOrFloat>((int)n_comps);
+        var current_result = GC.AllocateUninitializedArray<IntOrFloat>((int)n_comps); 
 
         for (int i = 0, d = 0; i < n; i++)
         {
@@ -133,8 +133,8 @@ internal static class MCT
     //2.5 - opj_mct_encode_real
     internal static void EncodeReal(int[] c0, int[] c1, int[] c2, int n)
     {
-        IntOrFloat r = new IntOrFloat(), g = new IntOrFloat(), b = new IntOrFloat();
-        IntOrFloat y = new IntOrFloat(), u = new IntOrFloat(), v = new IntOrFloat();
+        IntOrFloat r = new(), g = new(), b = new();
+        IntOrFloat y = new(), u = new(), v = new();
         for (var i = 0; i < n; ++i)
         {
             r.I = c0[i];

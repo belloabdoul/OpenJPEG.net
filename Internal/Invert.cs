@@ -14,10 +14,10 @@ internal static class Invert
 		var permutation_size = n_compo;
 		var swap_size = n_compo;
             
-		var permutations = new int[permutation_size];
-		var double_data = new float[swap_size];
-		var dest_temp = new float[swap_size];
-		var swap_area = new float[swap_size];
+		var permutations = GC.AllocateUninitializedArray<int>(permutation_size);
+		var double_data = GC.AllocateUninitializedArray<float>(swap_size);
+		var dest_temp = GC.AllocateUninitializedArray<float>(swap_size);
+		var swap_area = GC.AllocateUninitializedArray<float>(swap_size);
 
 		if (!lupDecompose(SrcMatrix, permutations, double_data, n_compo))
 			return false;

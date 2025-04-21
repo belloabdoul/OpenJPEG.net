@@ -31,6 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 #endregion
+
+using System;
 using System.IO;
 using System.Diagnostics;
 using OpenJpeg.Internal;
@@ -173,7 +175,7 @@ internal sealed class Jp2
 
         // Image Header box 
         _numcomps = image.numcomps;
-        _comps = new JP2Comps[_numcomps];
+        _comps = GC.AllocateUninitializedArray<JP2Comps>((int)_numcomps);
         _h = image.y1 - image.y0;
         _w = image.x1 - image.x0;
         //Setting bits per componet
@@ -256,7 +258,7 @@ internal sealed class Jp2
         if (alphaCount == 1U)
         { /* if here, we know what we can do */
             _color ??= new JP2Color();
-            _color.channel_definitions = new JP2cdefInfo[image.numcomps];
+            _color.channel_definitions = GC.AllocateUninitializedArray<JP2cdefInfo>((int)image.numcomps);
 
             uint i = 0;
             for (; i < colorChannels; i++)
@@ -653,7 +655,7 @@ internal sealed class Jp2
                 }
             }
 
-            var pcolUsage = new bool[nrChannels];
+            var pcolUsage = GC.AllocateUninitializedArray<bool>(nrChannels);
             if (pcolUsage == null)
             {
                 _cinfo.Error("Unexpected OOM.");
@@ -772,7 +774,7 @@ internal sealed class Jp2
         }
 
         var oldComps = image.comps;
-        var newComps = new ImageComp[nrChannels];
+        var newComps = GC.AllocateUninitializedArray<ImageComp>(nrChannels);
 
         for(i = 0; i < nrChannels; ++i)
         {
@@ -791,7 +793,7 @@ internal sealed class Jp2
             }
 
             /* Palette mapping: */
-            newComps[pcol].data = new int[oldComps[cmp].w * oldComps[cmp].h];
+            newComps[pcol].data = GC.AllocateUninitializedArray<int>((int)(oldComps[cmp].w * oldComps[cmp].h));
             newComps[pcol].prec = channelSize[i];
             newComps[pcol].sgnd = channelSign[i] != 0;
         }

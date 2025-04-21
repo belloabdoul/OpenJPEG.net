@@ -90,8 +90,8 @@ internal static class ht_dec
     /// 3 bits for suffix length
     /// 3 bits in the MSB for prefix value (u_pfx in Table 3 of ITU T.814)
     /// </summary>
-    private static readonly byte[] dec = new byte[] 
-    { // the index is the prefix codeword
+    private static readonly byte[] dec =
+    [ // the index is the prefix codeword
         3 | (5 << 2) | (5 << 5),        //000 == 000, prefix codeword "000"
         1 | (0 << 2) | (1 << 5),        //001 == xx1, prefix codeword "1"
         2 | (0 << 2) | (2 << 5),        //010 == x10, prefix codeword "01"
@@ -100,7 +100,7 @@ internal static class ht_dec
         1 | (0 << 2) | (1 << 5),        //101 == xx1, prefix codeword "1"
         2 | (0 << 2) | (2 << 5),        //110 == x10, prefix codeword "01"
         1 | (0 << 2) | (1 << 5)         //111 == xx1, prefix codeword "1"
-    };
+    ];
 
     /// <summary>
     /// Decode initial UVLC to get the u value (or u_q)
@@ -277,9 +277,10 @@ internal static class ht_dec
         /// <summary>
         /// MEL exponents
         /// </summary>
-        private static readonly int[] exp = new int[] {
+        private static readonly int[] exp =
+        [
             0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 5
-        };
+        ];
 
         /// <summary>
         /// The source data array
@@ -420,7 +421,7 @@ internal static class ht_dec
                     k = k + 1 < 12 ? k + 1 : 12;//increment, max is 12
                     tmp <<= 1; // consume one bit from tmp
                     bits -= 1;
-                    run = run << 1; // a stretch of zeros not terminating in one
+                    run <<= 1; // a stretch of zeros not terminating in one
                 } 
                 else
                 {
@@ -493,18 +494,18 @@ internal static class ht_dec
             var t = val & 0xFF;
             var unstuff = (val & 0xFF) == 0xFF ? 1 : 0; // true if the byte needs unstuffing
             bits -= unstuff;                          // there is one less bit in t if unstuffing is needed
-            t = t << (8 - unstuff);                   // move up to make room for the next byte
+            t <<= (8 - unstuff);                   // move up to make room for the next byte
 
             //this is a repeat of the above
             t |= (val >> 8) & 0xFF;
             unstuff = ((val >> 8) & 0xFF) == 0xFF ? 1 : 0;
             bits -= unstuff;
-            t = t << (8 - unstuff);
+            t <<= (8 - unstuff);
 
             t |= (val >> 16) & 0xFF;
             unstuff = ((val >> 16) & 0xFF) == 0xFF ? 1 : 0;
             bits -= unstuff;
-            t = t << (8 - unstuff);
+            t <<= (8 - unstuff);
 
             t |= (val >> 24) & 0xFF;
             this.unstuff = ((val >> 24) & 0xFF) == 0xFF;

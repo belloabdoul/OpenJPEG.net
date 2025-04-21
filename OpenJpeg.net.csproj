@@ -17,4 +17,7 @@
     <DefineConstants>TRACE;TEST_MATH_MODE</DefineConstants>
     <Optimize>true</Optimize>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.0" />
+  </ItemGroup>
 </Project>

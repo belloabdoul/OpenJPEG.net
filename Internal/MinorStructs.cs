@@ -148,16 +148,16 @@ internal struct ShortOrIntOrFloatOrDoubleAr
         switch (Type)
         {
             case ELEMENT_TYPE.INT16:
-                SA = new short[size];
+                SA = GC.AllocateUninitializedArray<short>(size);
                 break;
             case ELEMENT_TYPE.INT32:
-                IA = new int[size];
+                IA = GC.AllocateUninitializedArray<int>(size);
                 break;
             case ELEMENT_TYPE.FLOAT:
-                FA = new float[size];
+                FA = GC.AllocateUninitializedArray<float>(size);
                 break;
             case ELEMENT_TYPE.DOUBLE:
-                DA = new double[size];
+                DA = GC.AllocateUninitializedArray<double>(size);
                 break;
         }
     }
@@ -256,19 +256,19 @@ internal struct ShortOrIntOrFloatOrDoubleAr
         switch (Type)
         {
             case ELEMENT_TYPE.INT16:
-                SA = new short[bytes.Length / 2];
+                SA = GC.AllocateUninitializedArray<short>(bytes.Length / 2);
                 ar = SA;
                 break;
             case ELEMENT_TYPE.INT32:
-                IA = new int[bytes.Length / 4];
+                IA = GC.AllocateUninitializedArray<int>(bytes.Length / 4);
                 ar = IA;
                 break;
             case ELEMENT_TYPE.FLOAT:
-                FA = new float[bytes.Length / 4];
+                FA = GC.AllocateUninitializedArray<float>(bytes.Length / 4);
                 ar = FA;
                 break;
             case ELEMENT_TYPE.DOUBLE:
-                DA = new double[bytes.Length / 8];
+                DA = GC.AllocateUninitializedArray<double>(bytes.Length / 8);
                 ar = DA;
                 break;
             default:

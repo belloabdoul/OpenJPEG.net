@@ -205,11 +205,9 @@ public sealed class CompressionInfo
         {
             return _dFuncs.ReadHeader(out image);
         }
-        else
-        {
-            image = null;
-            return false;
-        }
+
+        image = null;
+        return false;
     }
 
     //2.5

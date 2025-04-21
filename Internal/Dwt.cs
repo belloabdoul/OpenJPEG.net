@@ -1,4 +1,5 @@
 ﻿#region License
+
 /*
  * Copyright (c) 2002-2007, Communications and Remote Sensing Laboratory, Universite catholique de Louvain (UCL), Belgium
  * Copyright (c) 2002-2007, Professor Benoit Macq
@@ -29,7 +30,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+
 #endregion
+
 //STANDARD_SLOW_VERSION Uses the OpenJpeg 2.1 codepath for DWT decoding.
 //#define STANDARD_SLOW_VERSION
 using System;
@@ -51,7 +54,6 @@ namespace OpenJpeg.Internal;
 /// </remarks>
 internal static class Dwt
 {
-
     #region Consts
 
     private const float K = 1.230174105f;
@@ -76,28 +78,31 @@ internal static class Dwt
     /// <summary>
     /// This table contains the norms of the 9-7 wavelets for different bands.
     /// </summary>
-    private static readonly double[][] DwtNormsReal = {
-        new double[] {1.000, 1.965, 4.177, 8.403, 16.90, 33.84, 67.69, 135.3, 270.6, 540.9},
-        new double[] {2.022, 3.989, 8.355, 17.04, 34.27, 68.63, 137.3, 274.6, 549.0},
-        new double[] {2.022, 3.989, 8.355, 17.04, 34.27, 68.63, 137.3, 274.6, 549.0},
-        new double[] {2.080, 3.865, 8.307, 17.18, 34.71, 69.59, 139.3, 278.6, 557.2}
-    };
+    private static readonly double[][] DwtNormsReal =
+    [
+        [1.000, 1.965, 4.177, 8.403, 16.90, 33.84, 67.69, 135.3, 270.6, 540.9],
+        [2.022, 3.989, 8.355, 17.04, 34.27, 68.63, 137.3, 274.6, 549.0],
+        [2.022, 3.989, 8.355, 17.04, 34.27, 68.63, 137.3, 274.6, 549.0],
+        [2.080, 3.865, 8.307, 17.18, 34.71, 69.59, 139.3, 278.6, 557.2]
+    ];
 
     /// <summary>
     /// This table contains the norms of the 5-3 wavelets for different bands.
     /// </summary>
-    private static readonly double[][] DwtNorms = {
-        new double[] {1.000, 1.500, 2.750, 5.375, 10.68, 21.34, 42.67, 85.33, 170.7, 341.3},
-        new double[] {1.038, 1.592, 2.919, 5.703, 11.33, 22.64, 45.25, 90.48, 180.9},
-        new double[] {1.038, 1.592, 2.919, 5.703, 11.33, 22.64, 45.25, 90.48, 180.9},
-        new double[] {.7186, .9218, 1.586, 3.043, 6.019, 12.01, 24.00, 47.97, 95.93}
-    };
+    private static readonly double[][] DwtNorms =
+    [
+        [1.000, 1.500, 2.750, 5.375, 10.68, 21.34, 42.67, 85.33, 170.7, 341.3],
+        [1.038, 1.592, 2.919, 5.703, 11.33, 22.64, 45.25, 90.48, 180.9],
+        [1.038, 1.592, 2.919, 5.703, 11.33, 22.64, 45.25, 90.48, 180.9],
+        [.7186, .9218, 1.586, 3.043, 6.019, 12.01, 24.00, 47.97, 95.93]
+    ];
 
     #endregion
 
     private delegate void Encodefunc(int[] a, int dn, int sn, int cas);
 
-    private delegate void EncodeAndDeinterleaveVfunc(int[] a, int aPt, int[] tmp, uint height, bool even, uint strideWidth, uint cols);
+    private delegate void EncodeAndDeinterleaveVfunc(int[] a, int aPt, int[] tmp, uint height, bool even,
+        uint strideWidth, uint cols);
 
     private delegate void EncodeAndDeinterleaveHOneRowfunc(int[] row, int rowPt, int[] tmp, uint width, bool even);
 
@@ -116,17 +121,17 @@ internal static class Dwt
     /// <remarks>2.5 - opj_dwt_encode_real</remarks>
     internal static bool EncodeReal(TileCoder tcd, TcdTilecomp tilec)
     {
-        return EncodeProcedure(tilec, EncodeAndDeinterleaveV_Real, EncodeAndDeinterleaveH_OneRowReal, tcd.DisableMultiThreading);
+        return EncodeProcedure(tilec, EncodeAndDeinterleaveV_Real, EncodeAndDeinterleaveH_OneRowReal,
+            tcd.DisableMultiThreading);
     }
 
     //2.5 - opj_dwt_encode_procedure
-    private static bool EncodeProcedure(TcdTilecomp tilec, 
-        EncodeAndDeinterleaveVfunc encodeAndDeinterleaveV, 
-        EncodeAndDeinterleaveHOneRowfunc encodeAndDeinterleaveHOneRow, 
+    private static bool EncodeProcedure(TcdTilecomp tilec,
+        EncodeAndDeinterleaveVfunc encodeAndDeinterleaveV,
+        EncodeAndDeinterleaveHOneRowfunc encodeAndDeinterleaveHOneRow,
         bool disableMultiThreading)
     {
-        int numThreads;
-        ThreadPool.GetAvailableThreads(out numThreads, out _);
+        ThreadPool.GetAvailableThreads(out var numThreads, out _);
         numThreads = disableMultiThreading ? 1 : Math.Min(Environment.ProcessorCount, numThreads);
 
         var tiledp = tilec.data;
@@ -142,170 +147,179 @@ internal static class Dwt
         if (dataSize > Constants.SizeMax / (NbEltsV8 * sizeof(int)))
             return false;
         dataSize *= NbEltsV8; //C# org impl is number of bytes, here it's number of ints
-        var bj = new int[dataSize];
+        var bj = GC.AllocateUninitializedArray<int>((int)dataSize);
         var i = l;
 
-        using (var reset = new ManualResetEvent(false))
+        using var reset = new ManualResetEvent(false);
+        while (i-- != 0)
         {
-            while (i-- != 0)
+            //Width of the resolution level computed
+            var rw = (uint)(tr[curRes].x1 - tr[curRes].x0);
+
+            //Height of the resolution level computed
+            var rh = (uint)(tr[curRes].y1 - tr[curRes].y0);
+
+            //Width of the resolution level once lower than computed one
+            var rw1 = (uint)(tr[lastRes].x1 - tr[lastRes].x0);
+
+            //Height of the resolution level once lower than computed one 
+            var rh1 = (uint)(tr[lastRes].y1 - tr[lastRes].y0);
+
+            //0 = non inversion on vertical filtering 1 = inversion between low-pass and high-pass filtering
+            var casRow = tr[curRes].x0 & 1;
+
+            //0 = non inversion on horizontal filtering 1 = inversion between low-pass and high-pass filtering
+            var casCol = tr[curRes].y0 & 1;
+
+            var sn = (int)rh1;
+            var dn = (int)(rh - rh1);
+
+            // Perform vertical pass
+            if (numThreads <= 1 || rw < 2 * NbEltsV8)
             {
-                //Width of the resolution level computed
-                var rw = (uint)(tr[curRes].x1 - tr[curRes].x0);
-
-                //Height of the resolution level computed
-                var rh = (uint)(tr[curRes].y1 - tr[curRes].y0);
-
-                //Width of the resolution level once lower than computed one
-                var rw1 = (uint)(tr[lastRes].x1 - tr[lastRes].x0);
-
-                //Height of the resolution level once lower than computed one 
-                var rh1 = (uint)(tr[lastRes].y1 - tr[lastRes].y0);
-
-                //0 = non inversion on vertical filtering 1 = inversion between low-pass and high-pass filtering
-                var casRow = tr[curRes].x0 & 1;
-
-                //0 = non inversion on horizontal filtering 1 = inversion between low-pass and high-pass filtering
-                var casCol = tr[curRes].y0 & 1;
-
-                var sn = (int)rh1;
-                var dn = (int)(rh - rh1);
-
-                // Perform vertical pass
-                if (numThreads <= 1 || rw < 2 * NbEltsV8)
+                var j = 0;
+                for (; j + NbEltsV8 - 1 < rw; j += NbEltsV8)
                 {
-                    var j = 0;
-                    for (; j + NbEltsV8 - 1 < rw; j += NbEltsV8)
-                    {
-                        encodeAndDeinterleaveV(tiledp, j, bj, rh, casCol == 0, w, NbEltsV8);
-                    }
-                    if (j < rw)
-                    {
-                        encodeAndDeinterleaveV(tiledp, j, bj, rh, casCol == 0, w, rw - (uint)j);
-                    }
-                }
-                else
-                {
-                    var numJobs = numThreads;
-
-                    if (rw < numJobs)
-                    {
-                        numJobs = (int)rw;
-                    }
-
-                    var stepJ = rw / (uint)numJobs / NbEltsV8 * NbEltsV8;
-
-                    reset.Reset();
-                    //Alternativly, we can set this to num_jobs and remove the Interlocked.Increment
-                    //and the Interlocked.Decrement after the for loop
-                    var nThreadWorkers = 1;
-
-                    for (uint j = 0; j < numJobs; j++)
-                    {
-                        var job = new EncodeVJob(
-                            new DwtLocal() { 
-                                Mem = new int[dataSize],
-                                Dn = dn,
-                                Sn = sn,
-                                Cas = casCol
-                            },
-                            rh,
-                            w,
-                            tiledp,
-                            0,
-                            j * stepJ,
-                            j + 1 == numJobs ? rw : (j + 1) * stepJ,
-                            encodeAndDeinterleaveV
-                        );
-
-                        Interlocked.Increment(ref nThreadWorkers);
-                        ThreadPool.QueueUserWorkItem((x) =>
-                        {
-                            try { encode_v_func((EncodeVJob)x); }
-                            finally
-                            {
-                                if (Interlocked.Decrement(ref nThreadWorkers) == 0)
-                                    reset.Set();
-                            }
-                        }, job);
-                    }
-                    if (Interlocked.Decrement(ref nThreadWorkers) == 0)
-                        reset.Set();
-                    reset.WaitOne();
+                    encodeAndDeinterleaveV(tiledp, j, bj, rh, casCol == 0, w, NbEltsV8);
                 }
 
-                sn = (int)rw1;
-                dn = (int)(rw - rw1);
-
-                // Perform horizontal pass
-                if (numThreads <= 1 || rh <= 1)
+                if (j < rw)
                 {
-                    for (var j = 0; j < rh; j++)
-                    {
-                        encodeAndDeinterleaveHOneRow(tiledp, j * (int)w, bj, rw, casRow == 0);
-                    }
+                    encodeAndDeinterleaveV(tiledp, j, bj, rh, casCol == 0, w, rw - (uint)j);
                 }
-                else
-                {
-                    var numJobs = numThreads;
-
-                    if (rh < numJobs)
-                    {
-                        numJobs = (int)rh;
-                    }
-
-                    var stepJ = rh / (uint)numJobs;
-
-                    reset.Reset();
-                    //Alternativly, we can set this to num_jobs and remove the Interlocked.Increment
-                    //and the Interlocked.Decrement after the for loop
-                    var nThreadWorkers = 1;
-
-                    for (uint j = 0; j < numJobs; j++)
-                    {
-                        var maxJ = (j + 1) * stepJ;
-                        if (j == numJobs - 1)
-                            maxJ = rh;
-
-                        var job = new EncodeHJob(
-                            new DwtLocal()
-                            {
-                                Mem = new int[dataSize],
-                                Dn = dn,
-                                Sn = sn,
-                                Cas = casRow
-                            },
-                            rw,
-                            w,
-                            tiledp,
-                            0,
-                            j * stepJ,
-                            maxJ,
-                            encodeAndDeinterleaveHOneRow
-                        );
-
-                        Interlocked.Increment(ref nThreadWorkers);
-                        ThreadPool.QueueUserWorkItem((x) =>
-                        {
-                            try { encode_h_func((EncodeHJob)x); }
-                            finally
-                            {
-                                if (Interlocked.Decrement(ref nThreadWorkers) == 0)
-                                    reset.Set();
-                            }
-                        }, job);
-                    }
-                    if (Interlocked.Decrement(ref nThreadWorkers) == 0)
-                        reset.Set();
-                    reset.WaitOne();
-                }
-
-                curRes = lastRes;
-
-                lastRes--;
             }
+            else
+            {
+                var numJobs = numThreads;
+
+                if (rw < numJobs)
+                {
+                    numJobs = (int)rw;
+                }
+
+                var stepJ = rw / (uint)numJobs / NbEltsV8 * NbEltsV8;
+
+                reset.Reset();
+                //Alternativly, we can set this to num_jobs and remove the Interlocked.Increment
+                //and the Interlocked.Decrement after the for loop
+                var nThreadWorkers = 1;
+
+                for (uint j = 0; j < numJobs; j++)
+                {
+                    var job = new EncodeVJob(
+                        new DwtLocal
+                        {
+                            Mem = GC.AllocateUninitializedArray<int>((int)dataSize),
+                            Dn = dn,
+                            Sn = sn,
+                            Cas = casCol
+                        },
+                        rh,
+                        w,
+                        tiledp,
+                        0,
+                        j * stepJ,
+                        j + 1 == numJobs ? rw : (j + 1) * stepJ,
+                        encodeAndDeinterleaveV
+                    );
+
+                    Interlocked.Increment(ref nThreadWorkers);
+                    ThreadPool.QueueUserWorkItem((x) =>
+                    {
+                        try
+                        {
+                            encode_v_func((EncodeVJob)x);
+                        }
+                        finally
+                        {
+                            if (Interlocked.Decrement(ref nThreadWorkers) == 0)
+                                reset.Set();
+                        }
+                    }, job);
+                }
+
+                if (Interlocked.Decrement(ref nThreadWorkers) == 0)
+                    reset.Set();
+                reset.WaitOne();
+            }
+
+            sn = (int)rw1;
+            dn = (int)(rw - rw1);
+
+            // Perform horizontal pass
+            if (numThreads <= 1 || rh <= 1)
+            {
+                for (var j = 0; j < rh; j++)
+                {
+                    encodeAndDeinterleaveHOneRow(tiledp, j * (int)w, bj, rw, casRow == 0);
+                }
+            }
+            else
+            {
+                var numJobs = numThreads;
+
+                if (rh < numJobs)
+                {
+                    numJobs = (int)rh;
+                }
+
+                var stepJ = rh / (uint)numJobs;
+
+                reset.Reset();
+                //Alternativly, we can set this to num_jobs and remove the Interlocked.Increment
+                //and the Interlocked.Decrement after the for loop
+                var nThreadWorkers = 1;
+
+                for (uint j = 0; j < numJobs; j++)
+                {
+                    var maxJ = (j + 1) * stepJ;
+                    if (j == numJobs - 1)
+                        maxJ = rh;
+
+                    var job = new EncodeHJob(
+                        new DwtLocal
+                        {
+                            Mem = GC.AllocateUninitializedArray<int>((int)dataSize),
+                            Dn = dn,
+                            Sn = sn,
+                            Cas = casRow
+                        },
+                        rw,
+                        w,
+                        tiledp,
+                        0,
+                        j * stepJ,
+                        maxJ,
+                        encodeAndDeinterleaveHOneRow
+                    );
+
+                    Interlocked.Increment(ref nThreadWorkers);
+                    ThreadPool.QueueUserWorkItem((x) =>
+                    {
+                        try
+                        {
+                            encode_h_func((EncodeHJob)x);
+                        }
+                        finally
+                        {
+                            if (Interlocked.Decrement(ref nThreadWorkers) == 0)
+                                reset.Set();
+                        }
+                    }, job);
+                }
+
+                if (Interlocked.Decrement(ref nThreadWorkers) == 0)
+                    reset.Set();
+                reset.WaitOne();
+            }
+
+            curRes = lastRes;
+
+            lastRes--;
         }
 
-        return true; ;
+        return true;
+        ;
     }
 
     //2.5 - opj_dwt_encode_h_func
@@ -323,11 +337,14 @@ internal static class Dwt
         uint j;
         for (j = job.MinJ; j + NbEltsV8 - 1 < job.MaxJ; j += NbEltsV8)
         {
-            job.EncodeAndDeinterleaveV(job.Tiled, job.Tiledp + (int)j, job.V.Mem, job.Rh, job.V.Cas == 0, job.W, NbEltsV8);
+            job.EncodeAndDeinterleaveV(job.Tiled, job.Tiledp + (int)j, job.V.Mem, job.Rh, job.V.Cas == 0, job.W,
+                NbEltsV8);
         }
+
         if (j < job.MaxJ)
         {
-            job.EncodeAndDeinterleaveV(job.Tiled, job.Tiledp + (int)j, job.V.Mem, job.Rh, job.V.Cas == 0, job.W, job.MaxJ - j);
+            job.EncodeAndDeinterleaveV(job.Tiled, job.Tiledp + (int)j, job.V.Mem, job.Rh, job.V.Cas == 0, job.W,
+                job.MaxJ - j);
         }
     }
 
@@ -349,6 +366,7 @@ internal static class Dwt
             if (mr < (w = (uint)(r.y1 - r.y0)))
                 mr = w;
         }
+
         return mr;
     }
 
@@ -363,8 +381,10 @@ internal static class Dwt
             var resno = bandno == 0 ? 0 : (bandno - 1) / 3 + 1;
             var orient = bandno == 0 ? 0 : (bandno - 1) % 3 + 1;
             var level = tccp.numresolutions - 1 - resno;
-            var gain = tccp.qmfbid == 0 ? 0U : orient == 0 ? 0U : orient == 1 || 
-                                                                  orient == 2 ? 1U : 2U;
+            var gain = tccp.qmfbid == 0 ? 0U :
+                orient == 0 ? 0U :
+                orient == 1 ||
+                orient == 2 ? 1U : 2U;
             if (tccp.qntsty == CCP_QNTSTY.NOQNT)
                 stepsize = 1.0;
             else
@@ -372,6 +392,7 @@ internal static class Dwt
                 var norm = GetNormReal(level, orient);
                 stepsize = (1 << (int)gain) / norm;
             }
+
             EncodeStepsize((int)Math.Floor(stepsize * 8192.0), (int)(prec + gain), out tccp.stepsizes[bandno]);
         }
     }
@@ -393,7 +414,7 @@ internal static class Dwt
         var p = MyMath.int_floorlog2(stepsize) - 13;
         var n = 11 - MyMath.int_floorlog2(stepsize);
         bandnoStepsize = new StepSize(
-            numbps - p, 
+            numbps - p,
             (n < 0 ? stepsize >> -n : stepsize << n) & 0x7ff);
     }
 
@@ -444,7 +465,7 @@ internal static class Dwt
 
         if (numres == 1U)
         {
-            var ret = sa.read(trMax.win_x0 - (uint)trMax.x0,
+            var ret = sa.Read(trMax.win_x0 - (uint)trMax.x0,
                 trMax.win_y0 - (uint)trMax.y0,
                 trMax.win_x1 - (uint)trMax.x0,
                 trMax.win_y1 - (uint)trMax.y0,
@@ -454,6 +475,7 @@ internal static class Dwt
             Debug.Assert(ret);
             return true;
         }
+
         ulong dataSize = MaxResolution(trAr, (int)numres);
         // overflow check
         // C# 
@@ -461,16 +483,14 @@ internal static class Dwt
         {
             return false;
         }
-        h.Wavelet = new float[dataSize * NbEltsV8];
+
+        h.Wavelet = GC.AllocateUninitializedArray<float>((int)(dataSize * NbEltsV8));
         v.Wavelet = h.Wavelet;
 
         for (uint resno = 1; resno < numres; resno++)
         {
             uint i, j;
             /* Window of interest subband-based coordinates */
-            uint winLlX0, winLlY0, winLlX1, winLlY1;
-            uint winHlX0, winHlX1;
-            uint winLhY0, winLhY1;
             /* Window of interest tile-resolution-based coordinates */
             uint winTrX0, winTrX1, winTrY0, winTrY1;
             /* Tile-resolution subband-based coordinates */
@@ -493,18 +513,18 @@ internal static class Dwt
             // LL band
             GetBandCoordinates(tilec, resno, 0,
                 winTcx0, winTcy0, winTcx1, winTcy1,
-                out winLlX0, out winLlY0,
-                out winLlX1, out winLlY1);
+                out var winLlX0, out var winLlY0,
+                out var winLlX1, out var winLlY1);
 
             // HL band
             GetBandCoordinates(tilec, resno, 1,
                 winTcx0, winTcy0, winTcx1, winTcy1,
-                out winHlX0, out _, out winHlX1, out _);
+                out var winHlX0, out _, out var winHlX1, out _);
 
             /* LH band */
             GetBandCoordinates(tilec, resno, 2,
                 winTcx0, winTcy0, winTcx1, winTcy1,
-                out _, out winLhY0, out _, out winLhY1);
+                out _, out var winLhY0, out _, out var winLhY1);
 
             /* Beware: band index for non-LL0 resolution are 0=HL, 1=LH and 2=HH */
             var trLlX0 = (uint)tr.bands[1].x0;
@@ -553,10 +573,10 @@ internal static class Dwt
                 winTrY1 = Math.Min(Math.Max(2 * winLhY1, 2 * winLlY1 + 1), rh);
             }
 
-            h.WinLX0 = winLlX0;
-            h.WinLX1 = winLlX1;
-            h.WinHX0 = winHlX0;
-            h.WinHX1 = winHlX1;
+            h.WinLx0 = winLlX0;
+            h.WinLx1 = winLlX1;
+            h.WinHx0 = winHlX0;
+            h.WinHx1 = winHlX1;
             for (j = 0; j + (NbEltsV8 - 1) < rh; j += NbEltsV8)
             {
                 if ((j + (NbEltsV8 - 1) >= winLlY0 && j < winLlY1) ||
@@ -565,7 +585,7 @@ internal static class Dwt
                 {
                     v8dwt_interleave_partial_h(h, sa, j, Math.Min(NbEltsV8, rh - j));
                     v8dwt_decode(h);
-                    if (!sa.write(winTrX0, j,
+                    if (!sa.Write(winTrX0, j,
                             winTrX1, j + NbEltsV8,
                             h.Wavelet, (int)winTrX0 * NbEltsV8, //C# Wavlet indexing, therefore mul with NB_ELTS_V8
                             NbEltsV8, 1, true))
@@ -582,7 +602,7 @@ internal static class Dwt
             {
                 v8dwt_interleave_partial_h(h, sa, j, rh - j);
                 v8dwt_decode(h);
-                if (!sa.write(winTrX0, j,
+                if (!sa.Write(winTrX0, j,
                         winTrX1, rh,
                         h.Wavelet, (int)winTrX0 * NbEltsV8,
                         NbEltsV8, 1, true))
@@ -591,17 +611,17 @@ internal static class Dwt
                 }
             }
 
-            v.WinLX0 = winLlY0;
-            v.WinLX1 = winLlY1;
-            v.WinHX0 = winLhY0;
-            v.WinHX1 = winLhY1;
+            v.WinLx0 = winLlY0;
+            v.WinLx1 = winLlY1;
+            v.WinHx0 = winLhY0;
+            v.WinHx1 = winLhY1;
             for (j = winTrX0; j < winTrX1; j += NbEltsV8)
             {
                 var nbElts = Math.Min(NbEltsV8, winTrX1 - j);
 
                 v8dwt_interleave_partial_v(v, sa, j, nbElts);
                 v8dwt_decode(v);
-                if (!sa.write(j, winTrY0,
+                if (!sa.Write(j, winTrY0,
                         j + nbElts, winTrY1,
                         v.Wavelet, (int)winTrY0 * NbEltsV8,
                         1, NbEltsV8, true))
@@ -612,7 +632,7 @@ internal static class Dwt
         }
 
         {
-            var ret = sa.read(
+            var ret = sa.Read(
                 trMax.win_x0 - (uint)trMax.x0,
                 trMax.win_y0 - (uint)trMax.y0,
                 trMax.win_x1 - (uint)trMax.x0,
@@ -645,10 +665,8 @@ internal static class Dwt
         //Height of the resolution level computed
         var rh = (uint)(res.y1 - res.y0);
 
-        var w = tilec.resolutions[tilec.minimum_num_resolutions - 1].x1 
+        var w = tilec.resolutions[tilec.minimum_num_resolutions - 1].x1
                 - tilec.resolutions[tilec.minimum_num_resolutions - 1].x0;
-
-        int numThreads;
 
         // Not entirely sure for the return code of w == 0 which is triggered per
         // https://github.com/uclouvain/openjpeg/issues/1505
@@ -656,7 +674,8 @@ internal static class Dwt
         {
             return true;
         }
-        ThreadPool.GetAvailableThreads(out numThreads, out _);
+
+        ThreadPool.GetAvailableThreads(out var numThreads, out _);
         numThreads = Math.Min(Environment.ProcessorCount, numThreads);
         if (disableMultiThreading)
             numThreads = 0;
@@ -671,229 +690,237 @@ internal static class Dwt
         h.Wavelet = new float[dataSize * NbEltsV8];
         v.Wavelet = h.Wavelet;
 
-        using (var reset = new ManualResetEvent(false))
+        using var reset = new ManualResetEvent(false);
+        while (--numres != 0)
         {
-            while (--numres != 0)
+            var ajAr = tilec.data;
+            int aj = 0, j;
+
+            h.Sn = (int)rw;
+            v.Sn = (int)rh;
+
+            res = resAr[++resArPos];
+
+            rw = (uint)(res.x1 - res.x0);
+            rh = (uint)(res.y1 - res.y0);
+
+            h.Dn = (int)(rw - (uint)h.Sn);
+            h.Cas = res.x0 % 2;
+
+            h.WinLx0 = 0;
+            h.WinLx1 = (uint)h.Sn;
+            h.WinHx0 = 0;
+            h.WinHx1 = (uint)h.Dn;
+
+            //C# impl. note
+            //Used to convert from float to the "int value" of the
+            //float. This is since the org impl. use a int array
+            //to store both float and int values
+            var fi = new IntOrFloat();
+
+            if (numThreads <= 1 || rh < 2 * NbEltsV8)
             {
-                var ajAr = tilec.data;
-                int aj = 0, j;
-
-                h.Sn = (int)rw;
-                v.Sn = (int)rh;
-
-                res = resAr[++resArPos];
-
-                rw = (uint)(res.x1 - res.x0);
-                rh = (uint)(res.y1 - res.y0);
-
-                h.Dn = (int)(rw - (uint)h.Sn);
-                h.Cas = res.x0 % 2;
-
-                h.WinLX0 = 0;
-                h.WinLX1 = (uint)h.Sn;
-                h.WinHX0 = 0;
-                h.WinHX1 = (uint)h.Dn;
-
-                //C# impl. note
-                //Used to convert from float to the "int value" of the
-                //float. This is since the org impl. use a int array
-                //to store both float and int values
-                var fi = new IntOrFloat();
-
-                if (numThreads <= 1 || rh < 2 * NbEltsV8)
+                for (j = 0; j + (NbEltsV8 - 1) < rh; j += NbEltsV8)
                 {
-                    for (j = 0; j + (NbEltsV8 - 1) < rh; j += NbEltsV8)
-                    {
-                        v8dwt_interleave_h(h, ajAr, aj, w, NbEltsV8);
-                        v8dwt_decode(h);
-
-                        //Copies that back into the aj array.
-                        // C# I'm unsure why it's split into two loops, that is probably an
-                        // optimalization.
-                        for (var k = 0; k < rw; k++)
-                        {
-                            //C# note: Org. impl stores the wavlet as a struct with eight
-                            //floating points. Here it's stored as a continuous array, this
-                            //is why we have to multiply k with 8. 
-                            var kWavelet = k * NbEltsV8;
-                            fi.F = h.Wavelet[kWavelet + 0];
-                            ajAr[aj + k] = fi.I;
-                            fi.F = h.Wavelet[kWavelet + 1];
-                            ajAr[aj + k + w] = fi.I;
-                            fi.F = h.Wavelet[kWavelet + 2];
-                            ajAr[aj + k + w * 2] = fi.I;
-                            fi.F = h.Wavelet[kWavelet + 3];
-                            ajAr[aj + k + w * 3] = fi.I;
-                        }
-                        for (var k = 0; k < rw; k++)
-                        {
-                            var kWavelet = k * NbEltsV8;
-                            fi.F = h.Wavelet[kWavelet + 4];
-                            ajAr[aj + k + w * 4] = fi.I;
-                            fi.F = h.Wavelet[kWavelet + 5];
-                            ajAr[aj + k + w * 5] = fi.I;
-                            fi.F = h.Wavelet[kWavelet + 6];
-                            ajAr[aj + k + w * 6] = fi.I;
-                            fi.F = h.Wavelet[kWavelet + 7];
-                            ajAr[aj + k + w * 7] = fi.I;
-                        }
-
-                        aj += w * NbEltsV8;
-                    }
-                }
-                else
-                {
-                    var numJobs = numThreads;
-
-                    if (rh / NbEltsV8 < numJobs)
-                    {
-                        numJobs = (int)rh / NbEltsV8;
-                    }
-
-                    var stepJ = rh / (uint)numJobs / NbEltsV8 * NbEltsV8;
-
-                    reset.Reset();
-                    //Alternativly, we can set this to num_jobs and remove the Interlocked.Increment
-                    //and the Interlocked.Decrement after the for loop
-                    var nThreadWorkers = 1;
-
-                    for (j = 0; j < numJobs; j++)
-                    {
-                        var job = new Dwt97DecodeHJob(
-                            h.Clone(), rw, (uint)w, ajAr, aj,
-                            j + 1 == numJobs ? (rh & unchecked((uint)~(NbEltsV8 - 1))) - (uint)j * stepJ : stepJ
-                        )
-                        {
-                            H =
-                            {
-                                Wavelet = new float[h.Wavelet.Length]
-                            }
-                        };
-
-                        aj += (int)(w * job.NbRows);
-
-                        Interlocked.Increment(ref nThreadWorkers);
-                        ThreadPool.QueueUserWorkItem((x) =>
-                        {
-                            try { dwt97_decode_h_func((Dwt97DecodeHJob)x); }
-                            finally
-                            {
-                                if (Interlocked.Decrement(ref nThreadWorkers) == 0)
-                                    reset.Set();
-                            }
-                        }, job);
-                    }
-                    if (Interlocked.Decrement(ref nThreadWorkers) == 0)
-                        reset.Set();
-                    reset.WaitOne();
-                    j = (int)(rh & unchecked((uint)~(NbEltsV8 - 1)));
-                }
-
-                if (j < rh)
-                {
-                        
-                    v8dwt_interleave_h(h, ajAr, aj, w, rh - (uint)j);
+                    v8dwt_interleave_h(h, ajAr, aj, w, NbEltsV8);
                     v8dwt_decode(h);
+
+                    //Copies that back into the aj array.
+                    // C# I'm unsure why it's split into two loops, that is probably an
+                    // optimalization.
+                    for (var k = 0; k < rw; k++)
+                    {
+                        //C# note: Org. impl stores the wavlet as a struct with eight
+                        //floating points. Here it's stored as a continuous array, this
+                        //is why we have to multiply k with 8. 
+                        var kWavelet = k * NbEltsV8;
+                        fi.F = h.Wavelet[kWavelet + 0];
+                        ajAr[aj + k] = fi.I;
+                        fi.F = h.Wavelet[kWavelet + 1];
+                        ajAr[aj + k + w] = fi.I;
+                        fi.F = h.Wavelet[kWavelet + 2];
+                        ajAr[aj + k + w * 2] = fi.I;
+                        fi.F = h.Wavelet[kWavelet + 3];
+                        ajAr[aj + k + w * 3] = fi.I;
+                    }
 
                     for (var k = 0; k < rw; k++)
                     {
-                        int kWavelet = k * NbEltsV8, ajk = aj + k;
-                        for (uint l = 0; l < rh - j; l++)
-                        {
-                            fi.F = h.Wavelet[kWavelet + l];
-                            ajAr[ajk + w * l] = fi.I;
-                        }
+                        var kWavelet = k * NbEltsV8;
+                        fi.F = h.Wavelet[kWavelet + 4];
+                        ajAr[aj + k + w * 4] = fi.I;
+                        fi.F = h.Wavelet[kWavelet + 5];
+                        ajAr[aj + k + w * 5] = fi.I;
+                        fi.F = h.Wavelet[kWavelet + 6];
+                        ajAr[aj + k + w * 6] = fi.I;
+                        fi.F = h.Wavelet[kWavelet + 7];
+                        ajAr[aj + k + w * 7] = fi.I;
                     }
+
+                    aj += w * NbEltsV8;
+                }
+            }
+            else
+            {
+                var numJobs = numThreads;
+
+                if (rh / NbEltsV8 < numJobs)
+                {
+                    numJobs = (int)rh / NbEltsV8;
                 }
 
-                v.Dn = (int)(rh - (uint)v.Sn);
-                v.Cas = res.y0 % 2;
-                v.WinLX0 = 0;
-                v.WinLX1 = (uint)v.Sn;
-                v.WinHX0 = 0;
-                v.WinHX1 = (uint)v.Dn;
+                var stepJ = rh / (uint)numJobs / NbEltsV8 * NbEltsV8;
 
-                aj = 0;
-                if (numThreads <= 1 || rw < 2 * NbEltsV8)
+                reset.Reset();
+                //Alternativly, we can set this to num_jobs and remove the Interlocked.Increment
+                //and the Interlocked.Decrement after the for loop
+                var nThreadWorkers = 1;
+
+                for (j = 0; j < numJobs; j++)
                 {
-                    for (j = (int)rw; j > NbEltsV8 - 1; j -= NbEltsV8)
+                    var job = new Dwt97DecodeHJob(
+                        h.Clone(), rw, (uint)w, ajAr, aj,
+                        j + 1 == numJobs ? (rh & unchecked((uint)~(NbEltsV8 - 1))) - (uint)j * stepJ : stepJ
+                    )
                     {
-                        IntOrFloat faa;
-                        faa.I = 0;
-
-                        v8dwt_interleave_v(v, ajAr, aj, w, NbEltsV8);
-                        v8dwt_decode(v);
-                        for (var k = 0; k < rh; ++k)
+                        H =
                         {
-                            Buffer.BlockCopy(v.Wavelet, k * NbEltsV8 * sizeof(float), ajAr, (aj + k * w) * sizeof(float), NbEltsV8 * sizeof(float));
+                            Wavelet = new float[h.Wavelet.Length]
                         }
+                    };
 
-                        aj += NbEltsV8;
+                    aj += (int)(w * job.NbRows);
+
+                    Interlocked.Increment(ref nThreadWorkers);
+                    ThreadPool.QueueUserWorkItem((x) =>
+                    {
+                        try
+                        {
+                            dwt97_decode_h_func((Dwt97DecodeHJob)x);
+                        }
+                        finally
+                        {
+                            if (Interlocked.Decrement(ref nThreadWorkers) == 0)
+                                reset.Set();
+                        }
+                    }, job);
+                }
+
+                if (Interlocked.Decrement(ref nThreadWorkers) == 0)
+                    reset.Set();
+                reset.WaitOne();
+                j = (int)(rh & unchecked((uint)~(NbEltsV8 - 1)));
+            }
+
+            if (j < rh)
+            {
+                v8dwt_interleave_h(h, ajAr, aj, w, rh - (uint)j);
+                v8dwt_decode(h);
+
+                for (var k = 0; k < rw; k++)
+                {
+                    int kWavelet = k * NbEltsV8, ajk = aj + k;
+                    for (uint l = 0; l < rh - j; l++)
+                    {
+                        fi.F = h.Wavelet[kWavelet + l];
+                        ajAr[ajk + w * l] = fi.I;
                     }
                 }
-                else
+            }
+
+            v.Dn = (int)(rh - (uint)v.Sn);
+            v.Cas = res.y0 % 2;
+            v.WinLx0 = 0;
+            v.WinLx1 = (uint)v.Sn;
+            v.WinHx0 = 0;
+            v.WinHx1 = (uint)v.Dn;
+
+            aj = 0;
+            if (numThreads <= 1 || rw < 2 * NbEltsV8)
+            {
+                for (j = (int)rw; j > NbEltsV8 - 1; j -= NbEltsV8)
                 {
-                    /* "bench_dwt -I" shows that scaling is poor, likely due to RAM
+                    IntOrFloat faa;
+                    faa.I = 0;
+
+                    v8dwt_interleave_v(v, ajAr, aj, w, NbEltsV8);
+                    v8dwt_decode(v);
+                    for (var k = 0; k < rh; ++k)
+                    {
+                        Buffer.BlockCopy(v.Wavelet, k * NbEltsV8 * sizeof(float), ajAr,
+                            (aj + k * w) * sizeof(float), NbEltsV8 * sizeof(float));
+                    }
+
+                    aj += NbEltsV8;
+                }
+            }
+            else
+            {
+                /* "bench_dwt -I" shows that scaling is poor, likely due to RAM
                         transfer being the limiting factor. So limit the number of
                         threads.
                         C# note: I've not run this benchmark
                      */
-                    var numJobs = Math.Max(numThreads / 2, 2);
-                    //num_jobs = 1;
+                var numJobs = Math.Max(numThreads / 2, 2);
+                //num_jobs = 1;
 
-                    if (rw / NbEltsV8 < numJobs)
-                    {
-                        numJobs = (int)rw / NbEltsV8;
-                    }
-
-                    var stepJ = rw / (uint)numJobs / NbEltsV8 * NbEltsV8;
-
-                    reset.Reset();
-                    //Alternativly, we can set this to num_jobs and remove the Interlocked.Increment
-                    //and the Interlocked.Decrement after the for loop
-                    var nThreadWorkers = 1;
-
-                    for (j = 0; j < numJobs; j++)
-                    {
-                        var job = new Dwt97DecodeVJob(
-                            v.Clone(), rh, (uint)w, ajAr, aj,
-                            j + 1 == numJobs ? (rw & unchecked((uint)~(NbEltsV8 - 1))) - (uint)j * stepJ : stepJ
-                        )
-                        {
-                            V =
-                            {
-                                Wavelet = new float[v.Wavelet.Length]
-                            }
-                        };
-
-                        aj += (int)job.NbColumns;
-
-                        Interlocked.Increment(ref nThreadWorkers);
-                        ThreadPool.QueueUserWorkItem((x) =>
-                        {
-                            try { dwt97_decode_v_func((Dwt97DecodeVJob)x); }
-                            finally
-                            {
-                                if (Interlocked.Decrement(ref nThreadWorkers) == 0)
-                                    reset.Set();
-                            }
-                        }, job);
-                    }
-                    if (Interlocked.Decrement(ref nThreadWorkers) == 0)
-                        reset.Set();
-                    reset.WaitOne();
-                }
-
-                //Makes sure not not overflow the array by copying "less than 4 floats".
-                if ((rw & (NbEltsV8 - 1)) != 0)
+                if (rw / NbEltsV8 < numJobs)
                 {
-                    j = (int)(rw & (NbEltsV8 - 1));
-                    v8dwt_interleave_v(v, ajAr, aj, w, j);
-                    v8dwt_decode(v);
-
-                    for (var k = 0; k < rh; ++k)
-                        Buffer.BlockCopy(v.Wavelet, k * NbEltsV8 * sizeof(float), ajAr, (aj + k * w) * sizeof(float), j * sizeof(float));
+                    numJobs = (int)rw / NbEltsV8;
                 }
+
+                var stepJ = rw / (uint)numJobs / NbEltsV8 * NbEltsV8;
+
+                reset.Reset();
+                //Alternativly, we can set this to num_jobs and remove the Interlocked.Increment
+                //and the Interlocked.Decrement after the for loop
+                var nThreadWorkers = 1;
+
+                for (j = 0; j < numJobs; j++)
+                {
+                    var job = new Dwt97DecodeVJob(
+                        v.Clone(), rh, (uint)w, ajAr, aj,
+                        j + 1 == numJobs ? (rw & unchecked((uint)~(NbEltsV8 - 1))) - (uint)j * stepJ : stepJ
+                    )
+                    {
+                        V =
+                        {
+                            Wavelet = new float[v.Wavelet.Length]
+                        }
+                    };
+
+                    aj += (int)job.NbColumns;
+
+                    Interlocked.Increment(ref nThreadWorkers);
+                    ThreadPool.QueueUserWorkItem((x) =>
+                    {
+                        try
+                        {
+                            dwt97_decode_v_func((Dwt97DecodeVJob)x);
+                        }
+                        finally
+                        {
+                            if (Interlocked.Decrement(ref nThreadWorkers) == 0)
+                                reset.Set();
+                        }
+                    }, job);
+                }
+
+                if (Interlocked.Decrement(ref nThreadWorkers) == 0)
+                    reset.Set();
+                reset.WaitOne();
+            }
+
+            //Makes sure not not overflow the array by copying "less than 4 floats".
+            if ((rw & (NbEltsV8 - 1)) != 0)
+            {
+                j = (int)(rw & (NbEltsV8 - 1));
+                v8dwt_interleave_v(v, ajAr, aj, w, j);
+                v8dwt_decode(v);
+
+                for (var k = 0; k < rh; ++k)
+                    Buffer.BlockCopy(v.Wavelet, k * NbEltsV8 * sizeof(float), ajAr, (aj + k * w) * sizeof(float),
+                        j * sizeof(float));
             }
         }
 
@@ -958,15 +985,15 @@ internal static class Dwt
         //C# Snip SSE code
 
         //C# Both a and b index dwt.wavelet, hench why we have to mul with NB_ELTS_V8
-        v8dwt_decode_step1(dwt.Wavelet, a * NbEltsV8, (int)dwt.WinLX0, (int)dwt.WinLX1, K);
-        v8dwt_decode_step1(dwt.Wavelet, b * NbEltsV8, (int)dwt.WinHX0, (int)dwt.WinHX1, twoInvK);
-        v8dwt_decode_step2(dwt.Wavelet, b * NbEltsV8, (a + 1) * NbEltsV8, (int)dwt.WinLX0, (int)dwt.WinLX1,
+        v8dwt_decode_step1(dwt.Wavelet, a * NbEltsV8, (int)dwt.WinLx0, (int)dwt.WinLx1, K);
+        v8dwt_decode_step1(dwt.Wavelet, b * NbEltsV8, (int)dwt.WinHx0, (int)dwt.WinHx1, twoInvK);
+        v8dwt_decode_step2(dwt.Wavelet, b * NbEltsV8, (a + 1) * NbEltsV8, (int)dwt.WinLx0, (int)dwt.WinLx1,
             Math.Min(dwt.Sn, dwt.Dn - a), -DwtDelta);
-        v8dwt_decode_step2(dwt.Wavelet, a * NbEltsV8, (b + 1) * NbEltsV8, (int)dwt.WinHX0, (int)dwt.WinHX1,
+        v8dwt_decode_step2(dwt.Wavelet, a * NbEltsV8, (b + 1) * NbEltsV8, (int)dwt.WinHx0, (int)dwt.WinHx1,
             Math.Min(dwt.Dn, dwt.Sn - b), -DwtGamma);
-        v8dwt_decode_step2(dwt.Wavelet, b * NbEltsV8, (a + 1) * NbEltsV8, (int)dwt.WinLX0, (int)dwt.WinLX1,
+        v8dwt_decode_step2(dwt.Wavelet, b * NbEltsV8, (a + 1) * NbEltsV8, (int)dwt.WinLx0, (int)dwt.WinLx1,
             Math.Min(dwt.Sn, dwt.Dn - a), -DwtBeta);
-        v8dwt_decode_step2(dwt.Wavelet, a * NbEltsV8, (b + 1) * NbEltsV8, (int)dwt.WinHX0, (int)dwt.WinHX1,
+        v8dwt_decode_step2(dwt.Wavelet, a * NbEltsV8, (b + 1) * NbEltsV8, (int)dwt.WinHx0, (int)dwt.WinHx1,
             Math.Min(dwt.Dn, dwt.Sn - b), -DwtAlpha);
     }
 
@@ -985,14 +1012,14 @@ internal static class Dwt
         // To be adapted if NB_ELTS_V8 changes
         for (var i = start; i < end; ++i)
         {
-            f[fw + i * 2 * 8 + 0] = f[fw + i * 2 * 8 + 0] * c;
-            f[fw + i * 2 * 8 + 1] = f[fw + i * 2 * 8 + 1] * c;
-            f[fw + i * 2 * 8 + 2] = f[fw + i * 2 * 8 + 2] * c;
-            f[fw + i * 2 * 8 + 3] = f[fw + i * 2 * 8 + 3] * c;
-            f[fw + i * 2 * 8 + 4] = f[fw + i * 2 * 8 + 4] * c;
-            f[fw + i * 2 * 8 + 5] = f[fw + i * 2 * 8 + 5] * c;
-            f[fw + i * 2 * 8 + 6] = f[fw + i * 2 * 8 + 6] * c;
-            f[fw + i * 2 * 8 + 7] = f[fw + i * 2 * 8 + 7] * c;
+            f[fw + i * 2 * 8 + 0] *= c;
+            f[fw + i * 2 * 8 + 1] *= c;
+            f[fw + i * 2 * 8 + 2] *= c;
+            f[fw + i * 2 * 8 + 3] *= c;
+            f[fw + i * 2 * 8 + 4] *= c;
+            f[fw + i * 2 * 8 + 5] *= c;
+            f[fw + i * 2 * 8 + 6] *= c;
+            f[fw + i * 2 * 8 + 7] *= c;
         }
     }
 
@@ -1021,10 +1048,10 @@ internal static class Dwt
 
         if (imax > 0)
         {
-            for(var c = 0; c < NbEltsV8; c++)
+            for (var c = 0; c < NbEltsV8; c++)
             {
-                fli.I = f[fl +  0 * NbEltsV8 + c];
-                fwi.I = f[fw +  0 * NbEltsV8 + c];
+                fli.I = f[fl + 0 * NbEltsV8 + c];
+                fwi.I = f[fw + 0 * NbEltsV8 + c];
 #if TEST_MATH_MODE
                 fli.F = (fli.F + fwi.F) * cst;
 #else
@@ -1034,13 +1061,14 @@ internal static class Dwt
                 fwi.F += fli.F;
                 f[fw + -1 * NbEltsV8 + c] = fwi.I;
             }
+
             fw += 2 * NbEltsV8;
-            for(var i = 1; i < imax; i++)
+            for (var i = 1; i < imax; i++)
             {
                 for (var c = 0; c < NbEltsV8; c++)
                 {
                     fli.I = f[fw + -2 * NbEltsV8 + c];
-                    fwi.I = f[fw +  0 * NbEltsV8 + c];
+                    fwi.I = f[fw + 0 * NbEltsV8 + c];
 #if TEST_MATH_MODE
                     fli.F = (fli.F + fwi.F) * cst;
 #else
@@ -1050,9 +1078,11 @@ internal static class Dwt
                     fwi.F += fli.F;
                     f[fw + -1 * NbEltsV8 + c] = fwi.I;
                 }
+
                 fw += 2 * NbEltsV8;
             }
         }
+
         if (m < end)
         {
             Debug.Assert(m + 1 == end);
@@ -1080,6 +1110,7 @@ internal static class Dwt
             fw += 2 * NbEltsV8 * start;
             fl = fw - 2 * NbEltsV8;
         }
+
         /* To be adapted if NB_ELTS_V8 changes */
         for (var i = start; i < imax; ++i)
         {
@@ -1102,14 +1133,14 @@ internal static class Dwt
 #if TEST_MATH_MODE
             //C# We have a problem. AFAICT, C# likes to do double precision math
             //   Liberal use of (float) seems to fix the issue. 
-            f[fw - 8] = f[fw - 8] + (f[fl + 0] + f[fw + 0]) * c;
-            f[fw - 7] = f[fw - 7] + (f[fl + 1] + f[fw + 1]) * c;
-            f[fw - 6] = f[fw - 6] + (f[fl + 2] + f[fw + 2]) * c;
-            f[fw - 5] = f[fw - 5] + (f[fl + 3] + f[fw + 3]) * c;
-            f[fw - 4] = f[fw - 4] + (f[fl + 4] + f[fw + 4]) * c;
-            f[fw - 3] = f[fw - 3] + (f[fl + 5] + f[fw + 5]) * c;
-            f[fw - 2] = f[fw - 2] + (f[fl + 6] + f[fw + 6]) * c;
-            f[fw - 1] = f[fw - 1] + (f[fl + 7] + f[fw + 7]) * c; 
+            f[fw - 8] += (f[fl + 0] + f[fw + 0]) * c;
+            f[fw - 7] += (f[fl + 1] + f[fw + 1]) * c;
+            f[fw - 6] += (f[fl + 2] + f[fw + 2]) * c;
+            f[fw - 5] += (f[fl + 3] + f[fw + 3]) * c;
+            f[fw - 4] += (f[fl + 4] + f[fw + 4]) * c;
+            f[fw - 3] += (f[fl + 5] + f[fw + 5]) * c;
+            f[fw - 2] += (f[fl + 6] + f[fw + 6]) * c;
+            f[fw - 1] += (f[fl + 7] + f[fw + 7]) * c;
 #else
                 //It's not a bug to have greater precision, it's a problem for verifying
                 //the result against original libary.
@@ -1125,19 +1156,20 @@ internal static class Dwt
             fl = fw;
             fw += 2 * NbEltsV8;
         }
+
         if (m < end)
         {
             Debug.Assert(m + 1 == end);
             c += c;
 #if TEST_MATH_MODE
-            f[fw - 8] = f[fw - 8] + f[fl + 0] * c;
-            f[fw - 7] = f[fw - 7] + f[fl + 1] * c;
-            f[fw - 6] = f[fw - 6] + f[fl + 2] * c;
-            f[fw - 5] = f[fw - 5] + f[fl + 3] * c;
-            f[fw - 4] = f[fw - 4] + f[fl + 4] * c;
-            f[fw - 3] = f[fw - 3] + f[fl + 5] * c;
-            f[fw - 2] = f[fw - 2] + f[fl + 6] * c;
-            f[fw - 1] = f[fw - 1] + f[fl + 7] * c;
+            f[fw - 8] += f[fl + 0] * c;
+            f[fw - 7] += f[fl + 1] * c;
+            f[fw - 6] += f[fl + 2] * c;
+            f[fw - 5] += f[fl + 3] * c;
+            f[fw - 4] += f[fl + 4] * c;
+            f[fw - 3] += f[fl + 5] * c;
+            f[fw - 2] += f[fl + 6] * c;
+            f[fw - 1] += f[fl + 7] * c;
 #else
                 f[fw - 8] = f[fw - 8] + (f[fl + 0] * c);
                 f[fw - 7] = f[fw - 7] + (f[fl + 1] * c);
@@ -1158,7 +1190,7 @@ internal static class Dwt
         uint i = 0;
         var itersCommon = Math.Min(itersC1, itersC2);
         Debug.Assert(Math.Abs((int)itersC1 - (int)itersC2) <= 1);
-        for(; i + 3 < itersCommon; i += 4)
+        for (; i + 3 < itersCommon; i += 4)
         {
             fw1.I = f[fw + 0];
             fw1.F *= c1;
@@ -1194,7 +1226,8 @@ internal static class Dwt
 
             fw += 8;
         }
-        for(; i < itersCommon; i++)
+
+        for (; i < itersCommon; i++)
         {
             fw1.I = f[fw + 0];
             fw1.F *= c1;
@@ -1206,6 +1239,7 @@ internal static class Dwt
 
             fw += 2;
         }
+
         if (i < itersC1)
         {
             fw1.I = f[fw + 0];
@@ -1223,7 +1257,7 @@ internal static class Dwt
     //2.5
     private static void EncodeStep2(int[] f, int fl, int fw, uint end, uint m, float c)
     {
-        IntOrFloat fw1 = new IntOrFloat(), fw2 = new IntOrFloat();
+        IntOrFloat fw1 = new(), fw2 = new();
         var imax = Math.Min(end, m);
         if (imax > 0)
         {
@@ -1240,7 +1274,7 @@ internal static class Dwt
             f[fw - 1] = fw1.I;
             fw += 2;
             var i = 1;
-            for(; i + 3 < imax; i += 4)
+            for (; i + 3 < imax; i += 4)
             {
                 //fw[-1] += (fw[-2] + fw[0]) * c;
                 fw1.I = f[fw - 2];
@@ -1292,7 +1326,8 @@ internal static class Dwt
 
                 fw += 8;
             }
-            for(; i < imax; i++)
+
+            for (; i < imax; i++)
             {
                 //fw[-1] += (fw[-2] + fw[0]) * c
                 fw1.I = f[fw - 2];
@@ -1309,6 +1344,7 @@ internal static class Dwt
                 fw += 2;
             }
         }
+
         if (m < end)
         {
             Debug.Assert(m + 1 == end);
@@ -1345,13 +1381,12 @@ internal static class Dwt
                                          1].x1 -
                        tilec.resolutions[tilec.minimum_num_resolutions - 1].x0);
 
-        int numThreads;
-
         if (numres == 1U)
         {
             return true;
         }
-        ThreadPool.GetAvailableThreads(out numThreads, out _);
+
+        ThreadPool.GetAvailableThreads(out var numThreads, out _);
         numThreads = disableMultiThreading ? 1 : Math.Min(Environment.ProcessorCount, numThreads);
 
         ulong hMemSize = MaxResolution(trAr, (int)numres);
@@ -1360,6 +1395,7 @@ internal static class Dwt
         {
             return false;
         }
+
         // We need PARALLEL_COLS_53 times the height of the array,
         // since for the vertical pass
         // we process PARALLEL_COLS_53 columns at a time
@@ -1367,137 +1403,145 @@ internal static class Dwt
         h.Mem = new int[hMemSize];
         v.Mem = h.Mem;
 
-        using (var reset = new ManualResetEvent(false))
+        using var reset = new ManualResetEvent(false);
+        while (--numres != 0)
         {
-            while (--numres != 0)
+            var tiledp = 0;
+            uint j;
+
+            tr = trAr[++trPos];
+            h.Sn = (int)rw;
+            v.Sn = (int)rh;
+
+            rw = (uint)(tr.x1 - tr.x0);
+            rh = (uint)(tr.y1 - tr.y0);
+
+            h.Dn = (int)(rw - (uint)h.Sn);
+            h.Cas = tr.x0 % 2;
+
+            if (numThreads <= 1 || rh <= 1)
             {
-                var tiledp = 0;
-                uint j;
-
-                tr = trAr[++trPos];
-                h.Sn = (int)rw;
-                v.Sn = (int)rh;
-
-                rw = (uint)(tr.x1 - tr.x0);
-                rh = (uint)(tr.y1 - tr.y0);
-
-                h.Dn = (int)(rw - (uint)h.Sn);
-                h.Cas = tr.x0 % 2;
-
-                if (numThreads <= 1 || rh <= 1)
+                for (j = 0; j < rh; ++j)
                 {
-                    for (j = 0; j < rh; ++j)
-                    {
-                        idwt53_h(h, tilec.data, tiledp + (int)(j * w));
-                    }
-                }
-                else
-                {
-                    var numJobs = numThreads;
-
-                    if (rh < numJobs)
-                    {
-                        numJobs = (int)rh;
-                    }
-
-                    var stepJ = rh / (uint)numJobs;
-                        
-                    reset.Reset();
-                    //Alternativly, we can set this to num_jobs and remove the Interlocked.Increment
-                    //and the Interlocked.Decrement after the for loop
-                    var nThreadWorkers = 1;
-
-                    for (j = 0; j < numJobs; j++)
-                    {
-                        var maxJ = (j + 1U) * stepJ; // this will overflow
-                        if (j == numJobs - 1) //So we clamp max_j
-                            maxJ = rh;
-                        var job = new DecodeHJob(
-                            h.Clone(), rw, w, tilec.data, tiledp,
-                            j * stepJ, maxJ
-                        )
-                        {
-                            H =
-                            {
-                                Mem = new int[hMemSize]
-                            }
-                        };
-
-                        Interlocked.Increment(ref nThreadWorkers);
-                        ThreadPool.QueueUserWorkItem((x) =>
-                        {
-                            try { decode_h_func((DecodeHJob)x); }
-                            finally
-                            {
-                                if (Interlocked.Decrement(ref nThreadWorkers) == 0)
-                                    reset.Set();
-                            }
-                        }, job);
-                    }
-                    if (Interlocked.Decrement(ref nThreadWorkers) == 0)
-                        reset.Set();
-                    reset.WaitOne();
-                }
-
-                v.Dn = (int)(rh - (uint)v.Sn);
-                v.Cas = tr.y0 % 2;
- 
-                if (numThreads <= 1 || rw <= 1)
-                {
-                    for (j = 0; j + ParallelCols53 <= rw; j += ParallelCols53)
-                    {
-                        idwt53_v(v, tilec.data, tiledp + (int)j, (int)w, (int)ParallelCols53);
-                    }
-                    if (j < rw)
-                        idwt53_v(v, tilec.data, tiledp + (int)j, (int)w, (int)(rw - j));
-                }
-                else
-                {
-                    var numJobs = numThreads;
-
-                    if (rw < numJobs)
-                    {
-                        numJobs = (int)rw;
-                    }
-
-                    var stepJ = rw / (uint)numJobs;
-
-                    reset.Reset();
-                    var nThreadWorkers = 1;
-
-                    for (j = 0; j < numJobs; j++)
-                    {
-                        var maxJ = (j + 1U) * stepJ; // this can overflow
-                        if (j == numJobs - 1)
-                            maxJ = rw;
-                        var job = new DecodeVJob(
-                            v.Clone(), rh, w, tilec.data, tiledp,
-                            j * stepJ, maxJ
-                        )
-                        {
-                            V =
-                            {
-                                Mem = new int[hMemSize]
-                            }
-                        };
-
-                        Interlocked.Increment(ref nThreadWorkers);
-                        ThreadPool.QueueUserWorkItem((x) =>
-                        {
-                            try { decode_v_func((DecodeVJob)x); }
-                            finally
-                            {
-                                if (Interlocked.Decrement(ref nThreadWorkers) == 0)
-                                    reset.Set();
-                            }
-                        }, job);
-                    }
-                    if (Interlocked.Decrement(ref nThreadWorkers) == 0)
-                        reset.Set();
-                    reset.WaitOne();
+                    idwt53_h(h, tilec.data, tiledp + (int)(j * w));
                 }
             }
+            else
+            {
+                var numJobs = numThreads;
+
+                if (rh < numJobs)
+                {
+                    numJobs = (int)rh;
+                }
+
+                var stepJ = rh / (uint)numJobs;
+
+                reset.Reset();
+                //Alternativly, we can set this to num_jobs and remove the Interlocked.Increment
+                //and the Interlocked.Decrement after the for loop
+                var nThreadWorkers = 1;
+
+                for (j = 0; j < numJobs; j++)
+                {
+                    var maxJ = (j + 1U) * stepJ; // this will overflow
+                    if (j == numJobs - 1) //So we clamp max_j
+                        maxJ = rh;
+                    var job = new DecodeHJob(
+                        h.Clone(), rw, w, tilec.data, tiledp,
+                        j * stepJ, maxJ
+                    )
+                    {
+                        H =
+                        {
+                            Mem = new int[hMemSize]
+                        }
+                    };
+
+                    Interlocked.Increment(ref nThreadWorkers);
+                    ThreadPool.QueueUserWorkItem((x) =>
+                    {
+                        try
+                        {
+                            decode_h_func((DecodeHJob)x);
+                        }
+                        finally
+                        {
+                            if (Interlocked.Decrement(ref nThreadWorkers) == 0)
+                                reset.Set();
+                        }
+                    }, job);
+                }
+
+                if (Interlocked.Decrement(ref nThreadWorkers) == 0)
+                    reset.Set();
+                reset.WaitOne();
+            }
+
+            v.Dn = (int)(rh - (uint)v.Sn);
+            v.Cas = tr.y0 % 2;
+
+            if (numThreads <= 1 || rw <= 1)
+            {
+                for (j = 0; j + ParallelCols53 <= rw; j += ParallelCols53)
+                {
+                    idwt53_v(v, tilec.data, tiledp + (int)j, (int)w, (int)ParallelCols53);
+                }
+
+                if (j < rw)
+                    idwt53_v(v, tilec.data, tiledp + (int)j, (int)w, (int)(rw - j));
+            }
+            else
+            {
+                var numJobs = numThreads;
+
+                if (rw < numJobs)
+                {
+                    numJobs = (int)rw;
+                }
+
+                var stepJ = rw / (uint)numJobs;
+
+                reset.Reset();
+                var nThreadWorkers = 1;
+
+                for (j = 0; j < numJobs; j++)
+                {
+                    var maxJ = (j + 1U) * stepJ; // this can overflow
+                    if (j == numJobs - 1)
+                        maxJ = rw;
+                    var job = new DecodeVJob(
+                        v.Clone(), rh, w, tilec.data, tiledp,
+                        j * stepJ, maxJ
+                    )
+                    {
+                        V =
+                        {
+                            Mem = new int[hMemSize]
+                        }
+                    };
+
+                    Interlocked.Increment(ref nThreadWorkers);
+                    ThreadPool.QueueUserWorkItem((x) =>
+                    {
+                        try
+                        {
+                            decode_v_func((DecodeVJob)x);
+                        }
+                        finally
+                        {
+                            if (Interlocked.Decrement(ref nThreadWorkers) == 0)
+                                reset.Set();
+                        }
+                    }, job);
+                }
+
+                if (Interlocked.Decrement(ref nThreadWorkers) == 0)
+                    reset.Set();
+                reset.WaitOne();
+            }
         }
+
         return true;
     }
 
@@ -1538,7 +1582,7 @@ internal static class Dwt
 
         if (numres == 1U)
         {
-            var ret = sa.read(trMax.win_x0 - (uint)trMax.x0,
+            var ret = sa.Read(trMax.win_x0 - (uint)trMax.x0,
                 trMax.win_y0 - (uint)trMax.y0,
                 trMax.win_x1 - (uint)trMax.x0,
                 trMax.win_y1 - (uint)trMax.y0,
@@ -1548,13 +1592,15 @@ internal static class Dwt
             Debug.Assert(ret);
             return true;
         }
-        ulong hMemSize = MaxResolution(trAr, (int) numres);
+
+        ulong hMemSize = MaxResolution(trAr, (int)numres);
         // overflow check
         // in vertical pass, we process 4 columns at a time
         if (hMemSize > Constants.SizeMax / (4 * sizeof(int)))
         {
             return false;
         }
+
         hMemSize *= 4;
         h.Mem = new int[hMemSize];
         v.Mem = h.Mem;
@@ -1562,9 +1608,6 @@ internal static class Dwt
         for (uint resno = 1; resno < numres; resno++)
         {
             /* Window of interest subband-based coordinates */
-            uint winLlX0, winLlY0, winLlX1, winLlY1;
-            uint winHlX0, winHlX1;
-            uint winLhY0, winLhY1;
             /* Window of interest tile-resolution-based coordinates */
             uint winTrX0, winTrX1, winTrY0, winTrY1;
             /* Tile-resolution subband-based coordinates */
@@ -1587,18 +1630,18 @@ internal static class Dwt
             // LL band
             GetBandCoordinates(tilec, resno, 0,
                 winTcx0, winTcy0, winTcx1, winTcy1,
-                out winLlX0, out winLlY0,
-                out winLlX1, out winLlY1);
+                out var winLlX0, out var winLlY0,
+                out var winLlX1, out var winLlY1);
 
             // HL band
             GetBandCoordinates(tilec, resno, 1,
                 winTcx0, winTcy0, winTcx1, winTcy1,
-                out winHlX0, out _, out winHlX1, out _);
+                out var winHlX0, out _, out var winHlX1, out _);
 
             /* LH band */
             GetBandCoordinates(tilec, resno, 2,
                 winTcx0, winTcy0, winTcx1, winTcy1,
-                out _, out winLhY0, out _, out winLhY1);
+                out _, out var winLhY0, out _, out var winLhY1);
 
             /* Beware: band index for non-LL0 resolution are 0=HL, 1=LH and 2=HH */
             var trLlX0 = (uint)tr.bands[1].x0;
@@ -1649,44 +1692,44 @@ internal static class Dwt
 
             for (uint j = 0; j < rh; ++j)
             {
-                if ((j >= winLlY0 && j < winLlY1) ||
-                    (j >= winLhY0 + (uint)v.Sn && j < winLhY1 + (uint)v.Sn))
+                if ((j < winLlY0 || j >= winLlY1) &&
+                    (j < winLhY0 + (uint)v.Sn || j >= winLhY1 + (uint)v.Sn)) 
+                    continue;
+                // Avoids dwt.c:1584:44 (in opj_dwt_decode_partial_1): runtime error:
+                // signed integer overflow: -1094795586 + -1094795586 cannot be represented in type 'int'
+                // on opj_decompress -i  ../../openjpeg/MAPA.jp2 -o out.tif -d 0,0,256,256
+                // This is less extreme than memsetting the whole buffer to 0
+                // although we could potentially do better with better handling of edge conditions
+                if (winTrX1 >= 1 && winTrX1 < rw)
                 {
-                    // Avoids dwt.c:1584:44 (in opj_dwt_decode_partial_1): runtime error:
-                    // signed integer overflow: -1094795586 + -1094795586 cannot be represented in type 'int'
-                    // on opj_decompress -i  ../../openjpeg/MAPA.jp2 -o out.tif -d 0,0,256,256
-                    // This is less extreme than memsetting the whole buffer to 0
-                    // although we could potentially do better with better handling of edge conditions
-                    if (winTrX1 >= 1 && winTrX1 < rw)
-                    {
-                        h.Mem[winTrX1 - 1] = 0;
-                    }
-                    if (winTrX1 < rw)
-                    {
-                        h.Mem[winTrX1] = 0;
-                    }
+                    h.Mem[winTrX1 - 1] = 0;
+                }
 
-                    interleave_partial_h(h.Mem,
-                        h.Cas,
-                        sa,
-                        j,
-                        (uint)h.Sn,
-                        winLlX0,
-                        winLlX1,
-                        winHlX0,
-                        winHlX1);
-                    decode_partial_1(h.Mem, h.Dn, h.Sn, h.Cas,
-                        (int)winLlX0,
-                        (int)winLlX1,
-                        (int)winHlX0,
-                        (int)winHlX1);
-                    if (!sa.write(winTrX0, j,
-                            winTrX1, j + 1,
-                            h.Mem, (int)winTrX0,
-                            1, 0, true))
-                    {
-                        return false;
-                    }
+                if (winTrX1 < rw)
+                {
+                    h.Mem[winTrX1] = 0;
+                }
+
+                interleave_partial_h(h.Mem,
+                    h.Cas,
+                    sa,
+                    j,
+                    (uint)h.Sn,
+                    winLlX0,
+                    winLlX1,
+                    winHlX0,
+                    winHlX1);
+                decode_partial_1(h.Mem, h.Dn, h.Sn, h.Cas,
+                    (int)winLlX0,
+                    (int)winLlX1,
+                    (int)winHlX0,
+                    (int)winHlX1);
+                if (!sa.Write(winTrX0, j,
+                        winTrX1, j + 1,
+                        h.Mem, (int)winTrX0,
+                        1, 0, true))
+                {
+                    return false;
                 }
             }
 
@@ -1708,7 +1751,7 @@ internal static class Dwt
                     (int)winLlY1,
                     (int)winLhY0,
                     (int)winLhY1);
-                if (!sa.write(i, winTrY0,
+                if (!sa.Write(i, winTrY0,
                         i + nbCols, winTrY1,
                         v.Mem, 4 * (int)winTrY0,
                         1, 4, true))
@@ -1721,7 +1764,7 @@ internal static class Dwt
         }
 
         {
-            var ret = sa.read(
+            var ret = sa.Read(
                 trMax.win_x0 - (uint)trMax.x0,
                 trMax.win_y0 - (uint)trMax.y0,
                 trMax.win_x1 - (uint)trMax.x0,
@@ -1742,19 +1785,19 @@ internal static class Dwt
         SparseArrayInt32 sa,
         uint saLine,
         uint sn,
-        uint winLX0,
-        uint winLX1,
-        uint winHX0,
-        uint winHX1)
+        uint winLx0,
+        uint winLx1,
+        uint winHx0,
+        uint winHx1)
     {
-        var ret = sa.read(winLX0, saLine,
-            winLX1, saLine + 1,
-            dest, cas + 2 * (int)winLX0,
+        var ret = sa.Read(winLx0, saLine,
+            winLx1, saLine + 1,
+            dest, cas + 2 * (int)winLx0,
             2, 0, true);
         Debug.Assert(ret);
-        ret = sa.read(sn + winHX0, saLine,
-            sn + winHX1, saLine + 1,
-            dest, 1 - cas + 2 * (int)winHX0,
+        ret = sa.Read(sn + winHx0, saLine,
+            sn + winHx1, saLine + 1,
+            dest, 1 - cas + 2 * (int)winHx0,
             2, 0, true);
         Debug.Assert(ret);
     }
@@ -1767,19 +1810,19 @@ internal static class Dwt
         uint saCol,
         uint nbCols,
         uint sn,
-        uint winLY0,
-        uint winLY1,
-        uint winHY0,
-        uint winHY1)
+        uint winLy0,
+        uint winLy1,
+        uint winHy0,
+        uint winHy1)
     {
-        var ret = sa.read(saCol, winLY0,
-            saCol + nbCols, winLY1,
-            dest, cas * 4 + 2 * 4 * (int)winLY0,
+        var ret = sa.Read(saCol, winLy0,
+            saCol + nbCols, winLy1,
+            dest, cas * 4 + 2 * 4 * (int)winLy0,
             1, 2 * 4, true);
         Debug.Assert(ret);
-        ret = sa.read(saCol, sn + winHY0,
-            saCol + nbCols, sn + winHY1,
-            dest, (1 - cas) * 4 + 2 * 4 * (int)winHY0,
+        ret = sa.Read(saCol, sn + winHy0,
+            saCol + nbCols, sn + winHy1,
+            dest, (1 - cas) * 4 + 2 * 4 * (int)winHy0,
             1, 2 * 4, true);
         Debug.Assert(ret);
     }
@@ -1802,19 +1845,19 @@ internal static class Dwt
     /// </remarks>
     private static void decode_partial_1(int[] a, int dn, int sn,
         int cas,
-        int winLX0,
-        int winLX1,
-        int winHX0,
-        int winHX1)
+        int winLx0,
+        int winLx1,
+        int winHx0,
+        int winHx1)
     {
         int i;
 
         if (cas == 0)
         {
             if (dn > 0 || sn > 1)
-            { 
-                i = winLX0;
-                if (i < winLX1)
+            {
+                i = winLx0;
+                if (i < winLx1)
                 {
                     /* Left-most case */
                     a[i * 2] -= ((i - 1 < 0 ? a[1 + 0 * 2] : i - 1 >= dn ? a[1 + (dn - 1) * 2] : a[1 + (i - 1) * 2])
@@ -1822,17 +1865,19 @@ internal static class Dwt
                                  + 2) >> 2;
                     i++;
 
-                    var iMax = winLX1;
+                    var iMax = winLx1;
                     if (iMax > dn)
                     {
                         iMax = dn;
                     }
+
                     for (; i < iMax; i++)
                     {
                         /* No bound checking */
                         a[i * 2] -= (a[1 + (i - 1) * 2] + a[1 + i * 2] + 2) >> 2;
                     }
-                    for (; i < winLX1; i++)
+
+                    for (; i < winLx1; i++)
                     {
                         /* Right-most case */
                         a[i * 2] -= ((i - 1 < 0 ? a[1 + 0 * 2] : i - 1 >= dn ? a[1 + (dn - 1) * 2] : a[1 + (i - 1) * 2])
@@ -1841,20 +1886,22 @@ internal static class Dwt
                     }
                 }
 
-                i = winHX0;
-                if (i < winHX1)
+                i = winHx0;
+                if (i < winHx1)
                 {
-                    var iMax = winHX1;
+                    var iMax = winHx1;
                     if (iMax >= sn)
                     {
                         iMax = sn - 1;
                     }
+
                     for (; i < iMax; i++)
                     {
                         /* No bound checking */
                         a[1 + i * 2] += (a[i * 2] + a[(i + 1) * 2]) >> 1;
                     }
-                    for (; i < winHX1; i++)
+
+                    for (; i < winHx1; i++)
                     {
                         /* Right-most case */
                         a[1 + i * 2] += ((i < 0 ? a[0] : i >= sn ? a[(sn - 1) * 2] : a[i * 2])
@@ -1867,12 +1914,13 @@ internal static class Dwt
         else
         {
             if (sn == 0 && dn == 1)
-            {        /* NEW :  CASE ONE ELEMENT */
+            {
+                /* NEW :  CASE ONE ELEMENT */
                 a[0] /= 2;
             }
             else
             {
-                for (i = winLX0; i < winLX1; i++)
+                for (i = winLx0; i < winLx1; i++)
                 {
                     a[1 + i * 2] = MyMath.int_sub_no_overflow(
                         a[1 + i * 2],
@@ -1882,7 +1930,8 @@ internal static class Dwt
                                 i + 1 < 0 ? a[0] : i + 1 >= dn ? a[(dn - 1) * 2] : a[(i + 1) * 2]),
                             2) >> 2);
                 }
-                for (i = winHX0; i < winHX1; i++)
+
+                for (i = winHx0; i < winHx1; i++)
                 {
                     a[i * 2] = MyMath.int_add_no_overflow(
                         a[i * 2],
@@ -1919,10 +1968,10 @@ internal static class Dwt
         uint nbCols,
         int dn, int sn,
         int cas,
-        int winLX0,
-        int winLX1,
-        int winHX0,
-        int winHX1)
+        int winLx0,
+        int winLx1,
+        int winHx0,
+        int winHx1)
     {
         int i;
         uint off;
@@ -1931,21 +1980,25 @@ internal static class Dwt
         {
             if (dn > 0 || sn > 1)
             {
-                i = winLX0;
-                if (i < winLX1)
+                i = winLx0;
+                if (i < winLx1)
                 {
                     /* Left-most case */
                     for (off = 0; off < 4; off++)
                     {
                         a[(uint)i * 2 * 4 + off] -= (
-                            (i - 1 < 0 ? a[1 * 4 + off] : i - 1 >= dn ? a[(1 + (uint)(dn - 1) * 2) * 4 + off] : a[(1 + (uint)(i - 1) * 2) * 4 + off]) 
-                            + (i < 0 ? a[1 * 4 + off] : i >= dn ? a[(1 + (uint)(dn - 1) * 2) * 4 + off] : a[(1 + (uint)i * 2) * 4 + off]) 
+                            (i - 1 < 0 ? a[1 * 4 + off] :
+                                i - 1 >= dn ? a[(1 + (uint)(dn - 1) * 2) * 4 + off] :
+                                a[(1 + (uint)(i - 1) * 2) * 4 + off])
+                            + (i < 0 ? a[1 * 4 + off] :
+                                i >= dn ? a[(1 + (uint)(dn - 1) * 2) * 4 + off] : a[(1 + (uint)i * 2) * 4 + off])
                             + 2
                         ) >> 2;
                     }
+
                     i++;
 
-                    var iMax = winLX1;
+                    var iMax = winLx1;
                     if (iMax > dn)
                     {
                         iMax = dn;
@@ -1959,30 +2012,34 @@ internal static class Dwt
                         for (off = 0; off < 4; off++)
                         {
                             a[(uint)i * 2 * 4 + off] -= (
-                                a[(1 + (uint)(i - 1) * 2) * 4 + off] 
-                                + a[(1 + (uint)i * 2) * 4 + off] 
+                                a[(1 + (uint)(i - 1) * 2) * 4 + off]
+                                + a[(1 + (uint)i * 2) * 4 + off]
                                 + 2
                             ) >> 2;
                         }
                     }
-                    for (; i < winLX1; i++)
+
+                    for (; i < winLx1; i++)
                     {
                         /* Right-most case */
                         for (off = 0; off < 4; off++)
                         {
                             a[(uint)i * 2 * 4 + off] -= (
-                                (i - 1 < 0 ? a[1 * 4 + off] : i - 1 >= dn ? a[(1 + (uint)(dn - 1) * 2) * 4 + off] : a[(1 + (uint)(i - 1) * 2) * 4 + off]) 
-                                + (i < 0 ? a[1 * 4 + off] : i >= dn ? a[(1 + (uint)(dn - 1) * 2) * 4 + off] : a[(1 + (uint)i * 2) * 4 + off]) 
+                                (i - 1 < 0 ? a[1 * 4 + off] :
+                                    i - 1 >= dn ? a[(1 + (uint)(dn - 1) * 2) * 4 + off] :
+                                    a[(1 + (uint)(i - 1) * 2) * 4 + off])
+                                + (i < 0 ? a[1 * 4 + off] :
+                                    i >= dn ? a[(1 + (uint)(dn - 1) * 2) * 4 + off] : a[(1 + (uint)i * 2) * 4 + off])
                                 + 2
                             ) >> 2;
                         }
                     }
                 }
 
-                i = winHX0;
-                if (i < winHX1)
+                i = winHx0;
+                if (i < winHx1)
                 {
-                    var iMax = winHX1;
+                    var iMax = winHx1;
                     if (iMax >= sn)
                     {
                         iMax = sn - 1;
@@ -2001,14 +2058,16 @@ internal static class Dwt
                             ) >> 1;
                         }
                     }
-                    for (; i < winHX1; i++)
+
+                    for (; i < winHx1; i++)
                     {
                         /* Right-most case */
                         for (off = 0; off < 4; off++)
                         {
                             a[(1 + (uint)i * 2) * 4 + off] += (
-                                (i < 0 ? a[off] : i >= sn ? a[(uint)(sn - 1) * 2 * 4 + off] : a[(uint)i * 2 * 4 + off]) 
-                                + (i + 1 < 0 ? a[off] : i + 1 >= sn ? a[(uint)(sn - 1) * 2 * 4 + off] : a[(uint)(i + 1) * 2 * 4 + off])
+                                (i < 0 ? a[off] : i >= sn ? a[(uint)(sn - 1) * 2 * 4 + off] : a[(uint)i * 2 * 4 + off])
+                                + (i + 1 < 0 ? a[off] :
+                                    i + 1 >= sn ? a[(uint)(sn - 1) * 2 * 4 + off] : a[(uint)(i + 1) * 2 * 4 + off])
                             ) >> 1;
                         }
                     }
@@ -2018,34 +2077,41 @@ internal static class Dwt
         else
         {
             if (sn == 0 && dn == 1)
-            {        /* NEW :  CASE ONE ELEMENT */
+            {
+                /* NEW :  CASE ONE ELEMENT */
                 for (off = 0; off < 4; off++)
                     a[off] /= 2;
             }
             else
             {
-                for (i = winLX0; i < winLX1; i++)
+                for (i = winLx0; i < winLx1; i++)
                 {
                     for (off = 0; off < 4; off++)
-                        a[(1 + (uint)i * 2) * 4 + off] = 
+                        a[(1 + (uint)i * 2) * 4 + off] =
                             MyMath.int_sub_no_overflow(
                                 a[(1 + (uint)i * 2) * 4 + off],
                                 MyMath.int_add_no_overflow(
                                     MyMath.int_add_no_overflow(
-                                        i < 0 ? a[(uint)0 * 2 * 4 + off] : i >= dn ? a[(uint)(dn - 1) * 2 * 4 + off] : a[(uint)i * 2 * 4 + off], 
-                                        i + 1 < 0 ? a[(uint)0 * 2 * 4 + off] : i + 1 >= dn ? a[(uint)(dn - 1) * 2 * 4 + off] : a[(uint)(i + 1) * 2 * 4 + off]), 
-                                    2) 
+                                        i < 0 ? a[(uint)0 * 2 * 4 + off] :
+                                        i >= dn ? a[(uint)(dn - 1) * 2 * 4 + off] : a[(uint)i * 2 * 4 + off],
+                                        i + 1 < 0 ? a[(uint)0 * 2 * 4 + off] :
+                                        i + 1 >= dn ? a[(uint)(dn - 1) * 2 * 4 + off] : a[(uint)(i + 1) * 2 * 4 + off]),
+                                    2)
                                 >> 2);
                 }
-                for (i = winHX0; i < winHX1; i++)
+
+                for (i = winHx0; i < winHx1; i++)
                 {
                     for (off = 0; off < 4; off++)
-                        a[(uint)i * 2 * 4 + off] = 
+                        a[(uint)i * 2 * 4 + off] =
                             MyMath.int_add_no_overflow(
                                 a[(uint)i * 2 * 4 + off],
                                 MyMath.int_add_no_overflow(
-                                    i < 0 ? a[(1 + (uint)0 * 2) * 4 + off] : i >= sn ? a[(1 + (uint)(sn - 1) * 2) * 4 + off] : a[(1 + (uint)i * 2) * 4 + off], 
-                                    i - 1 < 0 ? a[(1 + (uint)0 * 2) * 4 + off] : i - 1 >= sn ? a[(1 + (uint)(sn - 1) * 2) * 4 + off] : a[(1 + (uint)(i - 1) * 2) * 4 + off]) 
+                                    i < 0 ? a[(1 + (uint)0 * 2) * 4 + off] :
+                                    i >= sn ? a[(1 + (uint)(sn - 1) * 2) * 4 + off] : a[(1 + (uint)i * 2) * 4 + off],
+                                    i - 1 < 0 ? a[(1 + (uint)0 * 2) * 4 + off] :
+                                    i - 1 >= sn ? a[(1 + (uint)(sn - 1) * 2) * 4 + off] :
+                                    a[(1 + (uint)(i - 1) * 2) * 4 + off])
                                 >> 1);
                 }
             }
@@ -2056,8 +2122,8 @@ internal static class Dwt
     {
         var biAr = dwt.Wavelet;
         var bi = dwt.Cas * NbEltsV8; //C# NB_ELTS_V8 is because we're indexing into dwt.wavelet
-        var x0 = (int)dwt.WinLX0;
-        var x1 = (int)dwt.WinLX1;
+        var x0 = (int)dwt.WinLx0;
+        var x1 = (int)dwt.WinLx1;
 
         //C# impl. note:
         //Workaround for C's ability to treat float and
@@ -2077,19 +2143,26 @@ internal static class Dwt
                     int j = a + i, dst = bi + i * 2 * NbEltsV8;
                     fi.I = aAr[j];
                     biAr[dst + 0] = fi.F;
-                    j += width; fi.I = aAr[j];
+                    j += width;
+                    fi.I = aAr[j];
                     biAr[dst + 1] = fi.F;
-                    j += width; fi.I = aAr[j];
+                    j += width;
+                    fi.I = aAr[j];
                     biAr[dst + 2] = fi.F;
-                    j += width; fi.I = aAr[j];
+                    j += width;
+                    fi.I = aAr[j];
                     biAr[dst + 3] = fi.F;
-                    j += width; fi.I = aAr[j];
+                    j += width;
+                    fi.I = aAr[j];
                     biAr[dst + 4] = fi.F;
-                    j += width; fi.I = aAr[j];
+                    j += width;
+                    fi.I = aAr[j];
                     biAr[dst + 5] = fi.F;
-                    j += width; fi.I = aAr[j];
+                    j += width;
+                    fi.I = aAr[j];
                     biAr[dst + 6] = fi.F;
-                    j += width; fi.I = aAr[j];
+                    j += width;
+                    fi.I = aAr[j];
                     biAr[dst + 7] = fi.F;
                 }
             }
@@ -2134,8 +2207,8 @@ internal static class Dwt
 
             bi = (1 - dwt.Cas) * NbEltsV8;
             a += dwt.Sn;
-            x0 = (int) dwt.WinHX0;
-            x1 = (int) dwt.WinHX1;
+            x0 = (int)dwt.WinHx0;
+            x1 = (int)dwt.WinHx1;
         }
     }
 
@@ -2147,29 +2220,34 @@ internal static class Dwt
         var biAr = dwt.Wavelet;
         var bi = dwt.Cas;
 
-        for (var i = (int)dwt.WinLX0; i < dwt.WinLX1; ++i)
-            Buffer.BlockCopy(aAr, (a + i * width) * sizeof(float), biAr, (bi + i * 2) * NbEltsV8 * sizeof(float), nEltsRead * sizeof(float));
+        for (var i = (int)dwt.WinLx0; i < dwt.WinLx1; ++i)
+            Buffer.BlockCopy(aAr, (a + i * width) * sizeof(float), biAr, (bi + i * 2) * NbEltsV8 * sizeof(float),
+                nEltsRead * sizeof(float));
         a += dwt.Sn * width;
         bi = 1 - dwt.Cas;
-        for (var i = (int)dwt.WinHX0; i < dwt.WinHX1; ++i)
-            Buffer.BlockCopy(aAr, (a + i * width) * sizeof(float), biAr, (bi + i * 2) * NbEltsV8 * sizeof(float), nEltsRead * sizeof(float));
+        for (var i = (int)dwt.WinHx0; i < dwt.WinHx1; ++i)
+            Buffer.BlockCopy(aAr, (a + i * width) * sizeof(float), biAr, (bi + i * 2) * NbEltsV8 * sizeof(float),
+                nEltsRead * sizeof(float));
     }
 
     //2.5
-    private static void v8dwt_interleave_partial_h(V4dwtLocal dwt, SparseArrayInt32 sa, uint saLine, uint remainingHeight)
+    private static void v8dwt_interleave_partial_h(V4dwtLocal dwt, SparseArrayInt32 sa, uint saLine,
+        uint remainingHeight)
     {
         for (uint i = 0; i < remainingHeight; i++)
         {
-            var ret = sa.read(dwt.WinLX0, saLine + i,
-                dwt.WinLX1, saLine + i + 1,
+            var ret = sa.Read(dwt.WinLx0, saLine + i,
+                dwt.WinLx1, saLine + i + 1,
                 /* Nasty cast from float* to int32* */
-                dwt.Wavelet, (dwt.Cas + 2 * (int)dwt.WinLX0) * NbEltsV8 + (int)i, //C# dwt.wavelet index must be multiplied with NB_ELTS_V8
+                dwt.Wavelet,
+                (dwt.Cas + 2 * (int)dwt.WinLx0) * NbEltsV8 +
+                (int)i, //C# dwt.wavelet index must be multiplied with NB_ELTS_V8
                 2 * NbEltsV8, 0, true);
             Debug.Assert(ret);
-            ret = sa.read((uint)dwt.Sn + dwt.WinHX0, saLine + i,
-                (uint)dwt.Sn + dwt.WinHX1, saLine + i + 1,
+            ret = sa.Read((uint)dwt.Sn + dwt.WinHx0, saLine + i,
+                (uint)dwt.Sn + dwt.WinHx1, saLine + i + 1,
                 /* Nasty cast from float* to int32* */
-                dwt.Wavelet, (1 - dwt.Cas + 2 * (int)dwt.WinHX0) * NbEltsV8 + (int)i,
+                dwt.Wavelet, (1 - dwt.Cas + 2 * (int)dwt.WinHx0) * NbEltsV8 + (int)i,
                 2 * NbEltsV8, 0, true);
             Debug.Assert(ret);
         }
@@ -2178,16 +2256,16 @@ internal static class Dwt
     //2.5
     private static void v8dwt_interleave_partial_v(V4dwtLocal dwt, SparseArrayInt32 sa, uint saCol, uint nbEltsRead)
     {
-        var ret = sa.read(saCol, dwt.WinLX0,
-            saCol + nbEltsRead, dwt.WinLX1,
+        var ret = sa.Read(saCol, dwt.WinLx0,
+            saCol + nbEltsRead, dwt.WinLx1,
             /* Nasty cast from float* to int32* */
-            dwt.Wavelet, (dwt.Cas + 2 * (int)dwt.WinLX0) * NbEltsV8,
+            dwt.Wavelet, (dwt.Cas + 2 * (int)dwt.WinLx0) * NbEltsV8,
             1, 2 * NbEltsV8, true);
         Debug.Assert(ret);
-        ret = sa.read(saCol, (uint)dwt.Sn + dwt.WinHX0,
-            saCol + nbEltsRead, (uint)dwt.Sn + dwt.WinHX1,
+        ret = sa.Read(saCol, (uint)dwt.Sn + dwt.WinHx0,
+            saCol + nbEltsRead, (uint)dwt.Sn + dwt.WinHx1,
             /* Nasty cast from float* to int32* */
-            dwt.Wavelet, (1 - dwt.Cas + 2 * (int)dwt.WinHX0) * NbEltsV8,
+            dwt.Wavelet, (1 - dwt.Cas + 2 * (int)dwt.WinHx0) * NbEltsV8,
             1, 2 * NbEltsV8, true);
         Debug.Assert(ret);
     }
@@ -2227,10 +2305,9 @@ internal static class Dwt
     /// </remarks>
     internal static bool Decode(TileCoder tcd, TcdTilecomp tilec, uint numres)
     {
-        if (tcd.WholeTileDecoding)
-            return decode_tile(tilec, numres, tcd.DisableMultiThreading);
-        else
-            return DecodePartialTile(tilec, numres);
+        return tcd.WholeTileDecoding
+            ? decode_tile(tilec, numres, tcd.DisableMultiThreading)
+            : DecodePartialTile(tilec, numres);
     }
 
     /// <summary>
@@ -2250,6 +2327,7 @@ internal static class Dwt
             a = 1;
             b = 0;
         }
+
         EncodeStep2(w, a, b + 1, (uint)dn, (uint)Math.Min(dn, sn - b), DwtAlpha);
         EncodeStep2(w, b, a + 1, (uint)sn, (uint)Math.Min(sn, dn - a), DwtBeta);
         EncodeStep2(w, a, b + 1, (uint)dn, (uint)Math.Min(dn, sn - b), DwtGamma);
@@ -2266,7 +2344,8 @@ internal static class Dwt
     }
 
     //2.5 - opj_dwt_encode_and_deinterleave_v_real
-    private static void EncodeAndDeinterleaveV_Real(int[] arr, int aPt, int[] tmp, uint height, bool even, uint strideWidth, uint cols)
+    private static void EncodeAndDeinterleaveV_Real(int[] arr, int aPt, int[] tmp, uint height, bool even,
+        uint strideWidth, uint cols)
     {
         if (height == 1)
             return;
@@ -2287,6 +2366,7 @@ internal static class Dwt
             a = 1;
             b = 0;
         }
+
         v8dwt_encode_step2(tmp, a * NbEltsV8, (b + 1) * NbEltsV8, (uint)dn, (uint)Math.Min(dn, sn - b), DwtAlpha);
         v8dwt_encode_step2(tmp, b * NbEltsV8, (a + 1) * NbEltsV8, (uint)sn, (uint)Math.Min(sn, dn - a), DwtBeta);
         v8dwt_encode_step2(tmp, a * NbEltsV8, (b + 1) * NbEltsV8, (uint)dn, (uint)Math.Min(dn, sn - b), DwtGamma);
@@ -2309,7 +2389,8 @@ internal static class Dwt
     /// where cols <= NB_ELTS_V8
     /// </summary>
     /// <remarks>2.5 - opj_dwt_encode_and_deinterleave_v</remarks>
-    private static void EncodeAndDeinterleaveV(int[] a, int aPt, int[] tmp, uint height, bool even, uint strideWidth, uint cols)
+    private static void EncodeAndDeinterleaveV(int[] a, int aPt, int[] tmp, uint height, bool even, uint strideWidth,
+        uint cols)
     {
         var sn = (height + (even ? 1u : 0u)) >> 1;
         var dn = height - sn;
@@ -2331,6 +2412,7 @@ internal static class Dwt
                         tmp[(1 + i * 2) * 8 + c] -= (tmp[i * 2 * 8 + c] + tmp[(i + 1) * 2 * 8 + c]) >> 1;
                     }
                 }
+
                 if (height % 2 == 0)
                 {
                     for (c = 0; c < 8; c++)
@@ -2338,10 +2420,12 @@ internal static class Dwt
                         tmp[(1 + i * 2) * 8 + c] -= tmp[i * 2 * 8 + c];
                     }
                 }
+
                 for (c = 0; c < 8; c++)
                 {
                     tmp[0 * 2 * 8 + c] += (tmp[(1 + 0 * 2) * 8 + c] + tmp[(1 + 0 * 2) * 8 + c] + 2) >> 2;
                 }
+
                 for (i = 1; i < dn; i++)
                 {
                     for (c = 0; c < 8; c++)
@@ -2349,11 +2433,13 @@ internal static class Dwt
                         tmp[i * 2 * 8 + c] += (tmp[(1 + (i - 1) * 2) * 8 + c] + tmp[(1 + i * 2) * 8 + c] + 2) >> 2;
                     }
                 }
+
                 if (height % 2 == 1)
                 {
                     for (c = 0; c < 8; c++)
                     {
-                        tmp[i * 2 * 8 + c] += (tmp[(1 + (i - 1) * 2) * 8 + c] + tmp[(1 + (i - 1) * 2) * 8 + c] + 2) >> 2;
+                        tmp[i * 2 * 8 + c] +=
+                            (tmp[(1 + (i - 1) * 2) * 8 + c] + tmp[(1 + (i - 1) * 2) * 8 + c] + 2) >> 2;
                     }
                 }
             }
@@ -2375,6 +2461,7 @@ internal static class Dwt
                 {
                     tmp[0 * 2 * 8 + c] -= tmp[(1 + 0 * 2) * 8 + c];
                 }
+
                 for (i = 1; i < sn; i++)
                 {
                     for (c = 0; c < 8; c++)
@@ -2382,6 +2469,7 @@ internal static class Dwt
                         tmp[i * 2 * 8 + c] -= (tmp[(1 + i * 2) * 8 + c] + tmp[(1 + (i - 1) * 2) * 8 + c]) >> 1;
                     }
                 }
+
                 if (height % 2 == 1)
                 {
                     for (c = 0; c < 8; c++)
@@ -2389,6 +2477,7 @@ internal static class Dwt
                         tmp[i * 2 * 8 + c] -= tmp[(1 + (i - 1) * 2) * 8 + c];
                     }
                 }
+
                 for (i = 0; i + 1 < dn; i++)
                 {
                     for (c = 0; c < 8; c++)
@@ -2396,6 +2485,7 @@ internal static class Dwt
                         tmp[(1 + i * 2) * 8 + c] += (tmp[i * 2 * 8 + c] + tmp[(i + 1) * 2 * 8 + c] + 2) >> 2;
                     }
                 }
+
                 if (height % 2 == 0)
                 {
                     for (c = 0; c < 8; c++)
@@ -2406,16 +2496,8 @@ internal static class Dwt
             }
         }
 
-        if (cols == NbEltsV8)
-        {
-            DeinterleaveV_Cols(tmp, a, aPt, (int)dn, (int)sn,
-                (int)strideWidth, even ? 0 : 1, NbEltsV8);
-        }
-        else
-        {
-            DeinterleaveV_Cols(tmp, a, aPt, (int)dn, (int)sn,
-                (int)strideWidth, even ? 0 : 1, cols);
-        }
+        DeinterleaveV_Cols(tmp, a, aPt, (int)dn, (int)sn,
+            (int)strideWidth, even ? 0 : 1, cols == NbEltsV8 ? NbEltsV8 : cols);
     }
 
     /// <summary>
@@ -2424,14 +2506,15 @@ internal static class Dwt
     /// columns
     /// </summary>
     /// <remarks>2.5 - opj_dwt_deinterleave_v_cols</remarks>
-    private static void DeinterleaveV_Cols(int[] src, int[] dst, int dstPt, int dn, int sn, int strideWidth, int cas, uint cols)
+    private static void DeinterleaveV_Cols(int[] src, int[] dst, int dstPt, int dn, int sn, int strideWidth, int cas,
+        uint cols)
     {
         var orgDest = dstPt;
         var srcPt = cas * NbEltsV8;
         var i = sn;
         for (var k = 0; k < 2; k++)
         {
-            while(i-- != 0)
+            while (i-- != 0)
             {
                 if (cols == NbEltsV8)
                 {
@@ -2440,7 +2523,7 @@ internal static class Dwt
                 else
                 {
                     var c = 0;
-                    switch(cols)
+                    switch (cols)
                     {
                         case 7:
                             dst[dstPt + c] = src[srcPt + c];
@@ -2471,6 +2554,7 @@ internal static class Dwt
                             break;
                     }
                 }
+
                 dstPt += strideWidth;
                 srcPt += 2 * NbEltsV8;
             }
@@ -2514,19 +2598,23 @@ internal static class Dwt
                 {
                     tmp[sn + i] = row[rowPt + 2 * i + 1] - ((row[rowPt + i * 2] + row[rowPt + (i + 1) * 2]) >> 1);
                 }
+
                 if (width % 2 == 0)
                 {
                     tmp[sn + i] = row[rowPt + 2 * i + 1] - row[rowPt + i * 2];
                 }
+
                 row[rowPt + 0] += (tmp[sn] + tmp[sn] + 2) >> 2;
                 for (i = 1; i < dn; i++)
                 {
                     row[rowPt + i] = row[rowPt + 2 * i] + ((tmp[sn + (i - 1)] + tmp[sn + i] + 2) >> 2);
                 }
+
                 if (width % 2 == 1)
                 {
                     row[rowPt + i] = row[rowPt + 2 * i] + ((tmp[sn + (i - 1)] + tmp[sn + (i - 1)] + 2) >> 2);
                 }
+
                 Buffer.BlockCopy(tmp, sn * sizeof(int), row, (rowPt + sn) * sizeof(int), dn * sizeof(int));
             }
         }
@@ -2544,6 +2632,7 @@ internal static class Dwt
                 {
                     tmp[sn + i] = row[rowPt + 2 * i] - ((row[rowPt + 2 * i + 1] + row[rowPt + 2 * (i - 1) + 1]) >> 1);
                 }
+
                 if (width % 2 == 1)
                 {
                     tmp[sn + i] = row[rowPt + 2 * i] - row[rowPt + 2 * (i - 1) + 1];
@@ -2553,10 +2642,12 @@ internal static class Dwt
                 {
                     row[rowPt + i] = row[rowPt + 2 * i + 1] + ((tmp[sn + i] + tmp[sn + i + 1] + 2) >> 2);
                 }
+
                 if (width % 2 == 0)
                 {
                     row[rowPt + i] = row[rowPt + 2 * i + 1] + ((tmp[sn + i] + tmp[sn + i] + 2) >> 2);
                 }
+
                 Buffer.BlockCopy(tmp, sn * sizeof(int), row, (rowPt + sn) * sizeof(int), dn * sizeof(int));
             }
         }
@@ -2567,17 +2658,26 @@ internal static class Dwt
     //2.5
     private static void FetchColsVerticalPass(int[] a, int array, int[] tmp, uint height, int strideWidth, uint cols)
     {
-        if (cols == NbEltsV8) {
-            for (var k = 0; k < height; ++k) {
-                Buffer.BlockCopy(a, (array + k * strideWidth) * sizeof(int), tmp, NbEltsV8 * k * sizeof(int), NbEltsV8 * sizeof(int));
+        if (cols == NbEltsV8)
+        {
+            for (var k = 0; k < height; ++k)
+            {
+                Buffer.BlockCopy(a, (array + k * strideWidth) * sizeof(int), tmp, NbEltsV8 * k * sizeof(int),
+                    NbEltsV8 * sizeof(int));
             }
-        } else {
-            for (var k = 0; k < height; ++k) {
+        }
+        else
+        {
+            for (var k = 0; k < height; ++k)
+            {
                 var c = 0;
-                for (; c < cols; c++) {
+                for (; c < cols; c++)
+                {
                     tmp[NbEltsV8 * k + c] = a[array + c + k * strideWidth];
                 }
-                for (; c < NbEltsV8; c++) {
+
+                for (; c < NbEltsV8; c++)
+                {
                     tmp[NbEltsV8 * k + c] = 0;
                 }
             }
@@ -2587,7 +2687,7 @@ internal static class Dwt
     //2.5
     private static void decode_h_func(DecodeHJob job)
     {
-        for(var j = (int)job.MinJ; j < job.MaxJ; j++)
+        for (var j = (int)job.MinJ; j < job.MaxJ; j++)
         {
             idwt53_h(job.H, job.Tiled, job.Tiledp + j * (int)job.W);
         }
@@ -2622,6 +2722,7 @@ internal static class Dwt
                 fi.F = job.H.Wavelet[kWavelet + 3];
                 ajAr[aj + k + w * 3] = fi.I;
             }
+
             for (var k = 0; k < job.Rw; k++)
             {
                 var kWavelet = k * NbEltsV8;
@@ -2651,7 +2752,8 @@ internal static class Dwt
             v8dwt_interleave_v(job.V, ajAr, aj, (int)job.W, NbEltsV8);
             v8dwt_decode(job.V);
             for (var k = 0; k < job.Rh; ++k)
-                Buffer.BlockCopy(job.V.Wavelet, k * NbEltsV8 * sizeof(float), ajAr, (aj + k * (int)job.W) * sizeof(float), NbEltsV8 * sizeof(float));
+                Buffer.BlockCopy(job.V.Wavelet, k * NbEltsV8 * sizeof(float), ajAr,
+                    (aj + k * (int)job.W) * sizeof(float), NbEltsV8 * sizeof(float));
 
             aj += NbEltsV8;
         }
@@ -2674,7 +2776,8 @@ internal static class Dwt
         var sn = dwt.Sn;
         var len = sn + dwt.Dn;
         if (dwt.Cas == 0)
-        { /* Left-most sample is on even coordinate */
+        {
+            /* Left-most sample is on even coordinate */
             if (len > 1)
             {
                 idwt53_h_cas0(dwt.Mem, sn, len, tiled, tiledp);
@@ -2685,7 +2788,8 @@ internal static class Dwt
             }
         }
         else
-        { /* Left-most sample is on odd coordinate */
+        {
+            /* Left-most sample is on odd coordinate */
             if (len == 1)
             {
                 tiled[tiledp] /= 2;
@@ -2927,7 +3031,6 @@ internal static class Dwt
         var end = len - 2 - ((len & 1) == 0 ? 1 : 0);
         for (i = 1, j = 1; i < end; i += 2, j++)
         {
-
             var s2 = tiled[inEven + j + 1];
 
             dn = tiled[inOdd + j] - ((s1 + s2 + 2) >> 2);
@@ -3025,7 +3128,6 @@ internal static class Dwt
         var end = len - 2 - ((len & 1) == 0 ? 1 : 0);
         for (i = 1, j = 1; i < end; i += 2, j++)
         {
-
             var s2 = tiled[inEven + (j + 1) * stride];
 
             dn = tiled[inOdd + j * stride] - ((s1 + s2 + 2) >> 2);
@@ -3035,6 +3137,7 @@ internal static class Dwt
             dc = dn;
             s1 = s2;
         }
+
         tmp[i] = dc;
         if ((len & 1) == 0)
         {
@@ -3060,8 +3163,9 @@ internal static class Dwt
         int j;
         for (j = (int)job.MinJ; j + ParallelCols53 <= job.MaxJ; j += (int)ParallelCols53)
         {
-            idwt53_v(job.V, job.Tiled, job.Tiledp +j, (int)job.W, (int)ParallelCols53);
+            idwt53_v(job.V, job.Tiled, job.Tiledp + j, (int)job.W, (int)ParallelCols53);
         }
+
         if (j < job.MaxJ)
             idwt53_v(job.V, job.Tiled, job.Tiledp + j, (int)job.W, (int)(job.MaxJ - j));
     }
@@ -3129,6 +3233,7 @@ internal static class Dwt
                 {
                     tiled[tiledpCol] /= 2;
                 }
+
                 return;
             }
 
@@ -3145,7 +3250,7 @@ internal static class Dwt
 
                     for (var i = 0; i < len; ++i)
                     {
-                        tiled[tiledpCol + i * stride] = o[i] ;
+                        tiled[tiledpCol + i * stride] = o[i];
                     }
                 }
 
@@ -3160,6 +3265,7 @@ internal static class Dwt
                 {
                     idwt3_v_cas1(dwt.Mem, sn, len, tiled, tiledpCol, stride);
                 }
+
                 return;
             }
         }
@@ -3210,9 +3316,7 @@ internal static class Dwt
         out uint tby1)
     {
         // Compute number of decomposition for this band. See table F-1
-        var nb = resno == 0 ?
-            (int)tilec.numresolutions - 1 :
-            (int)(tilec.numresolutions - resno);
+        var nb = resno == 0 ? (int)tilec.numresolutions - 1 : (int)(tilec.numresolutions - resno);
         /* Map above tile-based coordinates to sub-band-based coordinates per */
         /* equation B-15 of the standard */
         var x0B = bandno & 1;
@@ -3310,205 +3414,152 @@ internal static class Dwt
         /// <summary>
         /// Start coord in low pass band
         /// </summary>
-        internal uint WinLX0;
+        internal uint WinLx0;
 
         /// <summary>
         /// End coord in low pass band
         /// </summary>
-        internal uint WinLX1;
+        internal uint WinLx1;
 
         /// <summary>
         /// Start coord in high pass band
         /// </summary>
-        internal uint WinHX0;
+        internal uint WinHx0;
 
         /// <summary>
         /// End coord in high pass band
         /// </summary>
-        internal uint WinHX1;
+        internal uint WinHx1;
 
-        public V4dwtLocal Clone() { return (V4dwtLocal)MemberwiseClone(); }
-    }
-
-    /// <summary>
-    /// Used by the MT impl
-    /// </summary>
-    private class DecodeHJob
-    {
-        public readonly DwtLocal H;
-        public readonly uint Rw;
-        public readonly uint W;
-        public readonly int[] Tiled;
-        public readonly int Tiledp;
-        public readonly uint MinJ;
-        public readonly uint MaxJ;
-
-        public DecodeHJob(
-            DwtLocal h,
-            uint rw, uint w,
-            int[] tiled, int tiledp,
-            uint minJ, uint maxJ
-        )
+        public V4dwtLocal Clone()
         {
-            this.H = h;
-            this.Rw = rw;
-            this.W = w;
-            this.Tiled = tiled;
-            this.Tiledp = tiledp;
-            this.MinJ = minJ;
-            this.MaxJ = maxJ;
+            return (V4dwtLocal)MemberwiseClone();
         }
     }
 
     /// <summary>
     /// Used by the MT impl
     /// </summary>
-    private class EncodeVJob
+    private class DecodeHJob(
+        DwtLocal h,
+        uint rw,
+        uint w,
+        int[] tiled,
+        int tiledp,
+        uint minJ,
+        uint maxJ)
     {
-        public readonly DwtLocal V;
-        public readonly uint Rh;
-        public readonly uint W;
-        public readonly int[] Tiled;
-        public readonly int Tiledp;
-        public readonly uint MinJ;
-        public readonly uint MaxJ;
-        public readonly EncodeAndDeinterleaveVfunc EncodeAndDeinterleaveV;
-
-        public EncodeVJob(
-            DwtLocal v,
-            uint rh, uint w,
-            int[] tiled, int tiledp,
-            uint minJ, uint maxJ,
-            EncodeAndDeinterleaveVfunc encodeAndDeinterleaveV
-        )
-        {
-            this.V = v;
-            this.Rh = rh;
-            this.W = w;
-            this.Tiled = tiled;
-            this.Tiledp = tiledp;
-            this.MinJ = minJ;
-            this.MaxJ = maxJ;
-            this.EncodeAndDeinterleaveV = encodeAndDeinterleaveV;
-        }
+        public readonly DwtLocal H = h;
+        public readonly uint Rw = rw;
+        public readonly uint W = w;
+        public readonly int[] Tiled = tiled;
+        public readonly int Tiledp = tiledp;
+        public readonly uint MinJ = minJ;
+        public readonly uint MaxJ = maxJ;
     }
 
     /// <summary>
     /// Used by the MT impl
     /// </summary>
-    private class EncodeHJob
+    private class EncodeVJob(
+        DwtLocal v,
+        uint rh,
+        uint w,
+        int[] tiled,
+        int tiledp,
+        uint minJ,
+        uint maxJ,
+        EncodeAndDeinterleaveVfunc encodeAndDeinterleaveV)
     {
-        public readonly DwtLocal H;
-        public readonly uint Rw;
-        public readonly uint W;
-        public readonly int[] Tiled;
-        public readonly int Tiledp;
-        public readonly uint MinJ;
-        public readonly uint MaxJ;
-        public readonly EncodeAndDeinterleaveHOneRowfunc Fn;
-
-        public EncodeHJob(
-            DwtLocal h,
-            uint rw, uint w,
-            int[] tiled, int tiledp,
-            uint minJ, uint maxJ,
-            EncodeAndDeinterleaveHOneRowfunc fn
-        )
-        {
-            this.H = h;
-            this.Rw = rw;
-            this.W = w;
-            this.Tiled = tiled;
-            this.Tiledp = tiledp;
-            this.MinJ = minJ;
-            this.MaxJ = maxJ;
-            this.Fn = fn;
-        }
+        public readonly DwtLocal V = v;
+        public readonly uint Rh = rh;
+        public readonly uint W = w;
+        public readonly int[] Tiled = tiled;
+        public readonly int Tiledp = tiledp;
+        public readonly uint MinJ = minJ;
+        public readonly uint MaxJ = maxJ;
+        public readonly EncodeAndDeinterleaveVfunc EncodeAndDeinterleaveV = encodeAndDeinterleaveV;
     }
 
     /// <summary>
     /// Used by the MT impl
     /// </summary>
-    private class DecodeVJob
+    private class EncodeHJob(
+        DwtLocal h,
+        uint rw,
+        uint w,
+        int[] tiled,
+        int tiledp,
+        uint minJ,
+        uint maxJ,
+        EncodeAndDeinterleaveHOneRowfunc fn)
     {
-        public readonly DwtLocal V;
-        public readonly uint Rh;
-        public readonly uint W;
-        public readonly int[] Tiled;
-        public readonly int Tiledp;
-        public readonly uint MinJ;
-        public readonly uint MaxJ;
-
-        public DecodeVJob(
-            DwtLocal v,
-            uint rh, uint w,
-            int[] tiled, int tiledp,
-            uint minJ, uint maxJ
-        )
-        {
-            this.V = v;
-            this.Rh = rh;
-            this.W = w;
-            this.Tiled = tiled;
-            this.Tiledp = tiledp;
-            this.MinJ = minJ;
-            this.MaxJ = maxJ;
-        }
+        public readonly DwtLocal H = h;
+        public readonly uint Rw = rw;
+        public readonly uint W = w;
+        public readonly int[] Tiled = tiled;
+        public readonly int Tiledp = tiledp;
+        public readonly uint MinJ = minJ;
+        public readonly uint MaxJ = maxJ;
+        public readonly EncodeAndDeinterleaveHOneRowfunc Fn = fn;
     }
 
     /// <summary>
     /// Used by the MT impl
     /// </summary>
-    private class Dwt97DecodeHJob
+    private class DecodeVJob(
+        DwtLocal v,
+        uint rh,
+        uint w,
+        int[] tiled,
+        int tiledp,
+        uint minJ,
+        uint maxJ)
     {
-        public readonly V4dwtLocal H;
-        public readonly uint Rw;
-        public readonly uint W;
-        public readonly int[] Aj;
-        public readonly int Ajp;
-        public readonly uint NbRows;
-
-        public Dwt97DecodeHJob(
-            V4dwtLocal h,
-            uint rw, uint w,
-            int[] aj, int ajp,
-            uint nbRows
-        )
-        {
-            this.H = h;
-            this.Rw = rw;
-            this.W = w;
-            this.Aj = aj;
-            this.Ajp = ajp;
-            this.NbRows = nbRows;
-        }
+        public readonly DwtLocal V = v;
+        public readonly uint Rh = rh;
+        public readonly uint W = w;
+        public readonly int[] Tiled = tiled;
+        public readonly int Tiledp = tiledp;
+        public readonly uint MinJ = minJ;
+        public readonly uint MaxJ = maxJ;
     }
 
     /// <summary>
     /// Used by the MT impl
     /// </summary>
-    private class Dwt97DecodeVJob
+    private class Dwt97DecodeHJob(
+        V4dwtLocal h,
+        uint rw,
+        uint w,
+        int[] aj,
+        int ajp,
+        uint nbRows)
     {
-        public readonly V4dwtLocal V;
-        public readonly uint Rh;
-        public readonly uint W;
-        public readonly int[] Aj;
-        public readonly int Ajp;
-        public readonly uint NbColumns;
+        public readonly V4dwtLocal H = h;
+        public readonly uint Rw = rw;
+        public readonly uint W = w;
+        public readonly int[] Aj = aj;
+        public readonly int Ajp = ajp;
+        public readonly uint NbRows = nbRows;
+    }
 
-        public Dwt97DecodeVJob(
-            V4dwtLocal v,
-            uint rh, uint w,
-            int[] aj, int ajp,
-            uint nbColumns
-        )
-        {
-            this.V = v;
-            this.Rh = rh;
-            this.W = w;
-            this.Aj = aj;
-            this.Ajp = ajp;
-            this.NbColumns = nbColumns;
-        }
+    /// <summary>
+    /// Used by the MT impl
+    /// </summary>
+    private class Dwt97DecodeVJob(
+        V4dwtLocal v,
+        uint rh,
+        uint w,
+        int[] aj,
+        int ajp,
+        uint nbColumns)
+    {
+        public readonly V4dwtLocal V = v;
+        public readonly uint Rh = rh;
+        public readonly uint W = w;
+        public readonly int[] Aj = aj;
+        public readonly int Ajp = ajp;
+        public readonly uint NbColumns = nbColumns;
     }
 }

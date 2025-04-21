@@ -5,7 +5,8 @@ namespace OpenJpeg.Internal;
 internal static class J2KTables
 {
     /* Table A.53 from JPEG2000 standard */
-    internal static ushort[] tabMaxSubLevelFromMainLevel = new ushort[] {
+    internal static ushort[] tabMaxSubLevelFromMainLevel =
+    [
         15, /* unspecified */
         1,
         1,
@@ -18,7 +19,7 @@ internal static class J2KTables
         7,
         8,
         9
-    };
+    ];
 }
 
 /// <summary>
@@ -63,8 +64,8 @@ internal sealed class DecMstabent
     //2.1
     internal DecMstabent(J2K parent)
     {
-        _marks = new J2kMarker[]
-        {
+        _marks =
+        [
             new J2kMarker(J2K_Marker.SOT, J2K_STATUS.MH | J2K_STATUS.TPHSOT, parent.ReadSOT),
             new J2kMarker(J2K_Marker.COD, J2K_STATUS.MH | J2K_STATUS.TPH, parent.ReadCOD),
             new J2kMarker(J2K_Marker.COC, J2K_STATUS.MH | J2K_STATUS.TPH, parent.ReadCOC),
@@ -89,7 +90,7 @@ internal sealed class DecMstabent
 
             //Unknown marker, must be last.
             new J2kMarker(J2K_Marker.NONE, J2K_STATUS.MH | J2K_STATUS.TPH, (b) => true)
-        };
+        ];
     }
 
     #endregion

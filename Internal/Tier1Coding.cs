@@ -110,12 +110,13 @@ internal sealed class Tier1Coding
     //TODO v.2.5: Remove
     private int flags_stride;
 
-    private static readonly T1[] MOD = {
+    private static readonly T1[] MOD =
+    [
         T1.SIG_S, T1.SIG_S|T1.SGN_S,
         T1.SIG_E, T1.SIG_E|T1.SGN_E,
         T1.SIG_W, T1.SIG_W|T1.SGN_W,
         T1.SIG_N, T1.SIG_N|T1.SGN_N
-    };
+    ];
 
     // The 3 variables below are only used by the decoder
 
@@ -1204,19 +1205,17 @@ internal sealed class Tier1Coding
     private static int cblk_count, n_dumps;
     private void DumpData(string txt)
     {
-        using (var file = new System.IO.StreamWriter("c:/temp/t1_dump.txt", append: n_dumps++ > 0))
+        using var file = new System.IO.StreamWriter("c:/temp/t1_dump.txt", append: n_dumps++ > 0);
+        file.Write(txt+"dumping code block: " + ++cblk_count+"\n");
+        file.Write(" -- " + flagssize + " flags\n");
+        for (var c=0; c < flagssize; c++)
+        {                                        
+            file.Write("{1}: {0}\n", (uint)flags[c], c);
+        }
+        file.Write(" -- " + datasize + " ints\n");
+        for (var c = 0; c < datasize; c++)
         {
-            file.Write(txt+"dumping code block: " + ++cblk_count+"\n");
-            file.Write(" -- " + flagssize + " flags\n");
-            for (var c=0; c < flagssize; c++)
-            {                                        
-                file.Write("{1}: {0}\n", (uint)flags[c], c);
-            }
-            file.Write(" -- " + datasize + " ints\n");
-            for (var c = 0; c < datasize; c++)
-            {
-                file.Write("{1}: {0}\n", _data[c], c);
-            }
+            file.Write("{1}: {0}\n", _data[c], c);
         }
     }
 #endif
@@ -3203,7 +3202,7 @@ internal sealed class Tier1Coding
             {
                 //Array.Resize is probably slower, since it retains the old data.
                 //if (cblkdatabuffer == null)
-                cblkdatabuffer = new byte[cblk_len + Constants.CommonCblkDataExtra];
+                cblkdatabuffer = GC.AllocateUninitializedArray<byte>((int)(cblk_len + Constants.CommonCblkDataExtra));
                 //else
                 //    Array.Resize(ref cblkdatabuffer, (int)cblk_len);
             }
@@ -3468,7 +3467,7 @@ internal sealed class Tier1Coding
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                        v = v ^ T1Luts.Getspb(lu);
+                                        v ^= T1Luts.Getspb(lu);
                                         _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                         UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, vsc);
                                     }
@@ -3502,7 +3501,7 @@ internal sealed class Tier1Coding
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                        v = v ^ T1Luts.Getspb(lu);
+                                        v ^= T1Luts.Getspb(lu);
                                         _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                         UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                                     }
@@ -3536,7 +3535,7 @@ internal sealed class Tier1Coding
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                        v = v ^ T1Luts.Getspb(lu);
+                                        v ^= T1Luts.Getspb(lu);
                                         _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                         UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                                     }
@@ -3570,7 +3569,7 @@ internal sealed class Tier1Coding
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                        v = v ^ T1Luts.Getspb(lu);
+                                        v ^= T1Luts.Getspb(lu);
                                         _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                         UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                                     }
@@ -3606,7 +3605,7 @@ internal sealed class Tier1Coding
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                    v = v ^ T1Luts.Getspb(lu);
+                                    v ^= T1Luts.Getspb(lu);
                                     _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                     UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, vsc);
                                 }
@@ -3637,7 +3636,7 @@ internal sealed class Tier1Coding
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                    v = v ^ T1Luts.Getspb(lu);
+                                    v ^= T1Luts.Getspb(lu);
                                     _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                     UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                                 }
@@ -3668,7 +3667,7 @@ internal sealed class Tier1Coding
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                    v = v ^ T1Luts.Getspb(lu);
+                                    v ^= T1Luts.Getspb(lu);
                                     _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                     UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                                 }
@@ -3699,7 +3698,7 @@ internal sealed class Tier1Coding
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                    v = v ^ T1Luts.Getspb(lu);
+                                    v ^= T1Luts.Getspb(lu);
                                     _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                     UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                                 }
@@ -3792,7 +3791,7 @@ internal sealed class Tier1Coding
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                        v = v ^ T1Luts.Getspb(lu);
+                                        v ^= T1Luts.Getspb(lu);
                                         _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                         UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, (uint)flags_stride, vsc);
                                     }
@@ -3826,7 +3825,7 @@ internal sealed class Tier1Coding
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                        v = v ^ T1Luts.Getspb(lu);
+                                        v ^= T1Luts.Getspb(lu);
                                         _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                         UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, (uint)flags_stride, false);
                                     }
@@ -3860,7 +3859,7 @@ internal sealed class Tier1Coding
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                        v = v ^ T1Luts.Getspb(lu);
+                                        v ^= T1Luts.Getspb(lu);
                                         _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                         UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, (uint)flags_stride, false);
                                     }
@@ -3894,7 +3893,7 @@ internal sealed class Tier1Coding
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                        v = v ^ T1Luts.Getspb(lu);
+                                        v ^= T1Luts.Getspb(lu);
                                         _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                         UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, (uint)flags_stride, false);
                                     }
@@ -3930,7 +3929,7 @@ internal sealed class Tier1Coding
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                    v = v ^ T1Luts.Getspb(lu);
+                                    v ^= T1Luts.Getspb(lu);
                                     _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                     UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, (uint)flags_stride, vsc);
                                 }
@@ -3961,7 +3960,7 @@ internal sealed class Tier1Coding
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                    v = v ^ T1Luts.Getspb(lu);
+                                    v ^= T1Luts.Getspb(lu);
                                     _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                     UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, (uint)flags_stride, false);
                                 }
@@ -3992,7 +3991,7 @@ internal sealed class Tier1Coding
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                    v = v ^ T1Luts.Getspb(lu);
+                                    v ^= T1Luts.Getspb(lu);
                                     _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                     UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, (uint)flags_stride, false);
                                 }
@@ -4023,7 +4022,7 @@ internal sealed class Tier1Coding
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                    v = v ^ T1Luts.Getspb(lu);
+                                    v ^= T1Luts.Getspb(lu);
                                     _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                     UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, (uint)flags_stride, false);
                                 }
@@ -4116,7 +4115,7 @@ internal sealed class Tier1Coding
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                        v = v ^ T1Luts.Getspb(lu);
+                                        v ^= T1Luts.Getspb(lu);
                                         _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                         UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, vsc);
                                     }
@@ -4150,7 +4149,7 @@ internal sealed class Tier1Coding
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                        v = v ^ T1Luts.Getspb(lu);
+                                        v ^= T1Luts.Getspb(lu);
                                         _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                         UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                                     }
@@ -4184,7 +4183,7 @@ internal sealed class Tier1Coding
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                        v = v ^ T1Luts.Getspb(lu);
+                                        v ^= T1Luts.Getspb(lu);
                                         _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                         UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                                     }
@@ -4218,7 +4217,7 @@ internal sealed class Tier1Coding
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                        v = v ^ T1Luts.Getspb(lu);
+                                        v ^= T1Luts.Getspb(lu);
                                         _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                         UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                                     }
@@ -4254,7 +4253,7 @@ internal sealed class Tier1Coding
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                    v = v ^ T1Luts.Getspb(lu);
+                                    v ^= T1Luts.Getspb(lu);
                                     _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                     UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, vsc);
                                 }
@@ -4285,7 +4284,7 @@ internal sealed class Tier1Coding
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                    v = v ^ T1Luts.Getspb(lu);
+                                    v ^= T1Luts.Getspb(lu);
                                     _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                     UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                                 }
@@ -4316,7 +4315,7 @@ internal sealed class Tier1Coding
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                    v = v ^ T1Luts.Getspb(lu);
+                                    v ^= T1Luts.Getspb(lu);
                                     _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                     UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                                 }
@@ -4347,7 +4346,7 @@ internal sealed class Tier1Coding
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                    v = v ^ T1Luts.Getspb(lu);
+                                    v ^= T1Luts.Getspb(lu);
                                     _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                     UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                                 }
@@ -4440,7 +4439,7 @@ internal sealed class Tier1Coding
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                        v = v ^ T1Luts.Getspb(lu);
+                                        v ^= T1Luts.Getspb(lu);
                                         _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                         UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, (uint)flags_stride, vsc);
                                     }
@@ -4474,7 +4473,7 @@ internal sealed class Tier1Coding
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                        v = v ^ T1Luts.Getspb(lu);
+                                        v ^= T1Luts.Getspb(lu);
                                         _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                         UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, (uint)flags_stride, false);
                                     }
@@ -4508,7 +4507,7 @@ internal sealed class Tier1Coding
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                        v = v ^ T1Luts.Getspb(lu);
+                                        v ^= T1Luts.Getspb(lu);
                                         _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                         UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, (uint)flags_stride, false);
                                     }
@@ -4542,7 +4541,7 @@ internal sealed class Tier1Coding
                                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                         v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                        v = v ^ T1Luts.Getspb(lu);
+                                        v ^= T1Luts.Getspb(lu);
                                         _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                         UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, (uint)flags_stride, false);
                                     }
@@ -4578,7 +4577,7 @@ internal sealed class Tier1Coding
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                    v = v ^ T1Luts.Getspb(lu);
+                                    v ^= T1Luts.Getspb(lu);
                                     _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                     UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, (uint)flags_stride, vsc);
                                 }
@@ -4609,7 +4608,7 @@ internal sealed class Tier1Coding
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                    v = v ^ T1Luts.Getspb(lu);
+                                    v ^= T1Luts.Getspb(lu);
                                     _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                     UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, (uint)flags_stride, false);
                                 }
@@ -4640,7 +4639,7 @@ internal sealed class Tier1Coding
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                    v = v ^ T1Luts.Getspb(lu);
+                                    v ^= T1Luts.Getspb(lu);
                                     _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                     UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, (uint)flags_stride, false);
                                 }
@@ -4671,7 +4670,7 @@ internal sealed class Tier1Coding
                                         flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                                     _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                                     v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                                    v = v ^ T1Luts.Getspb(lu);
+                                    v ^= T1Luts.Getspb(lu);
                                     _data[data + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                                     UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, (uint)flags_stride, false);
                                 }
@@ -5034,7 +5033,7 @@ internal sealed class Tier1Coding
                                 var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                v = v ^ spb;
+                                v ^= spb;
                                 _data[data + ci * w] = v ? -oneplushalf : oneplushalf;
                                 UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, vsc);
                             }
@@ -5063,7 +5062,7 @@ internal sealed class Tier1Coding
                                 var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                v = v ^ spb;
+                                v ^= spb;
                                 _data[data + ci * w] = v ? -oneplushalf : oneplushalf;
                                 UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                             }
@@ -5092,7 +5091,7 @@ internal sealed class Tier1Coding
                                 var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                v = v ^ spb;
+                                v ^= spb;
                                 _data[data + ci * w] = v ? -oneplushalf : oneplushalf;
                                 UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                             }
@@ -5121,7 +5120,7 @@ internal sealed class Tier1Coding
                                 var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                v = v ^ spb;
+                                v ^= spb;
                                 _data[data + ci * w] = v ? -oneplushalf : oneplushalf;
                                 UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                             }
@@ -5200,7 +5199,7 @@ internal sealed class Tier1Coding
                                 var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                v = v ^ spb;
+                                v ^= spb;
                                 _data[data + ci * w] = v ? -oneplushalf : oneplushalf;
                                 UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, vsc);
                             }
@@ -5229,7 +5228,7 @@ internal sealed class Tier1Coding
                                 var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                v = v ^ spb;
+                                v ^= spb;
                                 _data[data + ci * w] = v ? -oneplushalf : oneplushalf;
                                 UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                             }
@@ -5258,7 +5257,7 @@ internal sealed class Tier1Coding
                                 var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                v = v ^ spb;
+                                v ^= spb;
                                 _data[data + ci * w] = v ? -oneplushalf : oneplushalf;
                                 UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                             }
@@ -5287,7 +5286,7 @@ internal sealed class Tier1Coding
                                 var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                v = v ^ spb;
+                                v ^= spb;
                                 _data[data + ci * w] = v ? -oneplushalf : oneplushalf;
                                 UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                             }
@@ -5368,7 +5367,7 @@ internal sealed class Tier1Coding
                                 var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                v = v ^ spb;
+                                v ^= spb;
                                 _data[data + ci * w] = v ? -oneplushalf : oneplushalf;
                                 UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, vsc);
                             }
@@ -5397,7 +5396,7 @@ internal sealed class Tier1Coding
                                 var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                v = v ^ spb;
+                                v ^= spb;
                                 _data[data + ci * w] = v ? -oneplushalf : oneplushalf;
                                 UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                             }
@@ -5426,7 +5425,7 @@ internal sealed class Tier1Coding
                                 var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                v = v ^ spb;
+                                v ^= spb;
                                 _data[data + ci * w] = v ? -oneplushalf : oneplushalf;
                                 UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                             }
@@ -5455,7 +5454,7 @@ internal sealed class Tier1Coding
                                 var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                v = v ^ spb;
+                                v ^= spb;
                                 _data[data + ci * w] = v ? -oneplushalf : oneplushalf;
                                 UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                             }
@@ -5534,7 +5533,7 @@ internal sealed class Tier1Coding
                                 var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                v = v ^ spb;
+                                v ^= spb;
                                 _data[data + ci * w] = v ? -oneplushalf : oneplushalf;
                                 UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, vsc);
                             }
@@ -5563,7 +5562,7 @@ internal sealed class Tier1Coding
                                 var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                v = v ^ spb;
+                                v ^= spb;
                                 _data[data + ci * w] = v ? -oneplushalf : oneplushalf;
                                 UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                             }
@@ -5592,7 +5591,7 @@ internal sealed class Tier1Coding
                                 var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                v = v ^ spb;
+                                v ^= spb;
                                 _data[data + ci * w] = v ? -oneplushalf : oneplushalf;
                                 UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                             }
@@ -5621,7 +5620,7 @@ internal sealed class Tier1Coding
                                 var spb = T1Luts.Getspb(lu);
                                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                                v = v ^ spb;
+                                v ^= spb;
                                 _data[data + ci * w] = v ? -oneplushalf : oneplushalf;
                                 UpdateFlagsMacro(ref flags, flagsp, ci, v ? 1u : 0u, flags_stride, false);
                             }
@@ -5674,7 +5673,7 @@ internal sealed class Tier1Coding
                 var spb = T1Luts.Getspb(lu);
                 _mqc.Setcurctx(ctxt2); //<-- opj_t1_setcurctx
                 v = _mqc.Decode(); //<-- opj_mqc_decode_macro
-                v = v ^ spb;
+                v ^= spb;
                 _data[datap + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                 UpdateFlagsMacro(ref this.flags[flagsp], flagsp, ci, v ? 1u : 0u, flags_stride, vsc);
             }
@@ -5780,7 +5779,7 @@ internal sealed class Tier1Coding
                             flags, this.flags[flagsp - 1], this.flags[flagsp + 1], ci);
                         _mqc.Setcurctx(T1Luts.Getctxno_sc(lu)); //<- opj_t1_setcurctx macro
                         var v = _mqc.Decode(); //<- opj_mqc_decode_macro
-                        v = v ^ T1Luts.Getspb(lu);
+                        v ^= T1Luts.Getspb(lu);
                         _data[datap + ci * data_stride] = v ? -oneplushalf : oneplushalf;
                         UpdateFlagsMacro(ref this.flags[flagsp], flagsp, ci, v ? 1u : 0u, flags_stride, vsc);
                     }

@@ -4,24 +4,24 @@ namespace OpenJpeg.Internal;
 
 internal sealed class SparseArrayInt32
 {
-    public readonly uint width;
-    public readonly uint height;
-    public readonly uint block_width;
-    public readonly uint block_height;
-    public readonly uint block_count_hor;
-    public readonly uint block_count_ver;
-    public readonly int[][] data_blocks;
+    public readonly uint Width;
+    public readonly uint Height;
+    public readonly uint BlockWidth;
+    public readonly uint BlockHeight;
+    public readonly uint BlockCountHor;
+    public readonly uint BlockCountVer;
+    public readonly int[][] DataBlocks;
 
     private SparseArrayInt32(uint w, uint h, uint bw, uint bh, uint bch, uint bcv,
         int[][] db)
     {
-        width = w;
-        height = h;
-        block_width = bw;
-        block_height = bh;
-        block_count_hor = bch;
-        block_count_ver = bcv;
-        data_blocks= db;
+        Width = w;
+        Height = h;
+        BlockWidth = bw;
+        BlockHeight = bh;
+        BlockCountHor = bch;
+        BlockCountVer = bcv;
+        DataBlocks= db;
     }
 
     private bool is_region_valid(uint x0,
@@ -29,8 +29,8 @@ internal sealed class SparseArrayInt32
         uint x1,
         uint y1)
     {
-        return !(x0 >= width || x1 <= x0 || x1 > width ||
-                 y0 >= height || y1 <= y0 || y1 > height);
+        return !(x0 >= Width || x1 <= x0 || x1 > Width ||
+                 y0 >= Height || y1 <= y0 || y1 > Height);
     }
 
     /// <remarks>
@@ -43,13 +43,13 @@ internal sealed class SparseArrayInt32
         uint x1,
         uint y1,
         float[] buf,
-        int buf_pos,
-        uint buf_col_stride,
-        uint buf_line_stride,
+        int bufPos,
+        uint bufColStride,
+        uint bufLineStride,
         bool forgiving,
-        bool is_read_op)
+        bool isReadOp)
     {
-        uint y_incr = 0;
+        uint yIncr = 0;
         var iof = new IntOrFloat();
 
         if (!is_region_valid(x0, y0, x1, y1))
@@ -57,58 +57,58 @@ internal sealed class SparseArrayInt32
             return forgiving;
         }
 
-        var block_y = y0 / block_height;
-        for (var y = y0; y < y1; block_y++, y += y_incr)
+        var blockY = y0 / BlockHeight;
+        for (var y = y0; y < y1; blockY++, y += yIncr)
         {
-            uint x_incr = 0;
-            y_incr = y == y0 ? block_height - y0 % block_height :
-                block_height;
-            var block_y_offset = block_height - y_incr;
-            y_incr = Math.Min(y_incr, y1 - y);
-            var block_x = x0 / block_width;
-            for (var x = x0; x < x1; block_x++, x += x_incr)
+            uint xIncr = 0;
+            yIncr = y == y0 ? BlockHeight - y0 % BlockHeight :
+                BlockHeight;
+            var blockYOffset = BlockHeight - yIncr;
+            yIncr = Math.Min(yIncr, y1 - y);
+            var blockX = x0 / BlockWidth;
+            for (var x = x0; x < x1; blockX++, x += xIncr)
             {
                 uint j;
-                x_incr = x == x0 ? block_width - x0 % block_width : block_width;
-                var block_x_offset = block_width - x_incr;
-                x_incr = Math.Min(x_incr, x1 - x);
-                var src_block = data_blocks[block_y * block_count_hor + block_x];
-                if (is_read_op)
+                xIncr = x == x0 ? BlockWidth - x0 % BlockWidth : BlockWidth;
+                var blockXOffset = BlockWidth - xIncr;
+                xIncr = Math.Min(xIncr, x1 - x);
+                var srcBlock = DataBlocks[blockY * BlockCountHor + blockX];
+                if (isReadOp)
                 {
-                    if (src_block == null)
+                    if (srcBlock == null)
                     {
-                        if (buf_col_stride == 1)
+                        if (bufColStride == 1)
                         {
-                            var dest_ptr = (int)(buf_pos + (y - y0) * buf_line_stride +
-                                                 (x - x0) * buf_col_stride);
-                            for (j = 0; j < y_incr; j++)
+                            var destPtr = (int)(bufPos + (y - y0) * bufLineStride +
+                                                 (x - x0) * bufColStride);
+                            for (j = 0; j < yIncr; j++)
                             {
-                                Array.Clear(buf, dest_ptr, (int)x_incr);
-                                dest_ptr += (int)buf_line_stride;
+                                Array.Clear(buf, destPtr, (int)xIncr);
+                                destPtr += (int)bufLineStride;
                             }
                         }
                         else
                         {
-                            var dest_ptr = (int)(buf_pos + (y - y0) * buf_line_stride +
-                                                 (x - x0) * buf_col_stride);
-                            for (j = 0; j < y_incr; j++)
+                            var destPtr = (int)(bufPos + (y - y0) * bufLineStride +
+                                                 (x - x0) * bufColStride);
+                            for (j = 0; j < yIncr; j++)
                             {
-                                for (uint k = 0; k < x_incr; k++)
+                                for (uint k = 0; k < xIncr; k++)
                                 {
-                                    buf[dest_ptr + k * buf_col_stride] = 0;
+                                    buf[destPtr + k * bufColStride] = 0;
                                 }
-                                dest_ptr += (int)buf_line_stride;
+                                destPtr += (int)bufLineStride;
                             }
                         }
                     }
                     else
                     {
-                        var src_ptr = block_y_offset * block_width + block_x_offset;
-                        if (buf_col_stride == 1)
+                        var srcPtr = blockYOffset * BlockWidth + blockXOffset;
+                        if (bufColStride == 1)
                         {
-                            var dest_ptr = (int)(buf_pos + (y - y0) * buf_line_stride
+                            var destPtr = (int)(bufPos + (y - y0) * bufLineStride
                                                          +
-                                                         (x - x0) * buf_col_stride);
+                                                         (x - x0) * bufColStride);
                             //C# Commented out since it dosn't make sense for .net
                             //if (x_incr == 4)
                             //{
@@ -124,74 +124,74 @@ internal sealed class SparseArrayInt32
                             //}
                             //else
                             {
-                                for (j = 0; j < y_incr; j++)
+                                for (j = 0; j < yIncr; j++)
                                 {
-                                    Buffer.BlockCopy(src_block, (int)src_ptr * sizeof(int), buf, dest_ptr * sizeof(int), sizeof(int) * (int)x_incr);
-                                    dest_ptr += (int)buf_line_stride;
-                                    src_ptr += block_width;
+                                    Buffer.BlockCopy(srcBlock, (int)srcPtr * sizeof(int), buf, destPtr * sizeof(int), sizeof(int) * (int)xIncr);
+                                    destPtr += (int)bufLineStride;
+                                    srcPtr += BlockWidth;
                                 }
                             }
                         }
                         else
                         {
-                            var dest_ptr = (uint)buf_pos + (y - y0) * buf_line_stride
+                            var destPtr = (uint)bufPos + (y - y0) * bufLineStride
                                                          +
-                                                         (x - x0) * buf_col_stride;
-                            if (x_incr == 1)
+                                                         (x - x0) * bufColStride;
+                            if (xIncr == 1)
                             {
-                                for (j = 0; j < y_incr; j++)
+                                for (j = 0; j < yIncr; j++)
                                 {
-                                    buf[dest_ptr] = src_block[src_ptr];
-                                    dest_ptr += buf_line_stride;
-                                    src_ptr += block_width;
+                                    buf[destPtr] = srcBlock[srcPtr];
+                                    destPtr += bufLineStride;
+                                    srcPtr += BlockWidth;
                                 }
                             }
-                            else if (y_incr == 1 && buf_col_stride == 2)
+                            else if (yIncr == 1 && bufColStride == 2)
                             {
                                 uint k;
-                                for (k = 0; k < (x_incr & ~3U); k += 4)
+                                for (k = 0; k < (xIncr & ~3U); k += 4)
                                 {
-                                    buf[dest_ptr + k * buf_col_stride] = src_block[src_ptr + k];
-                                    buf[dest_ptr + (k + 1) * buf_col_stride] = src_block[src_ptr + k + 1];
-                                    buf[dest_ptr + (k + 2) * buf_col_stride] = src_block[src_ptr + k + 2];
-                                    buf[dest_ptr + (k + 3) * buf_col_stride] = src_block[src_ptr + k + 3];
+                                    buf[destPtr + k * bufColStride] = srcBlock[srcPtr + k];
+                                    buf[destPtr + (k + 1) * bufColStride] = srcBlock[srcPtr + k + 1];
+                                    buf[destPtr + (k + 2) * bufColStride] = srcBlock[srcPtr + k + 2];
+                                    buf[destPtr + (k + 3) * bufColStride] = srcBlock[srcPtr + k + 3];
                                 }
-                                for (; k < x_incr; k++)
+                                for (; k < xIncr; k++)
                                 {
-                                    buf[dest_ptr + k * buf_col_stride] = src_block[src_ptr + k];
+                                    buf[destPtr + k * bufColStride] = srcBlock[srcPtr + k];
                                 }
                             }
-                            else if (x_incr >= 8 && buf_col_stride == 8)
+                            else if (xIncr >= 8 && bufColStride == 8)
                             {
-                                for (j = 0; j < y_incr; j++)
+                                for (j = 0; j < yIncr; j++)
                                 {
                                     uint k;
-                                    for (k = 0; k < (x_incr & ~3U); k += 4)
+                                    for (k = 0; k < (xIncr & ~3U); k += 4)
                                     {
-                                        buf[dest_ptr + k * buf_col_stride] = src_block[src_ptr + k];
-                                        buf[dest_ptr + (k + 1) * buf_col_stride] = src_block[src_ptr + k + 1];
-                                        buf[dest_ptr + (k + 2) * buf_col_stride] = src_block[src_ptr + k + 2];
-                                        buf[dest_ptr + (k + 3) * buf_col_stride] = src_block[src_ptr + k + 3];
+                                        buf[destPtr + k * bufColStride] = srcBlock[srcPtr + k];
+                                        buf[destPtr + (k + 1) * bufColStride] = srcBlock[srcPtr + k + 1];
+                                        buf[destPtr + (k + 2) * bufColStride] = srcBlock[srcPtr + k + 2];
+                                        buf[destPtr + (k + 3) * bufColStride] = srcBlock[srcPtr + k + 3];
                                     }
-                                    for (; k < x_incr; k++)
+                                    for (; k < xIncr; k++)
                                     {
-                                        buf[dest_ptr + k * buf_col_stride] = src_block[src_ptr + k];
+                                        buf[destPtr + k * bufColStride] = srcBlock[srcPtr + k];
                                     }
-                                    dest_ptr += buf_line_stride;
-                                    src_ptr += block_width;
+                                    destPtr += bufLineStride;
+                                    srcPtr += BlockWidth;
                                 }
                             }
                             else
                             {
                                 /* General case */
-                                for (j = 0; j < y_incr; j++)
+                                for (j = 0; j < yIncr; j++)
                                 {
-                                    for (uint k = 0; k < x_incr; k++)
+                                    for (uint k = 0; k < xIncr; k++)
                                     {
-                                        buf[dest_ptr + k * buf_col_stride] = src_block[src_ptr + k];
+                                        buf[destPtr + k * bufColStride] = srcBlock[srcPtr + k];
                                     }
-                                    dest_ptr += buf_line_stride;
-                                    src_ptr += block_width;
+                                    destPtr += bufLineStride;
+                                    srcPtr += BlockWidth;
                                 }
                             }
                         }
@@ -199,18 +199,18 @@ internal sealed class SparseArrayInt32
                 }
                 else
                 {
-                    if (src_block == null)
+                    if (srcBlock == null)
                     {
-                        src_block = new int[block_width * block_height];
-                        data_blocks[block_y * block_count_hor + block_x] = src_block;
+                        srcBlock = new int[BlockWidth * BlockHeight];
+                        DataBlocks[blockY * BlockCountHor + blockX] = srcBlock;
                     }
 
-                    if (buf_col_stride == 1)
+                    if (bufColStride == 1)
                     {
-                        var dest_ptr = (int)(0 + block_y_offset *
-                            block_width + block_x_offset);
-                        var src_ptr = (int)(buf_pos + (y - y0) *
-                            buf_line_stride + (x - x0) * buf_col_stride);
+                        var destPtr = (int)(0 + blockYOffset *
+                            BlockWidth + blockXOffset);
+                        var srcPtr = (int)(bufPos + (y - y0) *
+                            bufLineStride + (x - x0) * bufColStride);
                         //if (x_incr == 4)
                         //{
                         //    /* Same code as general branch, but the compiler */
@@ -225,67 +225,67 @@ internal sealed class SparseArrayInt32
                         //}
                         //else
                         {
-                            for (j = 0; j < y_incr; j++)
+                            for (j = 0; j < yIncr; j++)
                             {
-                                Buffer.BlockCopy(buf, src_ptr * sizeof(int), src_block, dest_ptr * sizeof(int), (int)x_incr * sizeof(int));
-                                dest_ptr += (int)block_width;
-                                src_ptr += (int)buf_line_stride;
+                                Buffer.BlockCopy(buf, srcPtr * sizeof(int), srcBlock, destPtr * sizeof(int), (int)xIncr * sizeof(int));
+                                destPtr += (int)BlockWidth;
+                                srcPtr += (int)bufLineStride;
                             }
                         }
                     }
                     else
                     {
-                        var dest_ptr = 0 + block_y_offset *
-                            block_width + block_x_offset;
-                        var src_ptr = (uint)buf_pos + (y - y0) *
-                            buf_line_stride + (x - x0) * buf_col_stride;
-                        if (x_incr == 1)
+                        var destPtr = 0 + blockYOffset *
+                            BlockWidth + blockXOffset;
+                        var srcPtr = (uint)bufPos + (y - y0) *
+                            bufLineStride + (x - x0) * bufColStride;
+                        if (xIncr == 1)
                         {
-                            for (j = 0; j < y_incr; j++)
+                            for (j = 0; j < yIncr; j++)
                             {
-                                iof.F = buf[src_ptr];
-                                src_block[dest_ptr] = iof.I;
-                                src_ptr += buf_line_stride;
-                                dest_ptr += block_width;
+                                iof.F = buf[srcPtr];
+                                srcBlock[destPtr] = iof.I;
+                                srcPtr += bufLineStride;
+                                destPtr += BlockWidth;
                             }
                         }
-                        else if (x_incr >= 8 && buf_col_stride == 8)
+                        else if (xIncr >= 8 && bufColStride == 8)
                         {
-                            for (j = 0; j < y_incr; j++)
+                            for (j = 0; j < yIncr; j++)
                             {
                                 uint k;
-                                for (k = 0; k < (x_incr & ~3U); k += 4)
+                                for (k = 0; k < (xIncr & ~3U); k += 4)
                                 {
-                                    iof.F = buf[src_ptr + k * buf_col_stride];
-                                    src_block[dest_ptr + k] = iof.I;
-                                    iof.F = buf[src_ptr + (k + 1) * buf_col_stride];
-                                    src_block[dest_ptr + k + 1] = iof.I;
-                                    iof.F = buf[src_ptr + (k + 2) * buf_col_stride];
-                                    src_block[dest_ptr + k + 2] = iof.I;
-                                    iof.F = buf[src_ptr + (k + 3) * buf_col_stride];
-                                    src_block[dest_ptr + k + 3] = iof.I;
+                                    iof.F = buf[srcPtr + k * bufColStride];
+                                    srcBlock[destPtr + k] = iof.I;
+                                    iof.F = buf[srcPtr + (k + 1) * bufColStride];
+                                    srcBlock[destPtr + k + 1] = iof.I;
+                                    iof.F = buf[srcPtr + (k + 2) * bufColStride];
+                                    srcBlock[destPtr + k + 2] = iof.I;
+                                    iof.F = buf[srcPtr + (k + 3) * bufColStride];
+                                    srcBlock[destPtr + k + 3] = iof.I;
                                 }
-                                for (; k < x_incr; k++)
+                                for (; k < xIncr; k++)
                                 {
-                                    iof.F = buf[src_ptr + k * buf_col_stride];
-                                    src_block[dest_ptr + k] = iof.I;
+                                    iof.F = buf[srcPtr + k * bufColStride];
+                                    srcBlock[destPtr + k] = iof.I;
                                 }
-                                src_ptr += buf_line_stride;
-                                dest_ptr += block_width;
+                                srcPtr += bufLineStride;
+                                destPtr += BlockWidth;
                             }
                         }
                         else
                         {
                             /* General case */
-                            for (j = 0; j < y_incr; j++)
+                            for (j = 0; j < yIncr; j++)
                             {
-                                for (uint k = 0; k < x_incr; k++)
+                                for (uint k = 0; k < xIncr; k++)
                                 {
-                                    iof.F = buf[src_ptr + k * buf_col_stride];
-                                    src_block[dest_ptr + k] = iof.I;
+                                    iof.F = buf[srcPtr + k * bufColStride];
+                                    srcBlock[destPtr + k] = iof.I;
                                 }
-                                src_ptr += buf_line_stride;
-                                dest_ptr += block_width;
+                                srcPtr += bufLineStride;
+                                destPtr += BlockWidth;
                             }
                         }
                     }
@@ -302,71 +302,71 @@ internal sealed class SparseArrayInt32
         uint x1,
         uint y1,
         int[] buf,
-        int buf_pos,
-        uint buf_col_stride,
-        uint buf_line_stride,
+        int bufPos,
+        uint bufColStride,
+        uint bufLineStride,
         bool forgiving,
-        bool is_read_op)
+        bool isReadOp)
     {
-        uint y_incr;
+        uint yIncr;
 
         if (!is_region_valid(x0, y0, x1, y1))
         {
             return forgiving;
         }
 
-        var block_y = y0 / block_height;
-        for (var y = y0; y < y1; block_y++, y += y_incr)
+        var blockY = y0 / BlockHeight;
+        for (var y = y0; y < y1; blockY++, y += yIncr)
         {
-            uint x_incr;
-            y_incr = y == y0 ? block_height - y0 % block_height :
-                block_height;
-            var block_y_offset = block_height - y_incr;
-            y_incr = Math.Min(y_incr, y1 - y);
-            var block_x = x0 / block_width;
-            for (var x = x0; x < x1; block_x++, x += x_incr)
+            uint xIncr;
+            yIncr = y == y0 ? BlockHeight - y0 % BlockHeight :
+                BlockHeight;
+            var blockYOffset = BlockHeight - yIncr;
+            yIncr = Math.Min(yIncr, y1 - y);
+            var blockX = x0 / BlockWidth;
+            for (var x = x0; x < x1; blockX++, x += xIncr)
             {
                 uint j;
-                x_incr = x == x0 ? block_width - x0 % block_width : block_width;
-                var block_x_offset = block_width - x_incr;
-                x_incr = Math.Min(x_incr, x1 - x);
-                var src_block = data_blocks[block_y * block_count_hor + block_x];
-                if (is_read_op)
+                xIncr = x == x0 ? BlockWidth - x0 % BlockWidth : BlockWidth;
+                var blockXOffset = BlockWidth - xIncr;
+                xIncr = Math.Min(xIncr, x1 - x);
+                var srcBlock = DataBlocks[blockY * BlockCountHor + blockX];
+                if (isReadOp)
                 {
-                    if (src_block == null)
+                    if (srcBlock == null)
                     {
-                        if (buf_col_stride == 1)
+                        if (bufColStride == 1)
                         {
-                            var dest_ptr = (int)(buf_pos + (y - y0) * buf_line_stride +
-                                                 (x - x0) * buf_col_stride);
-                            for (j = 0; j < y_incr; j++)
+                            var destPtr = (int)(bufPos + (y - y0) * bufLineStride +
+                                                 (x - x0) * bufColStride);
+                            for (j = 0; j < yIncr; j++)
                             {
-                                Array.Clear(buf, dest_ptr, (int)x_incr);
-                                dest_ptr += (int)buf_line_stride;
+                                Array.Clear(buf, destPtr, (int)xIncr);
+                                destPtr += (int)bufLineStride;
                             }
                         }
                         else
                         {
-                            var dest_ptr = (int)(buf_pos + (y - y0) * buf_line_stride +
-                                                 (x - x0) * buf_col_stride);
-                            for (j = 0; j < y_incr; j++)
+                            var destPtr = (int)(bufPos + (y - y0) * bufLineStride +
+                                                 (x - x0) * bufColStride);
+                            for (j = 0; j < yIncr; j++)
                             {
-                                for (uint k = 0; k < x_incr; k++)
+                                for (uint k = 0; k < xIncr; k++)
                                 {
-                                    buf[dest_ptr + k * buf_col_stride] = 0;
+                                    buf[destPtr + k * bufColStride] = 0;
                                 }
-                                dest_ptr += (int)buf_line_stride;
+                                destPtr += (int)bufLineStride;
                             }
                         }
                     }
                     else
                     {
-                        var src_ptr = block_y_offset * block_width + block_x_offset;
-                        if (buf_col_stride == 1)
+                        var srcPtr = blockYOffset * BlockWidth + blockXOffset;
+                        if (bufColStride == 1)
                         {
-                            var dest_ptr = (int)(buf_pos + (y - y0) * buf_line_stride
+                            var destPtr = (int)(bufPos + (y - y0) * bufLineStride
                                                          +
-                                                         (x - x0) * buf_col_stride);
+                                                         (x - x0) * bufColStride);
                             //if (x_incr == 4)
                             //{
                             //    /* Same code as general branch, but the compiler */
@@ -381,74 +381,74 @@ internal sealed class SparseArrayInt32
                             //}
                             //else
                             {
-                                for (j = 0; j < y_incr; j++)
+                                for (j = 0; j < yIncr; j++)
                                 {
-                                    Buffer.BlockCopy(src_block, (int)src_ptr * sizeof(int), buf, dest_ptr * sizeof(int), sizeof(int) * (int)x_incr);
-                                    dest_ptr += (int)buf_line_stride;
-                                    src_ptr += block_width;
+                                    Buffer.BlockCopy(srcBlock, (int)srcPtr * sizeof(int), buf, destPtr * sizeof(int), sizeof(int) * (int)xIncr);
+                                    destPtr += (int)bufLineStride;
+                                    srcPtr += BlockWidth;
                                 }
                             }
                         }
                         else
                         {
-                            var dest_ptr = (uint)buf_pos + (y - y0) * buf_line_stride
+                            var destPtr = (uint)bufPos + (y - y0) * bufLineStride
                                                          +
-                                                         (x - x0) * buf_col_stride;
-                            if (x_incr == 1)
+                                                         (x - x0) * bufColStride;
+                            if (xIncr == 1)
                             {
-                                for (j = 0; j < y_incr; j++)
+                                for (j = 0; j < yIncr; j++)
                                 {
-                                    buf[dest_ptr] = src_block[src_ptr];
-                                    dest_ptr += buf_line_stride;
-                                    src_ptr += block_width;
+                                    buf[destPtr] = srcBlock[srcPtr];
+                                    destPtr += bufLineStride;
+                                    srcPtr += BlockWidth;
                                 }
                             }
-                            else if (y_incr == 1 && buf_col_stride == 2)
+                            else if (yIncr == 1 && bufColStride == 2)
                             {
                                 uint k;
-                                for (k = 0; k < (x_incr & ~3U); k += 4)
+                                for (k = 0; k < (xIncr & ~3U); k += 4)
                                 {
-                                    buf[dest_ptr + k * buf_col_stride] = src_block[src_ptr + k];
-                                    buf[dest_ptr + (k + 1) * buf_col_stride] = src_block[src_ptr + k + 1];
-                                    buf[dest_ptr + (k + 2) * buf_col_stride] = src_block[src_ptr + k + 2];
-                                    buf[dest_ptr + (k + 3) * buf_col_stride] = src_block[src_ptr + k + 3];
+                                    buf[destPtr + k * bufColStride] = srcBlock[srcPtr + k];
+                                    buf[destPtr + (k + 1) * bufColStride] = srcBlock[srcPtr + k + 1];
+                                    buf[destPtr + (k + 2) * bufColStride] = srcBlock[srcPtr + k + 2];
+                                    buf[destPtr + (k + 3) * bufColStride] = srcBlock[srcPtr + k + 3];
                                 }
-                                for (; k < x_incr; k++)
+                                for (; k < xIncr; k++)
                                 {
-                                    buf[dest_ptr + k * buf_col_stride] = src_block[src_ptr + k];
+                                    buf[destPtr + k * bufColStride] = srcBlock[srcPtr + k];
                                 }
                             }
-                            else if (x_incr >= 8 && buf_col_stride == 8)
+                            else if (xIncr >= 8 && bufColStride == 8)
                             {
-                                for (j = 0; j < y_incr; j++)
+                                for (j = 0; j < yIncr; j++)
                                 {
                                     uint k;
-                                    for (k = 0; k < (x_incr & ~3U); k += 4)
+                                    for (k = 0; k < (xIncr & ~3U); k += 4)
                                     {
-                                        buf[dest_ptr + k * buf_col_stride] = src_block[src_ptr + k];
-                                        buf[dest_ptr + (k + 1) * buf_col_stride] = src_block[src_ptr + k + 1];
-                                        buf[dest_ptr + (k + 2) * buf_col_stride] = src_block[src_ptr + k + 2];
-                                        buf[dest_ptr + (k + 3) * buf_col_stride] = src_block[src_ptr + k + 3];
+                                        buf[destPtr + k * bufColStride] = srcBlock[srcPtr + k];
+                                        buf[destPtr + (k + 1) * bufColStride] = srcBlock[srcPtr + k + 1];
+                                        buf[destPtr + (k + 2) * bufColStride] = srcBlock[srcPtr + k + 2];
+                                        buf[destPtr + (k + 3) * bufColStride] = srcBlock[srcPtr + k + 3];
                                     }
-                                    for (; k < x_incr; k++)
+                                    for (; k < xIncr; k++)
                                     {
-                                        buf[dest_ptr + k * buf_col_stride] = src_block[src_ptr + k];
+                                        buf[destPtr + k * bufColStride] = srcBlock[srcPtr + k];
                                     }
-                                    dest_ptr += buf_line_stride;
-                                    src_ptr += block_width;
+                                    destPtr += bufLineStride;
+                                    srcPtr += BlockWidth;
                                 }
                             }
                             else
                             {
                                 /* General case */
-                                for (j = 0; j < y_incr; j++)
+                                for (j = 0; j < yIncr; j++)
                                 {
-                                    for (uint k = 0; k < x_incr; k++)
+                                    for (uint k = 0; k < xIncr; k++)
                                     {
-                                        buf[dest_ptr + k * buf_col_stride] = src_block[src_ptr + k];
+                                        buf[destPtr + k * bufColStride] = srcBlock[srcPtr + k];
                                     }
-                                    dest_ptr += buf_line_stride;
-                                    src_ptr += block_width;
+                                    destPtr += bufLineStride;
+                                    srcPtr += BlockWidth;
                                 }
                             }
                         }
@@ -456,18 +456,18 @@ internal sealed class SparseArrayInt32
                 }
                 else
                 {
-                    if (src_block == null)
+                    if (srcBlock == null)
                     {
-                        src_block = new int[block_width * block_height];
-                        data_blocks[block_y * block_count_hor + block_x] = src_block;
+                        srcBlock = GC.AllocateUninitializedArray<int>((int)(BlockWidth * BlockHeight));
+                        DataBlocks[blockY * BlockCountHor + blockX] = srcBlock;
                     }
 
-                    if (buf_col_stride == 1)
+                    if (bufColStride == 1)
                     {
-                        var dest_ptr = (int)(0 + block_y_offset *
-                            block_width + block_x_offset);
-                        var src_ptr = (int)(buf_pos + (y - y0) *
-                            buf_line_stride + (x - x0) * buf_col_stride);
+                        var destPtr = (int)(0 + blockYOffset *
+                            BlockWidth + blockXOffset);
+                        var srcPtr = (int)(bufPos + (y - y0) *
+                            bufLineStride + (x - x0) * bufColStride);
                         //if (x_incr == 4)
                         //{
                         //    /* Same code as general branch, but the compiler */
@@ -482,60 +482,60 @@ internal sealed class SparseArrayInt32
                         //}
                         //else
                         {
-                            for (j = 0; j < y_incr; j++)
+                            for (j = 0; j < yIncr; j++)
                             {
-                                Buffer.BlockCopy(buf, src_ptr * sizeof(int), src_block, dest_ptr * sizeof(int), (int)x_incr * sizeof(int));
-                                dest_ptr += (int)block_width;
-                                src_ptr += (int)buf_line_stride;
+                                Buffer.BlockCopy(buf, srcPtr * sizeof(int), srcBlock, destPtr * sizeof(int), (int)xIncr * sizeof(int));
+                                destPtr += (int)BlockWidth;
+                                srcPtr += (int)bufLineStride;
                             }
                         }
                     }
                     else
                     {
-                        var dest_ptr = 0 + block_y_offset *
-                            block_width + block_x_offset;
-                        var src_ptr = (uint)buf_pos + (y - y0) *
-                            buf_line_stride + (x - x0) * buf_col_stride;
-                        if (x_incr == 1)
+                        var destPtr = 0 + blockYOffset *
+                            BlockWidth + blockXOffset;
+                        var srcPtr = (uint)bufPos + (y - y0) *
+                            bufLineStride + (x - x0) * bufColStride;
+                        if (xIncr == 1)
                         {
-                            for (j = 0; j < y_incr; j++)
+                            for (j = 0; j < yIncr; j++)
                             {
-                                src_block[dest_ptr] = buf[src_ptr];
-                                src_ptr += buf_line_stride;
-                                dest_ptr += block_width;
+                                srcBlock[destPtr] = buf[srcPtr];
+                                srcPtr += bufLineStride;
+                                destPtr += BlockWidth;
                             }
                         }
-                        else if (x_incr >= 8 && buf_col_stride == 8)
+                        else if (xIncr >= 8 && bufColStride == 8)
                         {
-                            for (j = 0; j < y_incr; j++)
+                            for (j = 0; j < yIncr; j++)
                             {
                                 uint k;
-                                for (k = 0; k < (x_incr & ~3U); k += 4)
+                                for (k = 0; k < (xIncr & ~3U); k += 4)
                                 {
-                                    src_block[dest_ptr + k] = buf[src_ptr + k * buf_col_stride];
-                                    src_block[dest_ptr + k + 1] = buf[src_ptr + (k + 1) * buf_col_stride];
-                                    src_block[dest_ptr + k + 2] = buf[src_ptr + (k + 2) * buf_col_stride];
-                                    src_block[dest_ptr + k + 3] = buf[src_ptr + (k + 3) * buf_col_stride];
+                                    srcBlock[destPtr + k] = buf[srcPtr + k * bufColStride];
+                                    srcBlock[destPtr + k + 1] = buf[srcPtr + (k + 1) * bufColStride];
+                                    srcBlock[destPtr + k + 2] = buf[srcPtr + (k + 2) * bufColStride];
+                                    srcBlock[destPtr + k + 3] = buf[srcPtr + (k + 3) * bufColStride];
                                 }
-                                for (; k < x_incr; k++)
+                                for (; k < xIncr; k++)
                                 {
-                                    src_block[dest_ptr + k] = buf[src_ptr + k * buf_col_stride];
+                                    srcBlock[destPtr + k] = buf[srcPtr + k * bufColStride];
                                 }
-                                src_ptr += buf_line_stride;
-                                dest_ptr += block_width;
+                                srcPtr += bufLineStride;
+                                destPtr += BlockWidth;
                             }
                         }
                         else
                         {
                             /* General case */
-                            for (j = 0; j < y_incr; j++)
+                            for (j = 0; j < yIncr; j++)
                             {
-                                for (uint k = 0; k < x_incr; k++)
+                                for (uint k = 0; k < xIncr; k++)
                                 {
-                                    src_block[dest_ptr + k] = buf[src_ptr + k * buf_col_stride];
+                                    srcBlock[destPtr + k] = buf[srcPtr + k * bufColStride];
                                 }
-                                src_ptr += buf_line_stride;
-                                dest_ptr += block_width;
+                                srcPtr += bufLineStride;
+                                destPtr += BlockWidth;
                             }
                         }
                     }
@@ -545,111 +545,111 @@ internal sealed class SparseArrayInt32
 
         return true;
     }
-    internal bool read(uint x0,
+    internal bool Read(uint x0,
         uint y0,
         uint x1,
         uint y1,
         int[] dest,
-        int dest_pos,
-        uint dest_col_stride,
-        uint dest_line_stride,
+        int destPos,
+        uint destColStride,
+        uint destLineStride,
         bool forgiving)
     {
         return read_or_write(x0, y0, x1, y1,
             dest,
-            dest_pos,
-            dest_col_stride,
-            dest_line_stride,
+            destPos,
+            destColStride,
+            destLineStride,
             forgiving,
             true);
     }
 
     //2.5 - opj_sparse_array_int32_read
-    internal bool read(uint x0,
+    internal bool Read(uint x0,
         uint y0,
         uint x1,
         uint y1,
         float[] dest,
-        int dest_pos,
-        uint dest_col_stride,
-        uint dest_line_stride,
+        int destPos,
+        uint destColStride,
+        uint destLineStride,
         bool forgiving)
     {
         return read_or_write(x0, y0, x1, y1,
             dest,
-            dest_pos,
-            dest_col_stride,
-            dest_line_stride,
+            destPos,
+            destColStride,
+            destLineStride,
             forgiving,
             true);
     }
 
-    internal bool write(uint x0,
+    internal bool Write(uint x0,
         uint y0,
         uint x1,
         uint y1,
         int[] src,
-        int src_pos,
-        uint src_col_stride,
-        uint src_line_stride,
+        int srcPos,
+        uint srcColStride,
+        uint srcLineStride,
         bool forgiving)
     {
         return read_or_write(x0, y0, x1, y1,
             src,
-            src_pos,
-            src_col_stride,
-            src_line_stride,
+            srcPos,
+            srcColStride,
+            srcLineStride,
             forgiving,
             false);
     }
 
-    internal bool write(uint x0,
+    internal bool Write(uint x0,
         uint y0,
         uint x1,
         uint y1,
         float[] src,
-        int src_pos,
-        uint src_col_stride,
-        uint src_line_stride,
+        int srcPos,
+        uint srcColStride,
+        uint srcLineStride,
         bool forgiving)
     {
         return read_or_write(x0, y0, x1, y1,
             src,
-            src_pos,
-            src_col_stride,
-            src_line_stride,
+            srcPos,
+            srcColStride,
+            srcLineStride,
             forgiving,
             false);
     }
 
     internal static SparseArrayInt32 Create(uint width, uint height, 
-        uint block_width, uint block_height)
+        uint blockWidth, uint blockHeight)
     {
-        if (width == 0 || height == 0 || block_width == 0 || block_height == 0)
+        if (width == 0 || height == 0 || blockWidth == 0 || blockHeight == 0)
         {
             return null;
         }
-        if (block_width > ~0U / block_height / sizeof(int))
+        if (blockWidth > ~0U / blockHeight / sizeof(int))
         {
             return null;
         }
 
-        var bch = MyMath.uint_ceildiv(width, block_width);
-        var bcv = MyMath.uint_ceildiv(height, block_height);
+        var bch = MyMath.uint_ceildiv(width, blockWidth);
+        var bcv = MyMath.uint_ceildiv(height, blockHeight);
         if (bch > ~0U / bcv)
         {
             return null;
         }
 
-        return new SparseArrayInt32(width, height, block_width, block_height,
+        return new SparseArrayInt32(width, height, blockWidth, blockHeight,
             bch, bcv, new int[bch * bcv][]);
     }
 
     internal static SparseArrayInt32 Init(TcdTilecomp tilec, uint numres)
     {
-        var tr_max = tilec.resolutions[numres - 1];
-        var w = (uint)(tr_max.x1 - tr_max.x0);
-        var h = (uint)(tr_max.y1 - tr_max.y0);
+        var trMax = tilec.resolutions[numres - 1];
+        var w = (uint)(trMax.x1 - trMax.x0);
+        var h = (uint)(trMax.y1 - trMax.y0);
 
         var sa = Create(w, h, Math.Min(w, 64u), Math.Min(h, 64u));
         if (sa == null)
@@ -673,8 +673,8 @@ internal sealed class SparseArrayInt32
                         {
                             var x = (uint)(cblk.x0 - band.x0);
                             var y = (uint)(cblk.y0 - band.y0);
-                            var cblk_w = (uint)(cblk.x1 - cblk.x0);
-                            var cblk_h = (uint)(cblk.y1 - cblk.y0);
+                            var cblkW = (uint)(cblk.x1 - cblk.x0);
+                            var cblkH = (uint)(cblk.y1 - cblk.y0);
 
                             if ((band.bandno & 1) != 0)
                             {
@@ -687,10 +687,10 @@ internal sealed class SparseArrayInt32
                                 y += (uint)(pres.y1 - pres.y0);
                             }
 
-                            if (!sa.write(x, y,
-                                    x + cblk_w, y + cblk_h,
+                            if (!sa.Write(x, y,
+                                    x + cblkW, y + cblkH,
                                     cblk.decoded_data, 0,
-                                    1, cblk_w, true))
+                                    1, cblkW, true))
                             {
                                 return null;
                             }

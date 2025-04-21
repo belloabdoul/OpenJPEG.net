@@ -39,7 +39,7 @@ public class Cio // Character In/Out
     /// <summary>
     /// Read buffer
     /// </summary>
-    private readonly byte[] _bytes = new byte[4];
+    private readonly byte[] _bytes = GC.AllocateUninitializedArray<byte>(4);
 
     /// <summary>
     /// Source or destination stream
@@ -474,7 +474,7 @@ internal class BufferCio
         //in C#. Buffer.BlockCopy might work for all I know, but I doubt it.
 
         //1. We copy all existing data to a tmp buffer.
-        var tmp = new byte[_pos - (int)count];
+        var tmp = GC.AllocateUninitializedArray<byte>(_pos - (int)count);
         Buffer.BlockCopy(_buffer, (int)pos, tmp, 0, tmp.Length);
 
         //Copies the new data into buffer

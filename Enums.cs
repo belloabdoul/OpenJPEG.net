@@ -850,21 +850,13 @@ public class PrecinctSize
         X = x; Y = y;
     }
 }
-public class SubsamplingFactor
+public class SubsamplingFactor(int dx, int dy)
 {
-    public readonly int dX, dY;
-    public SubsamplingFactor(int dx, int dy)
-    {
-        dX = dx; dY = dy;
-    }
+    public readonly int dX = dx, dY = dy;
 }
-public class ImageOffset
+public class ImageOffset(int x0, int y0)
 {
-    public readonly int x0, y0;
-    public ImageOffset(int x0, int y0)
-    {
-        this.x0 = x0; this.y0 = y0;
-    }
+    public readonly int x0 = x0, y0 = y0;
 }
 
 public class CodeblockSize

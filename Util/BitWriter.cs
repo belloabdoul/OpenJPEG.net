@@ -1,11 +1,12 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace OpenJpeg.Util;
 
 //Based on WBIO just without the "skip bit" feature
 internal class BitWriter
 {
-    internal byte[] _buf = new byte[256];
+    internal byte[] _buf = GC.AllocateUninitializedArray<byte>(256);
     private int _buf_pos;
     private byte _unfinished_byte;
     private int _u_pos = 8;

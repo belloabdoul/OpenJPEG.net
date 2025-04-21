@@ -232,7 +232,7 @@ public class CompressionParameters
     {
         get
         {
-            var r = new PrecinctSize[prch_init.Length];
+            var r = GC.AllocateUninitializedArray<PrecinctSize>(prch_init.Length);
             for (var c = 0; c < r.Length; c++)
                 r[c] = new PrecinctSize(prcw_init[c], prch_init[c]);
             return r;
@@ -275,15 +275,7 @@ public class CompressionParameters
         set => prog_order = value;
     }
 
-    public ProgOrdChang[] ProgressionOrderChange
-    {
-        get
-        {
-            if (POC == null)
-                POC = new ProgOrdChang[32];
-            return POC;
-        }
-    }
+    public ProgOrdChang[] ProgressionOrderChange => POC ??= GC.AllocateUninitializedArray<ProgOrdChang>(3);
 
     public uint NumberOfPocs
     {
@@ -442,20 +434,20 @@ public class CompressionParameters
     /// </summary>
     /// <remarks>
     /// Remeber to init:
-    ///  prcw_init = new int[Constants.J2K_MAXRLVLS];
-    ///  prch_init = new int[Constants.J2K_MAXRLVLS];
+    ///  prcw_init = GC.AllocateUninitializedArray<int>(Constants.J2K_MAXRLVLS];
+    ///  prch_init = GC.AllocateUninitializedArray<int>(Constants.J2K_MAXRLVLS];
     /// </remarks>
     internal int res_spec;
 
     /// <summary>
     /// initial precinct width
     /// </summary>
-    internal int[] prcw_init = new int[Constants.J2KMaxrlvls];
+    internal int[] prcw_init = GC.AllocateUninitializedArray<int>(Constants.J2KMaxrlvls);
 
     /// <summary>
     /// initial precinct height
     /// </summary>
-    internal int[] prch_init = new int[Constants.J2KMaxrlvls];
+    internal int[] prch_init = GC.AllocateUninitializedArray<int>(Constants.J2KMaxrlvls);
 
     internal int image_offset_x0;
     /** subimage encoding: origin image offset in y direction */
@@ -692,8 +684,8 @@ public class CompressionParameters
     /// <param name="cp"></param>
     public CompressionParameters(CompressionParameters cp)
     {
-        tcp_distoratio = new float[cp.tcp_numlayers];
-        tcp_rates = new float[cp.tcp_numlayers];
+        tcp_distoratio = GC.AllocateUninitializedArray<float>(cp.tcp_numlayers);
+        tcp_rates = GC.AllocateUninitializedArray<float>(cp.tcp_numlayers);
 
         //Sets default values
         tw = 1;
@@ -735,8 +727,8 @@ public class CompressionParameters
     {
         //C# these are set to 100 in the org impl, we
         //   do things a little differently.
-        tcp_distoratio = new float[0];
-        tcp_rates = new float[0];
+        tcp_distoratio = [];
+        tcp_rates = [];
 
         cp_cinema = CINEMA_MODE.OFF; /* DEPRECATED */
         rsiz = J2K_PROFILE.NONE;
@@ -790,7 +782,7 @@ public class CompressionParameters
     {
         if (cp_fixed_alloc)
         {
-            matrice = new int[tcp_numlayers * numresolution * 3];
+            matrice = GC.AllocateUninitializedArray<int>(tcp_numlayers * numresolution * 3);
 
             //Debug code
             //Values 0-17 works. Setting them to high will trigger

@@ -113,7 +113,7 @@ internal sealed class PacketIterator
     /// <summary>
     /// Progression order change information
     /// </summary>
-    internal ProgOrdChang poc = new ProgOrdChang();
+    internal ProgOrdChang poc = new();
 
     /// <summary>
     /// Number of components in the image

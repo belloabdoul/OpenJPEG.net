@@ -176,7 +176,7 @@ internal sealed class J2K
             // per component is allowed
             j2k._cp.AllowDifferentBitDepthSign = true;
 
-            j2k._specific_param.decoder.header_data = new byte[Constants.J2KDefaultHeaderSize];
+            j2k._specific_param.decoder.header_data = GC.AllocateUninitializedArray<byte>(Constants.J2KDefaultHeaderSize);
             j2k._specific_param.decoder.header_data_size = Constants.J2KDefaultHeaderSize;
             j2k._specific_param.decoder.tile_ind_to_dec = -1;
             j2k._specific_param.decoder.last_sot_read_pos = 0;
@@ -189,7 +189,7 @@ internal sealed class J2K
             //     We still use the OpenJpeg 1.4 API, so a few things
             //     have to be placed a little differently.
             j2k._specific_param.encoder.header_tile_data =
-                new byte[Constants.J2KDefaultHeaderSize];
+                GC.AllocateUninitializedArray<byte>(Constants.J2KDefaultHeaderSize);
             j2k._specific_param.encoder.header_tile_data_size = Constants.J2KDefaultHeaderSize;
         }
 
@@ -567,7 +567,7 @@ internal sealed class J2K
         {
             //Int64 in org. Impl, but C# don't support arrays > 2GB
             var array_size = parameters.tcp_numlayers * parameters.numresolution * 3;
-            _cp.specific_param.enc.matrice = new int[array_size];
+            _cp.specific_param.enc.matrice = GC.AllocateUninitializedArray<int>(array_size);
             Array.Copy(parameters.matrice, _cp.specific_param.enc.matrice, parameters.matrice.Length);
         }
 
@@ -634,7 +634,7 @@ internal sealed class J2K
         _cp.img_size = image.ImageSize;
 
         //Initialize the tiles
-        _cp.tcps = new TileCodingParams[_cp.tw * _cp.th];
+        _cp.tcps = GC.AllocateUninitializedArray<TileCodingParams>((int)(_cp.tw * _cp.th));
         for (uint tileno = 0; tileno < _cp.tcps.Length; tileno++)
         {
             var tcp = new TileCodingParams();
@@ -711,17 +711,17 @@ internal sealed class J2K
             if (parameters.mct_data != null)
             {
                 var lMctSize = image.numcomps * image.numcomps;
-                var lTmpBuf = new float[lMctSize];
+                var lTmpBuf = GC.AllocateUninitializedArray<float>((int)lMctSize);
                 var mct_data = parameters.mct_data;
 
                 tcp.mct = 2;
-                tcp.mct_coding_matrix = new float[lMctSize];
+                tcp.mct_coding_matrix = GC.AllocateUninitializedArray<float>((int)lMctSize);
 
                 //C#: This is the two memcopy statements
                 for (var c = 0; c < lTmpBuf.Length; c++)
                     lTmpBuf[c] = tcp.mct_coding_matrix[c] = mct_data[c].F;
 
-                tcp.mct_decoding_matrix = new float[lMctSize];
+                tcp.mct_decoding_matrix = GC.AllocateUninitializedArray<float>((int)lMctSize);
                 var did_invert = Invert.MatrixInversion(lTmpBuf, tcp.mct_decoding_matrix, (int)image.numcomps);
                 if(!did_invert)
                 {
@@ -3345,7 +3345,7 @@ internal sealed class J2K
 
         if (_specific_param.encoder.PLT)
         {
-            marker_info = new TcdMarkerInfo() { need_PLT = true };
+            marker_info = new TcdMarkerInfo { need_PLT = true };
         }
 
         if (remaining_data < _specific_param.encoder.reserved_bytes_for_PLT)

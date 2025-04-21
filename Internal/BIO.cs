@@ -6,6 +6,8 @@
  * Use it at your own risk.
  */
 #endregion
+
+using System;
 using System.IO;
 
 namespace OpenJpeg.Internal;
@@ -289,7 +291,7 @@ internal class WBIO
     //Since BufferCIO does its own buffering, I've reduced this
     //buffer from 256 to 4. An alternative is to simply drop this
     //buffer. 
-    internal byte[] _buf = new byte[4];
+    internal byte[] _buf = GC.AllocateUninitializedArray<byte>(4);
     private int _buf_pos;
     private byte _unfinished_byte;
     private int _u_pos = 8;

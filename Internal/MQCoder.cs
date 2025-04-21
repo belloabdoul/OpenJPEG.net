@@ -72,7 +72,7 @@ internal sealed class MQCoder
     /// <summary>
     /// Original value of the 2 bytes at end[0] and end[1]
     /// </summary>
-    private readonly byte[] _backup = new byte[Constants.CommonCblkDataExtra];
+    private readonly byte[] _backup = GC.AllocateUninitializedArray<byte>(Constants.CommonCblkDataExtra);
 
     /// <summary>
     /// aaaaaaaaaaa
@@ -103,7 +103,7 @@ internal sealed class MQCoder
     /// out a "ptr", and if that ptr is updated said update
     /// is reflected in this array.
     /// </remarks>
-    internal Ptr<MQCState>[] ctxs = new Ptr<MQCState>[Constants.MqcNumctxs];
+    internal Ptr<MQCState>[] ctxs = GC.AllocateUninitializedArray<Ptr<MQCState>>(Constants.MqcNumctxs);
 
     /// <summary>Current context</summary>
     /// <remarks>
@@ -772,7 +772,7 @@ internal class MQCState
     /// </summary>
     static MQCState()
     {
-        mqc_states = new MQCState[47 * 2];
+        mqc_states = GC.AllocateUninitializedArray<MQCState>(47 * 2);
 
         for (var c = 0; c < mqc_states.Length; c++)
             mqc_states[c] = new MQCState(mcqints[c, 0], mcqints[c, 1]);

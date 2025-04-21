@@ -2,7 +2,8 @@
 
 internal static class T1Luts
 {
-    private static readonly short[] lut_nmsedec_ref = {
+    private static readonly short[] lut_nmsedec_ref =
+    [
         0x1800, 0x1780, 0x1700, 0x1680, 0x1600, 0x1580, 0x1500, 0x1480, 
         0x1400, 0x1380, 0x1300, 0x1280, 0x1200, 0x1180, 0x1100, 0x1080, 
         0x1000, 0x0f80, 0x0f00, 0x0e80, 0x0e00, 0x0d80, 0x0d00, 0x0c80, 
@@ -19,9 +20,10 @@ internal static class T1Luts
         0x0c00, 0x0c80, 0x0d00, 0x0d80, 0x0e00, 0x0e80, 0x0f00, 0x0f80, 
         0x1000, 0x1080, 0x1100, 0x1180, 0x1200, 0x1280, 0x1300, 0x1380, 
         0x1400, 0x1480, 0x1500, 0x1580, 0x1600, 0x1680, 0x1700, 0x1780
-    };
+    ];
 
-    private static readonly short[] lut_nmsedec_ref0 = {
+    private static readonly short[] lut_nmsedec_ref0 =
+    [
         0x2000, 0x1f00, 0x1e00, 0x1d00, 0x1c00, 0x1b00, 0x1a80, 0x1980, 
         0x1880, 0x1780, 0x1700, 0x1600, 0x1500, 0x1480, 0x1380, 0x1300, 
         0x1200, 0x1180, 0x1080, 0x1000, 0x0f00, 0x0e80, 0x0e00, 0x0d00, 
@@ -38,7 +40,7 @@ internal static class T1Luts
         0x0c80, 0x0d00, 0x0e00, 0x0e80, 0x0f00, 0x1000, 0x1080, 0x1180, 
         0x1200, 0x1300, 0x1380, 0x1480, 0x1500, 0x1600, 0x1700, 0x1780, 
         0x1880, 0x1980, 0x1a80, 0x1b00, 0x1c00, 0x1d00, 0x1e00, 0x1f00
-    };
+    ];
 
     //2.5 - opj_t1_getnmsedec_ref
     internal static short Getnmsedec_ref(uint x, int bitpos)
@@ -51,7 +53,8 @@ internal static class T1Luts
         return lut_nmsedec_ref0[x & ((1 << Constants.T1NmsedecBits) - 1)];
     }
 
-    private static readonly short[] lut_nmsedec_sig = {
+    private static readonly short[] lut_nmsedec_sig =
+    [
         0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
         0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
         0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 
@@ -68,9 +71,10 @@ internal static class T1Luts
         0x5400, 0x5580, 0x5700, 0x5880, 0x5a00, 0x5b80, 0x5d00, 0x5e80, 
         0x6000, 0x6180, 0x6300, 0x6480, 0x6600, 0x6780, 0x6900, 0x6a80, 
         0x6c00, 0x6d80, 0x6f00, 0x7080, 0x7200, 0x7380, 0x7500, 0x7680
-    };
+    ];
 
-    private static readonly short[] lut_nmsedec_sig0 = {
+    private static readonly short[] lut_nmsedec_sig0 =
+    [
         0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0080, 0x0080, 
         0x0080, 0x0080, 0x0100, 0x0100, 0x0100, 0x0180, 0x0180, 0x0200, 
         0x0200, 0x0280, 0x0280, 0x0300, 0x0300, 0x0380, 0x0400, 0x0400, 
@@ -87,7 +91,7 @@ internal static class T1Luts
         0x5480, 0x5600, 0x5800, 0x5980, 0x5b00, 0x5d00, 0x5e80, 0x6080, 
         0x6200, 0x6400, 0x6580, 0x6780, 0x6900, 0x6b00, 0x6d00, 0x6e80, 
         0x7080, 0x7280, 0x7480, 0x7600, 0x7800, 0x7a00, 0x7c00, 0x7e00
-    };
+    ];
 
     //2.5 - opj_t1_getnmsedec_sig
     internal static short Getnmsedec_sig(uint x, int bitpos)
@@ -134,7 +138,8 @@ internal static class T1Luts
     }
 
     //2.5 - lut_ctxno_zc[2048]
-    internal static sbyte[] lut_ctxno_zc = {
+    internal static sbyte[] lut_ctxno_zc =
+    [
         0, 1, 3, 3, 1, 2, 3, 3, 5, 6, 7, 7, 6, 6, 7, 7, 0, 1, 3, 3, 1, 2, 3, 3, 5, 6, 7, 7, 6, 6, 7, 7,
         5, 6, 7, 7, 6, 6, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8, 5, 6, 7, 7, 6, 6, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8,
         1, 2, 3, 3, 2, 2, 3, 3, 6, 6, 7, 7, 6, 6, 7, 7, 1, 2, 3, 3, 2, 2, 3, 3, 6, 6, 7, 7, 6, 6, 7, 7,
@@ -199,11 +204,11 @@ internal static class T1Luts
         5, 7, 5, 7, 7, 8, 7, 8, 5, 7, 5, 7, 7, 8, 7, 8, 5, 7, 5, 7, 7, 8, 7, 8, 5, 7, 5, 7, 7, 8, 7, 8,
         7, 8, 7, 8, 8, 8, 8, 8, 7, 8, 7, 8, 8, 8, 8, 8, 7, 8, 7, 8, 8, 8, 8, 8, 7, 8, 7, 8, 8, 8, 8, 8,
         7, 8, 7, 8, 8, 8, 8, 8, 7, 8, 7, 8, 8, 8, 8, 8, 7, 8, 7, 8, 8, 8, 8, 8, 7, 8, 7, 8, 8, 8, 8, 8
-    };
+    ];
 
     //2.5 - lut_spb
-    private static readonly bool[] lut_spb = 
-    {
+    private static readonly bool[] lut_spb =
+    [
         false, false, false, false, false, false, false, false, false, true, false, true, false, true, false, true, false, false, true, true, false, false, true, true, false, true, false, true, false, true, false, true,
         false, false, false, false, true, true, true, true, false, false, false, false, false, true, false, true, false, false, false, false, true, true, true, true, false, false, false, true, false, true, true, true,
         false, false, false, false, false, false, false, false, false, true, false, true, false, true, false, true, false, false, true, true, false, false, true, true, false, true, false, true, false, true, false, true,
@@ -212,7 +217,7 @@ internal static class T1Luts
         false, false, false, false, true, true, true, true, false, false, false, false, false, true, false, true, false, false, false, false, true, true, true, true, false, false, false, false, false, true, false, true,
         true, true, false, false, true, true, false, false, false, true, false, true, false, true, false, true, true, true, true, true, true, true, true, true, false, true, false, true, false, true, false, true,
         false, false, false, false, true, true, true, true, false, true, false, false, true, true, false, true, false, false, false, false, true, true, true, true, false, true, false, true, true, true, true, true
-    };
+    ];
 
     //2.5 - opj_t1_getspb
     internal static bool Getspb(T1 f)
@@ -222,8 +227,8 @@ internal static class T1Luts
 
     //2.5 - lut_ctxno_sc[256]
     //This table corresponds with the enum "T1_CTXNO"
-    private static readonly sbyte[] ctxno_sc = 
-    {
+    private static readonly sbyte[] ctxno_sc =
+    [
         0x9, 0x9, 0xa, 0xa, 0x9, 0x9, 0xa, 0xa, 0xc, 0xc, 0xd, 0xb, 0xc, 0xc, 0xd, 0xb,
         0x9, 0x9, 0xa, 0xa, 0x9, 0x9, 0xa, 0xa, 0xc, 0xc, 0xb, 0xd, 0xc, 0xc, 0xb, 0xd,
         0xc, 0xc, 0xd, 0xd, 0xc, 0xc, 0xb, 0xb, 0xc, 0x9, 0xd, 0xa, 0x9, 0xc, 0xa, 0xb,
@@ -240,7 +245,7 @@ internal static class T1Luts
         0xa, 0xa, 0xa, 0xa, 0xa, 0xa, 0xa, 0xa, 0xb, 0xd, 0xb, 0xd, 0xb, 0xd, 0xb, 0xd,
         0xb, 0xb, 0xc, 0xc, 0xd, 0xd, 0xc, 0xc, 0xb, 0xa, 0xc, 0x9, 0xa, 0xd, 0x9, 0xc,
         0xb, 0xb, 0xb, 0xb, 0xd, 0xd, 0xd, 0xd, 0xb, 0xa, 0xb, 0xa, 0xa, 0xd, 0xa, 0xd
-    };
+    ];
 
     /// <remarks>
     /// 2.5 - opj_t1_getctxno_sc
